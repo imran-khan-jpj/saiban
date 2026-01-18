@@ -8,7 +8,7 @@ export async function POST() {
 
     return NextResponse.redirect(
       new URL(
-        "/auth/login",
+        "/login",
         process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
       )
     );

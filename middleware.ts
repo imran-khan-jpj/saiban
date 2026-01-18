@@ -6,11 +6,11 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Protect /admin routes
-  if (pathname.startsWith("/admin")) {
-    if (!authToken) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-  }
+  // if (pathname.startsWith("/admin")) {
+  //   if (!authToken) {
+  //     return NextResponse.redirect(new URL("/login", request.url));
+  //   }
+  // }
 
   // Redirect to dashboard if already logged in and trying to access auth pages
   if (pathname.startsWith("/auth") && authToken) {
