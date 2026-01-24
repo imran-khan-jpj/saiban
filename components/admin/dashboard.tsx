@@ -1,3 +1,4 @@
+import { useDashboardMetrics } from "@/app/api/dashboard/use-dashboard-metrics";
 import { SectionCards } from "./components/section-cards";
 import { SiteHeader } from "@/components/site-header";
 

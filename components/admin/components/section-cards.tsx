@@ -1,50 +1,75 @@
+"use client";
+
 import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react";
 
 import { SectionCard } from "./section-card";
+import { useDashboardMetrics } from "@/app/api/dashboard/use-dashboard-metrics";
 
 export function SectionCards() {
+  const { data, isLoading } = useDashboardMetrics();
+
+  const formatPKR = (amount: number) => {
+    return new Intl.NumberFormat("en-PK", {
+      style: "currency",
+      currency: "PKR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-4 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-24 animate-pulse rounded-lg bg-muted"></div>
+        ))}
+      </div>
+    );
+  }
+
+  const totalReceivable = data?.metrics.ledger.totalReceivable ?? 0;
+  const totalDebit = data?.metrics.ledger.totalDebit ?? 0;
+  const totalCredit = data?.metrics.ledger.totalCredit ?? 0;
+  const balance = totalDebit - totalCredit;
+
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <SectionCard
-        description="Total Revenue"
-        value="$1,250.00"
-        badgeIcon={<IconTrendingUp />}
-        badgeText="+12.5%"
+        description="Total Products"
+        value={data?.metrics.totalProducts.toString() ?? "0"}
+        badgeText={`${data?.alerts.lowStockProducts.length ?? 0} Low Stock`}
         badgeVariant="outline"
-        footerTitle="Trending up this month"
-        footerIcon={<IconTrendingUp className="size-4" />}
-        footerDescription="Visitors for the last 6 months"
+        footerTitle="Stock Management"
       />
       <SectionCard
-        description="New Customers"
-        value="1,234"
-        badgeIcon={<IconTrendingDown />}
-        badgeText="-20%"
+        description="Total Customers"
+        value={data?.metrics.totalCustomers.toString() ?? "0"}
+        badgeText="Active"
         badgeVariant="outline"
-        footerTitle="Down 20% this period"
-        footerIcon={<IconTrendingDown className="size-4" />}
-        footerDescription="Acquisition needs attention"
+        footerTitle="Registered Customers"
       />
 
       <SectionCard
-        description="Active Accounts"
-        value="45,678"
-        badgeIcon={<IconTrendingUp />}
-        badgeText="+12.5%"
+        description="Total Orders"
+        value={data?.metrics.totalOrders.toString() ?? "0"}
+        badgeText={`${data?.alerts.pendingOrders.length ?? 0} Pending`}
         badgeVariant="outline"
-        footerTitle="Strong user retention"
-        footerIcon={<IconTrendingUp className="size-4" />}
-        footerDescription="Engagement exceed targets"
+        footerTitle="Order Management"
       />
       <SectionCard
-        description="Growth Rate"
-        value="4.5%"
-        badgeIcon={<IconTrendingUp />}
-        badgeText="+4.5%"
+        description="Ledger Balance"
+        value={formatPKR(balance)}
+        badgeIcon={balance >= 0 ? <IconTrendingUp /> : <IconTrendingDown />}
+        badgeText={formatPKR(Math.abs(totalReceivable))}
         badgeVariant="outline"
-        footerTitle="Steady performance increase"
-        footerIcon={<IconTrendingUp className="size-4" />}
-        footerDescription="Meets growth projections"
+        footerTitle={`Debit: ${formatPKR(totalDebit)} | Credit: ${formatPKR(totalCredit)}`}
+        footerIcon={
+          balance >= 0 ? (
+            <IconTrendingUp className="size-4" />
+          ) : (
+            <IconTrendingDown className="size-4" />
+          )
+        }
       />
     </div>
   );

@@ -35,25 +35,17 @@ export const SectionCard = ({
 }: SectionCardProps) => {
   return (
     <Card className={`@container/card ${className || ""}`}>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardDescription>{description}</CardDescription>
         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
           {value}
         </CardTitle>
-        <CardAction>
-          <Badge variant={badgeVariant}>
-            {badgeIcon}
-            {badgeText}
-          </Badge>
-        </CardAction>
       </CardHeader>
-      <CardFooter className="flex-col items-start gap-1.5 text-sm">
-        <div className="line-clamp-1 flex gap-2 font-medium">
-          {footerTitle} {footerIcon}
+      <CardFooter className="pt-2 pb-4">
+        <div className="line-clamp-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+          {footerIcon}
+          <span>{footerTitle}</span>
         </div>
-        {footerDescription && (
-          <div className="text-muted-foreground">{footerDescription}</div>
-        )}
       </CardFooter>
     </Card>
   );

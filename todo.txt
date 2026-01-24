@@ -1,0 +1,16 @@
+Pending
+- products
+- customers
+- ledger
+
+In process
+
+- authentication apis
+Done
+
+
+Messges for nabeel.
+
+
+update register api to take first_name, last_name 
+and also create a forgot passwrod end point (in case of forgot password);

@@ -1,41 +1,53 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import Link from "next/link";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { useLogin } from "@/app/api/auth/use-login";
+import { Input } from "@/components/ui/input";
+import { toast } from "react-toastify";
+import { setAuthToken } from "@/lib/cookies";
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const router = useRouter();
+  const { mutate, isPending } = useLogin();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "admin@saiban.com", password: "Admin@123" },
+  });
 
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+  const onSubmit = (data: LoginFormData) => {
+    mutate(
+      { email: data.email, password: data.password },
+      {
+        onSuccess: (data) => {
+          setAuthToken(data.access_token);
+          toast.success("Login successful!");
+          console.log("Logged in:", data.user);
+          router.push("/admin/dashboard");
         },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Cookie will be set by the API route
-        router.push("/admin/dashboard");
-      } else {
-        setError(data.message || "Login failed");
-      }
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-    }
+        onError: (error) => {
+          toast.error(error.message || "Login failed");
+          console.error("Login failed:", error.message);
+        },
+      },
+    );
   };
 
   return (
@@ -46,25 +58,53 @@ export const Login = () => {
             Sign in to your account
           </h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-          <div className="space-y-4">
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input placeholder="Email" id="email" type="email" />
+            <Input
+              {...register("email")}
+              placeholder="Email"
+              id="email"
+              type="email"
+              error={!!errors.email}
+              errorMessage={errors.email?.message}
+            />
           </div>
-          <div className="space-y-4">
+          <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input placeholder="Password" id="password" type="password" />
+            <Input
+              {...register("password")}
+              placeholder="Password"
+              id="password"
+              type="password"
+              error={!!errors.password}
+              errorMessage={errors.password?.message}
+            />
+          </div>
+
+          <div className="flex items-center justify-end text-sm">
+            <Link
+              href="/forgot-password"
+              className="font-medium text-primary hover:text-primary/80"
+            >
+              Forgot password?
+            </Link>
           </div>
 
           <div>
-            <Button type="submit" className="w-full">
-              Sign in
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? "Signing in..." : "Sign in"}
             </Button>
+          </div>
+
+          <div className="text-center text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Link
+              href="/register"
+              className="font-medium text-primary hover:text-primary/80"
+            >
+              Create account
+            </Link>
           </div>
         </form>
       </div>
