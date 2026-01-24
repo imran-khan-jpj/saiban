@@ -1,27 +1,24 @@
 import { CONFIG } from "@/app/config";
 import { DEFAULTS } from "@/app/defaults";
+import { getAuthToken } from "@/lib/cookies";
 
 type FetchPostOptions = {
   url: string;
   fetchOptions?: RequestInit;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: Record<string, any>;
-  token?: string | null;
 };
 
 export const postClient = async <T>({
   url,
   fetchOptions,
   body,
-  token,
 }: FetchPostOptions): Promise<T> => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const headers: any = {
       ...fetchOptions?.headers,
-      Authorization: `Bearer ${token}`,
-      "ngrok-skip-browser-warning": "1",
-      skip_zrok_interstitial: "1",
+      Authorization: `Bearer ${getAuthToken()}`,
     };
 
     if (!(body instanceof FormData)) {
@@ -37,13 +34,7 @@ export const postClient = async <T>({
     });
     if (!response.ok) {
       const res = await response.json();
-      throw new Error(
-        res?.error ??
-          res?.message ??
-          res?.aiResponse ??
-          res?.responseMsg ??
-          DEFAULTS.ERROR_MESSAGE
-      );
+      throw new Error(res?.message ?? res?.error ?? DEFAULTS.ERROR_MESSAGE);
     }
 
     return (await response.json()) as T;
@@ -58,22 +49,19 @@ type FetchPatchOptions = {
   fetchOptions?: RequestInit;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: Record<string, any>;
-  token?: string | null;
   put?: boolean;
 };
 export const patchClient = async <T>({
   url,
   fetchOptions,
   body,
-  token,
   put = false,
 }: FetchPatchOptions): Promise<T> => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const headers: any = {
       ...fetchOptions?.headers,
-      Authorization: `Bearer ${token}`,
-      skip_zrok_interstitial: "1",
+      Authorization: `Bearer ${getAuthToken()}`,
     };
 
     if (!(body instanceof FormData)) {
@@ -89,9 +77,7 @@ export const patchClient = async <T>({
     });
     if (!response.ok) {
       const res = await response.json();
-      throw new Error(
-        res?.error ?? res?.aiResponse ?? res?.message ?? DEFAULTS.ERROR_MESSAGE
-      );
+      throw new Error(res?.message ?? res?.error ?? DEFAULTS.ERROR_MESSAGE);
     }
 
     return (await response.json()) as T;
@@ -104,20 +90,16 @@ export const patchClient = async <T>({
 type FetchGetOptions = {
   url: string;
   fetchOptions?: RequestInit;
-  token?: string | null;
 };
 
 export const getClient = async <T>({
   url,
   fetchOptions,
-  token,
 }: FetchGetOptions): Promise<T> => {
   try {
     const headers = {
       ...fetchOptions?.headers,
-      Authorization: token ? `Bearer ${token}` : "",
-      "ngrok-skip-browser-warning": "1",
-      skip_zrok_interstitial: "1",
+      Authorization: `Bearer ${getAuthToken()}`,
     };
 
     const response = await fetch(`${CONFIG.API_URL}${url}`, {
@@ -137,7 +119,7 @@ export const getClient = async <T>({
 
     if (!response.ok) {
       const res = await response.json();
-      throw new Error(res?.responseMsg ?? DEFAULTS.ERROR_MESSAGE);
+      throw new Error(res?.message ?? res?.error ?? DEFAULTS.ERROR_MESSAGE);
     }
 
     return (await response.json()) as T;
@@ -149,20 +131,17 @@ export const getClient = async <T>({
 
 type DeleteClientOptions = {
   url: string;
-  token?: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: Record<string, any>;
 };
 export const deleteClient = async <T>({
   url,
-  token,
   body,
 }: DeleteClientOptions): Promise<T> => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const headers: any = {
-      Authorization: `Bearer ${token}`,
-      "ngrok-skip-browser-warning": "1",
+      Authorization: `Bearer ${getAuthToken()}`,
     };
 
     if (!(body instanceof FormData)) {

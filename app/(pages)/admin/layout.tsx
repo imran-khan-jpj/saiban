@@ -1,10 +1,5 @@
 "use client";
-import {
-  useSidebar,
-  SidebarTrigger,
-  SidebarInset,
-} from "@/components/ui/sidebar";
-// app/dashboard/layout.tsx
+import { SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 

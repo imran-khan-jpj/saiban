@@ -1,5 +1,3 @@
-// import { Dashboard } from "@/components/admin/dashboard";
-import Dashboard from "@/components/admin/dashboard";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -11,5 +9,6 @@ export default async function Home() {
   if (!authToken) {
     redirect("/login");
   }
-  return <Dashboard />;
+
+  redirect("/admin/dashboard");
 }
