@@ -1,7 +1,73 @@
-import { IconBoxSeam } from "@tabler/icons-react";
+"use client";
+
+import * as React from "react";
 import { SiteHeader } from "@/components/site-header";
+import { useGetAllProducts } from "@/app/api/products/use-get-all";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function StockPage() {
+  // Fetch all products
+  const { data, isLoading, isError } = useGetAllProducts(1, 100);
+
+  const products = data?.data || [];
+
+  // Calculate stock statistics
+  const totalItems = products.length;
+  const lowStockItems = products.filter(
+    (p) => p.quantityInStock > 0 && p.quantityInStock <= p.lowStockThreshold,
+  ).length;
+  const outOfStockItems = products.filter(
+    (p) => p.quantityInStock === 0,
+  ).length;
+
+  // Get stock status
+  const getStockStatus = (stock: number, lowStockThreshold: number) => {
+    if (stock === 0) return "Out of Stock";
+    if (stock <= lowStockThreshold) return "Low Stock";
+    return "In Stock";
+  };
+
+  // Get stock badge variant
+  const getStockBadgeClass = (status: string) => {
+    if (status === "In Stock")
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+    if (status === "Low Stock")
+      return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
+    return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+  };
+
+  // Get recent products sorted by stock
+  const recentProducts = React.useMemo(() => {
+    return [...products]
+      .sort((a, b) => {
+        // Prioritize out of stock and low stock
+        const statusA = getStockStatus(a.quantityInStock, a.lowStockThreshold);
+        const statusB = getStockStatus(b.quantityInStock, b.lowStockThreshold);
+        if (statusA === "Out of Stock" && statusB !== "Out of Stock") return -1;
+        if (statusB === "Out of Stock" && statusA !== "Out of Stock") return 1;
+        if (statusA === "Low Stock" && statusB === "In Stock") return -1;
+        if (statusB === "Low Stock" && statusA === "In Stock") return 1;
+        return 0;
+      })
+      .slice(0, 10);
+  }, [products]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-lg border border-destructive p-4">
+        <p className="text-destructive">Error loading stock data</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <SiteHeader title="Stock Management" />
@@ -14,7 +80,7 @@ export default function StockPage() {
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Total Items
                   </h3>
-                  <p className="mt-2 text-3xl font-bold">1,234</p>
+                  <p className="mt-2 text-3xl font-bold">{totalItems}</p>
                   <p className="text-sm text-muted-foreground">
                     Active products
                   </p>
@@ -24,7 +90,9 @@ export default function StockPage() {
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Low Stock Items
                   </h3>
-                  <p className="mt-2 text-3xl font-bold text-orange-600">23</p>
+                  <p className="mt-2 text-3xl font-bold text-orange-600">
+                    {lowStockItems}
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     Need reordering
                   </p>
@@ -34,7 +102,9 @@ export default function StockPage() {
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Out of Stock
                   </h3>
-                  <p className="mt-2 text-3xl font-bold text-red-600">5</p>
+                  <p className="mt-2 text-3xl font-bold text-red-600">
+                    {outOfStockItems}
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     Urgent attention
                   </p>
@@ -47,40 +117,39 @@ export default function StockPage() {
                     Recent Stock Updates
                   </h2>
                   <div className="space-y-3">
-                    {[
-                      { item: "Product A", quantity: 150, status: "In Stock" },
-                      { item: "Product B", quantity: 25, status: "Low Stock" },
-                      {
-                        item: "Product C",
-                        quantity: 0,
-                        status: "Out of Stock",
-                      },
-                      { item: "Product D", quantity: 300, status: "In Stock" },
-                      { item: "Product E", quantity: 10, status: "Low Stock" },
-                    ].map((stock, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between py-2 border-b last:border-0"
-                      >
-                        <div>
-                          <p className="font-medium">{stock.item}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Quantity: {stock.quantity}
-                          </p>
-                        </div>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            stock.status === "In Stock"
-                              ? "bg-green-100 text-green-800"
-                              : stock.status === "Low Stock"
-                              ? "bg-orange-100 text-orange-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {stock.status}
-                        </span>
-                      </div>
-                    ))}
+                    {recentProducts.length === 0 ? (
+                      <p className="text-muted-foreground text-center py-4">
+                        No products found
+                      </p>
+                    ) : (
+                      recentProducts.map((product) => {
+                        const status = getStockStatus(
+                          product.quantityInStock,
+                          product.lowStockThreshold,
+                        );
+                        return (
+                          <div
+                            key={product._id}
+                            className="flex items-center justify-between py-2 border-b last:border-0"
+                          >
+                            <div>
+                              <p className="font-medium">{product.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Quantity: {product.quantityInStock} | Threshold:{" "}
+                                {product.lowStockThreshold}
+                              </p>
+                            </div>
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-medium ${getStockBadgeClass(
+                                status,
+                              )}`}
+                            >
+                              {status}
+                            </span>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </div>
