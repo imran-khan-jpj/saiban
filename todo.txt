@@ -11,6 +11,13 @@ Done
 
 Messges for nabeel.
 
+- if we create an order it is reducing the stock and when i cancel any order 
+the stock is still not being updated and i am unable to create new order.
+- update register api to take first_name, last_name 
+- and also create a forgot passwrod end point (in case of forgot password);
+- i am trying to search order by email/user name but unable to get data
+- called this api but it is also returining results other the customerId.
+- there is an entry which is created on 10-jan
+but these filters and not returning those data
 
-update register api to take first_name, last_name 
-and also create a forgot passwrod end point (in case of forgot password);
+https://backend.saiban.click/api/ledger/entries?page=1&limit=10&startDate=2026-01-01&endDate=2026-01-10

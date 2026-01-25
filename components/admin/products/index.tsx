@@ -4,6 +4,7 @@ import * as React from "react";
 import { DataTable } from "@/components/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   IconPlus,
   IconPencil,
@@ -12,6 +13,7 @@ import {
   IconFilter,
   IconX,
   IconEye,
+  IconSearch,
 } from "@tabler/icons-react";
 import {
   Dialog,
@@ -64,12 +66,14 @@ interface ProductsProps {
   searchInput: string;
   stockStatus: string;
   onStockStatusChange: (value: string) => void;
+  setSearchInput: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export function Products({
   searchInput,
   stockStatus,
   onStockStatusChange,
+  setSearchInput,
 }: ProductsProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(
@@ -330,11 +334,14 @@ export function Products({
   return (
     <div className="flex flex-col h-full space-y-4 min-h-0">
       <div className="shrink-0 flex items-center justify-between mt-2">
-        <div>
-          <p className="text-muted-foreground">
-            Manage your products and inventory ({data?.pagination.total || 0}{" "}
-            total)
-          </p>
+        <div className="relative max-w-sm">
+          <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search products by name..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="pl-9"
+          />
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
