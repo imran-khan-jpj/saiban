@@ -1,13 +1,13 @@
 Pending
 - products
-- customers
 - ledger
 
 In process
+- customers
 
-- authentication apis
 Done
 
+- authentication apis
 
 Messges for nabeel.
 
