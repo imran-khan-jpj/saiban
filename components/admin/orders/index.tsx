@@ -4,6 +4,7 @@ import * as React from "react";
 import { DataTable } from "@/components/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   IconPlus,
   IconEye,
@@ -12,6 +13,7 @@ import {
   IconDotsVertical,
   IconFilter,
   IconX,
+  IconSearch,
 } from "@tabler/icons-react";
 import {
   Dialog,
@@ -62,12 +64,14 @@ export type { Order };
 
 interface OrdersProps {
   searchInput: string;
+  onSearchInputChange: (value: string) => void;
   statusFilter: string;
   onStatusFilterChange: (value: string) => void;
 }
 
 export function Orders({
   searchInput,
+  onSearchInputChange,
   statusFilter,
   onStatusFilterChange,
 }: OrdersProps) {
@@ -330,11 +334,16 @@ export function Orders({
   return (
     <div className="flex flex-col h-full space-y-4 min-h-0">
       <div className="shrink-0 flex items-center justify-between mt-2">
-        <div>
-          <p className="text-muted-foreground">
-            Manage orders and track their status ({data?.pagination.total || 0}{" "}
-            total)
-          </p>
+        <div className="flex items-center gap-2 flex-1">
+          <div className="relative max-w-sm">
+            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search orders..."
+              value={searchInput}
+              onChange={(e) => onSearchInputChange(e.target.value)}
+              className="pl-9"
+            />
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
