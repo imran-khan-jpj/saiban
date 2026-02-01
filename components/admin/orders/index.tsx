@@ -15,6 +15,7 @@ import {
   IconX,
   IconSearch,
 } from "@tabler/icons-react";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -136,14 +137,17 @@ export function Orders({
   }, [data]);
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive"> = {
-      pending: "secondary",
-      confirmed: "default",
-      cancelled: "destructive",
-      paid: "default",
+    const statusStyles: Record<string, string> = {
+      pending: "bg-orange-500 text-white hover:bg-orange-600",
+      confirmed: "bg-green-600 text-white hover:bg-green-700",
+      completed: "bg-green-600 text-white hover:bg-green-700",
+      cancelled: "bg-red-600 text-white hover:bg-red-700",
+      paid: "bg-green-600 text-white hover:bg-green-700",
     };
     return (
-      <Badge variant={variants[status] || "default"} className="capitalize">
+      <Badge
+        className={`capitalize ${statusStyles[status] || "bg-gray-500 text-white"}`}
+      >
         {status}
       </Badge>
     );
@@ -154,24 +158,28 @@ export function Orders({
     {
       accessorKey: "_id",
       header: "Order ID",
-      size: 150,
       cell: ({ row }) => (
-        <div className="font-mono text-xs">{row.original._id.slice(-8)}</div>
+        <Link
+          href={`/admin/orders/${row.original._id}`}
+          className="font-mono text-xs hover:text-primary hover:underline"
+        >
+          {row.original._id.slice(-8)}
+        </Link>
       ),
     },
     {
       accessorKey: "customerId",
       header: "Customer",
       cell: ({ row }) => (
-        <div>
+        <Link
+          href={`/admin/customers/${row.original.customerId._id}`}
+          className="hover:underline"
+        >
           <div className="font-medium">
             {row.original.customerId.firstName}{" "}
             {row.original.customerId.lastName}
           </div>
-          <div className="text-sm text-muted-foreground">
-            {row.original.customerId.email}
-          </div>
-        </div>
+        </Link>
       ),
     },
     {
@@ -193,54 +201,49 @@ export function Orders({
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => getStatusBadge(row.original.status),
+      cell: ({ row }) => {
+        const isPending = row.original.status === "pending";
+        return (
+          <div className="flex items-center gap-2">
+            {getStatusBadge(row.original.status)}
+            {isPending && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 bg-green-100 text-green-600 hover:bg-green-200"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleConfirm(row.original._id);
+                  }}
+                  title="Confirm order"
+                >
+                  <IconCheck className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 bg-red-100 text-red-600 hover:bg-red-200"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCancel(row.original._id);
+                  }}
+                  title="Cancel order"
+                >
+                  <IconCancel className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "createdAt",
-      header: "Created At",
+      header: "Date",
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {formatDate(row.original.createdAt)}
-        </div>
-      ),
-    },
-    {
-      id: "actions",
-      header: () => <div className="text-right">Actions</div>,
-      cell: ({ row }) => (
-        <div className="flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <IconDotsVertical className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleView(row.original._id)}>
-                <IconEye className="mr-2 h-4 w-4" />
-                View
-              </DropdownMenuItem>
-              {row.original.status === "pending" && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => handleConfirm(row.original._id)}
-                  >
-                    <IconCheck className="mr-2 h-4 w-4" />
-                    Confirm
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-destructive"
-                    onClick={() => handleCancel(row.original._id)}
-                  >
-                    <IconCancel className="mr-2 h-4 w-4" />
-                    Cancel
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       ),
     },
@@ -545,15 +548,9 @@ export function Orders({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground">Created At</Label>
+                  <Label className="text-muted-foreground">Date</Label>
                   <p className="text-sm">
                     {formatDate(viewingOrderData.createdAt)}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Last Updated</Label>
-                  <p className="text-sm">
-                    {formatDate(viewingOrderData.updatedAt)}
                   </p>
                 </div>
               </div>

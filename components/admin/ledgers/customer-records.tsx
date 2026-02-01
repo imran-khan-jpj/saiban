@@ -57,10 +57,14 @@ export function CustomerLedgerRecords({
   }, [data]);
 
   const getEntryTypeBadge = (entryType: string) => {
+    const statusStyles: Record<string, string> = {
+      credit: "bg-green-600 text-white hover:bg-green-700",
+      debit: "bg-red-600 text-white hover:bg-red-700",
+    };
+
     return (
       <Badge
-        variant={entryType === "credit" ? "default" : "destructive"}
-        className="capitalize"
+        className={`capitalize ${statusStyles[entryType] || "bg-gray-500 text-white"}`}
       >
         {entryType}
       </Badge>
@@ -97,7 +101,7 @@ export function CustomerLedgerRecords({
     },
     {
       accessorKey: "createdAt",
-      header: "Created At",
+      header: "Date",
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {formatDate(row.original.createdAt)}

@@ -40,6 +40,7 @@ export function SectionCards() {
         badgeText={`${data?.alerts.lowStockProducts.length ?? 0} Low Stock`}
         badgeVariant="outline"
         footerTitle="Stock Management"
+        href="/admin/products"
       />
       <SectionCard
         description="Total Customers"
@@ -47,6 +48,7 @@ export function SectionCards() {
         badgeText="Active"
         badgeVariant="outline"
         footerTitle="Registered Customers"
+        href="/admin/customers"
       />
 
       <SectionCard
@@ -55,9 +57,10 @@ export function SectionCards() {
         badgeText={`${data?.alerts.pendingOrders.length ?? 0} Pending`}
         badgeVariant="outline"
         footerTitle="Order Management"
+        href="/admin/orders"
       />
       <SectionCard
-        description="Ledger Balance"
+        description="Revenue (PKR)"
         value={formatPKR(balance)}
         badgeIcon={balance >= 0 ? <IconTrendingUp /> : <IconTrendingDown />}
         badgeText={formatPKR(Math.abs(totalReceivable))}
@@ -70,6 +73,7 @@ export function SectionCards() {
             <IconTrendingDown className="size-4" />
           )
         }
+        href="/admin/ledgers"
       />
     </div>
   );

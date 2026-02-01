@@ -76,10 +76,14 @@ export function Ledgers() {
   }, [data]);
 
   const getEntryTypeBadge = (entryType: string) => {
+    const statusStyles: Record<string, string> = {
+      credit: "bg-green-600 text-white hover:bg-green-700",
+      debit: "bg-red-600 text-white hover:bg-red-700",
+    };
+
     return (
       <Badge
-        variant={entryType === "credit" ? "default" : "destructive"}
-        className="capitalize"
+        className={`capitalize ${statusStyles[entryType] || "bg-gray-500 text-white"}`}
       >
         {entryType}
       </Badge>
@@ -101,13 +105,10 @@ export function Ledgers() {
             onClick={() =>
               router.push(`/admin/ledgers/${customer._id}/records`)
             }
-            className="text-left hover:underline"
+            className="text-left hover:underline cursor-pointer"
           >
             <div className="font-medium">
               {customer.firstName} {customer.lastName}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {customer.email}
             </div>
           </button>
         );
@@ -134,7 +135,7 @@ export function Ledgers() {
     },
     {
       accessorKey: "createdAt",
-      header: "Created At",
+      header: "Date",
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {formatDate(row.original.createdAt)}

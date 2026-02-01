@@ -43,11 +43,13 @@ import { useDeleteCustomer } from "@/app/api/customers/use-delete";
 import { Spinner } from "@/components/ui/spinner";
 import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 // Re-export Customer type
 export type { Customer };
 
 export function Customers() {
+  const router = useRouter();
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const [editingCustomer, setEditingCustomer] = React.useState<Customer | null>(
     null,
@@ -82,31 +84,16 @@ export function Customers() {
   // Column definitions
   const columns: ColumnDef<Customer & { id: string }>[] = [
     {
-      accessorKey: "firstName",
-      header: "First Name",
-      size: 120,
+      accessorKey: "fullName",
+      header: "Full Name",
+      size: 200,
       cell: ({ row }) => (
-        <div className="font-medium">{row.original.firstName}</div>
-      ),
-    },
-    {
-      accessorKey: "lastName",
-      header: "Last Name",
-      size: 120,
-      cell: ({ row }) => (
-        <div className="font-medium">{row.original.lastName}</div>
-      ),
-    },
-    {
-      accessorKey: "email",
-      header: "Email Address",
-      cell: ({ row }) => (
-        <a
-          href={`mailto:${row.original.email}`}
-          className="text-muted-foreground hover:text-primary underline-offset-4 hover:underline"
+        <button
+          onClick={() => router.push(`/admin/customers/${row.original._id}`)}
+          className="font-medium hover:text-primary hover:underline text-left"
         >
-          {row.original.email}
-        </a>
+          {row.original.firstName} {row.original.lastName}
+        </button>
       ),
     },
     {
@@ -122,8 +109,17 @@ export function Customers() {
       ),
     },
     {
+      accessorKey: "address",
+      header: "Address",
+      cell: ({ row }) => (
+        <div className="text-muted-foreground">
+          {row.original.streetAddress}, {row.original.city}
+        </div>
+      ),
+    },
+    {
       accessorKey: "createdAt",
-      header: "Created At",
+      header: "Date",
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {formatDate(row.original.createdAt)}

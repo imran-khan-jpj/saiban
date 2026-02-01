@@ -36,27 +36,22 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Stock",
-      url: "/admin/stock",
-      icon: IconBoxSeam,
-    },
-    {
-      title: "Products",
+      title: "Products Management",
       url: "/admin/products",
       icon: IconPackage,
     },
     {
-      title: "Customers",
+      title: "Customers Management",
       url: "/admin/customers",
       icon: IconUsers,
     },
     {
-      title: "Orders",
+      title: "Orders Management",
       url: "/admin/orders",
       icon: IconShoppingCart,
     },
     {
-      title: "Ledgers",
+      title: "Ledger Management",
       url: "/admin/ledgers",
       icon: IconBook2,
     },

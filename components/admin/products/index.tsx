@@ -199,7 +199,7 @@ export function Products({
     },
     {
       accessorKey: "createdAt",
-      header: "Created At",
+      header: "Date",
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {formatDate(row.original.createdAt)}
@@ -515,15 +515,9 @@ export function Products({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground">Created At</Label>
+                  <Label className="text-muted-foreground">Date</Label>
                   <p className="text-sm">
                     {formatDate(viewingProductData.createdAt)}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Last Updated</Label>
-                  <p className="text-sm">
-                    {formatDate(viewingProductData.updatedAt)}
                   </p>
                 </div>
               </div>
