@@ -90,7 +90,7 @@ export function Customers() {
       cell: ({ row }) => (
         <button
           onClick={() => router.push(`/admin/customers/${row.original._id}`)}
-          className="font-medium hover:text-primary hover:underline text-left"
+          className="font-medium text-blue-600 hover:text-blue-700 underline text-left cursor-pointer"
         >
           {row.original.firstName} {row.original.lastName}
         </button>

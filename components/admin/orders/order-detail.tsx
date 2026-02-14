@@ -28,7 +28,7 @@ import {
 import { IconArrowLeft, IconCopy, IconCash } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatCurrency } from "@/lib/utils";
 import { useGetOrderById } from "@/app/api/orders/use-get-by-id";
 import { useRecordPayment } from "@/app/api/customers/use-record-payment";
 import { PaymentForm } from "../customers/payment-form";
@@ -139,42 +139,14 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
       </div>
 
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <Label className="text-muted-foreground">Order ID</Label>
-            <div className="flex items-center gap-2">
-              <p className="font-mono text-sm">{order._id}</p>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={`h-6 w-6 ${
-                        copiedOrderId
-                          ? "text-green-600 hover:text-green-700"
-                          : ""
-                      }`}
-                      onClick={() => {
-                        navigator.clipboard.writeText(order._id);
-                        setCopiedOrderId(true);
-                        toast.success("Order ID copied!", {
-                          description: order._id,
-                        });
-                      }}
-                    >
-                      <IconCopy className="h-3 w-3" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Copy Order ID</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="flex items-center gap-2">
+            <Label className="text-muted-foreground">Date:</Label>
+            <p className="text-sm">{formatDate(order.createdAt)}</p>
           </div>
+
           <div className="space-y-1">
-            <Label className="text-muted-foreground">Status</Label>
+            <Label className="text-muted-foreground mr-2">Status</Label>
             {getStatusBadge(order.status)}
           </div>
         </div>
@@ -220,12 +192,14 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
                   <tr key={index} className="border-t">
                     <td className="p-3">{item.productId.name}</td>
                     <td className="p-3 text-right">{item.quantity}</td>
-                    <td className="p-3 text-right">PKR {item.unitPrice}</td>
+                    <td className="p-3 text-right">
+                      {formatCurrency(item.unitPrice)}
+                    </td>
                     <td className="p-3 text-right">
                       {item.discountPercentage}%
                     </td>
                     <td className="p-3 text-right font-medium">
-                      PKR {item.lineTotal}
+                      {formatCurrency(item.lineTotal)}
                     </td>
                   </tr>
                 ))}
@@ -237,19 +211,27 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
         <div className="space-y-2 p-4 bg-muted rounded-lg">
           <div className="flex items-center justify-between">
             <Label className="text-sm">Subtotal</Label>
-            <p className="text-sm font-medium">PKR {order.subtotal}</p>
+            <p className="text-sm font-medium">
+              {formatCurrency(order.subtotal)}
+            </p>
           </div>
           <div className="flex items-center justify-between">
             <Label className="text-sm">Discount</Label>
-            <p className="text-sm font-medium">PKR {order.discountTotal}</p>
+            <p className="text-sm font-medium">
+              {formatCurrency(order.discountTotal)}
+            </p>
           </div>
           <div className="flex items-center justify-between">
             <Label className="text-sm">GST</Label>
-            <p className="text-sm font-medium">PKR {order.gstTotal}</p>
+            <p className="text-sm font-medium">
+              {formatCurrency(order.gstTotal)}
+            </p>
           </div>
           <div className="flex items-center justify-between pt-2 border-t">
             <Label className="text-lg font-semibold">Grand Total</Label>
-            <p className="text-lg font-bold">PKR {order.grandTotal}</p>
+            <p className="text-lg font-bold">
+              {formatCurrency(order.grandTotal)}
+            </p>
           </div>
         </div>
 
@@ -259,20 +241,6 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
             <p className="text-sm p-3 bg-muted rounded-lg">{order.note}</p>
           </div>
         )}
-
-        <div className="space-y-1">
-          <Label className="text-muted-foreground">Payment Method</Label>
-          <p className="text-sm capitalize">
-            {order.paymentMethod.replace("_", " ")}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <Label className="text-muted-foreground">Date</Label>
-            <p className="text-sm">{formatDate(order.createdAt)}</p>
-          </div>
-        </div>
       </div>
 
       {/* Record Payment Dialog */}
@@ -288,6 +256,7 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
             onSubmit={handleRecordPayment}
             onCancel={() => setIsPaymentDialogOpen(false)}
             isSubmitting={recordPayment.isPending}
+            defaultOrderId={orderId}
           />
         </DialogContent>
       </Dialog>
