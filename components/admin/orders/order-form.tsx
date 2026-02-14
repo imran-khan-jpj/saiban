@@ -37,6 +37,7 @@ import {
 } from "@tabler/icons-react";
 import { useGetAllCustomers } from "@/app/api/customers/use-get-all";
 import { useGetAllProducts } from "@/app/api/products/use-get-all";
+import { formatCurrency } from "@/lib/utils";
 
 // Form validation schema
 const orderFormSchema = z.object({
@@ -358,7 +359,8 @@ export function OrderForm({
                               />
                               <div className="flex-1">
                                 <div>
-                                  {product.name} - PKR {product.unitPrice}
+                                  {product.name} -{" "}
+                                  {formatCurrency(product.unitPrice)}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
                                   Stock: {product.quantityInStock}{" "}
@@ -478,7 +480,7 @@ export function OrderForm({
 
       <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
         <Label className="text-lg font-semibold">Total Amount</Label>
-        <p className="text-lg font-bold">PKR {totalAmount.toFixed(2)}</p>
+        <p className="text-lg font-bold">{formatCurrency(totalAmount)}</p>
       </div>
 
       <div className="flex justify-end gap-2 pt-4">

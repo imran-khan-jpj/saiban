@@ -44,6 +44,8 @@ export const useCreateOrder = () => {
     onSuccess: () => {
       // Invalidate orders queries to refetch the list
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      // Invalidate products queries to update quantities after order creation
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
 };

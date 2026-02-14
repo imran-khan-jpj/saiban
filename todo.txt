@@ -1,23 +1,15 @@
 Pending
-- products
-- ledger
 
-In process
-- customers
 
-Done
 
-- authentication apis
+in progress
 
-Messges for nabeel.
-
-- if we create an order it is reducing the stock and when i cancel any order 
-the stock is still not being updated and i am unable to create new order.
-- update register api to take first_name, last_name 
-- and also create a forgot passwrod end point (in case of forgot password);
-- i am trying to search order by email/user name but unable to get data
-- called this api but it is also returining results other the customerId.
-- there is an entry which is created on 10-jan
-but these filters and not returning those data
-
-https://backend.saiban.click/api/ledger/entries?page=1&limit=10&startDate=2026-01-01&endDate=2026-01-10
+done
+when i create order then it should invalite the products query
+in orders table order id and customer name should be blue
+in orders table add an eye icon which will open order detail
+remove balance column from ledger table
+fix the format of start date and end date on ledger table
+remove PKR everywhere
+record payment modal should hide the order id input while on admin/customer/:id page
+in ledger table customer name should be blue

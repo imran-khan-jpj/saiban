@@ -9,13 +9,14 @@ import {
   LedgerEntry,
 } from "@/app/api/ledgers/use-get-all";
 import { Spinner } from "@/components/ui/spinner";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 
 import { Input } from "@/components/ui/input";
 import { IconX, IconSearch } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 
 import { cn } from "@/lib/utils";
 import { useGetAllCustomers } from "@/app/api/customers/use-get-all";
@@ -31,8 +32,8 @@ export function Ledgers() {
   });
   const [customerFilter, setCustomerFilter] = React.useState("");
   const [customerSearch, setCustomerSearch] = React.useState("");
-  const [startDate, setStartDate] = React.useState("");
-  const [endDate, setEndDate] = React.useState("");
+  const [startDate, setStartDate] = React.useState<Date | undefined>();
+  const [endDate, setEndDate] = React.useState<Date | undefined>();
 
   // Fetch customers for filter
   const { data: customersData } = useGetAllCustomers(1, 100);
@@ -43,8 +44,8 @@ export function Ledgers() {
     pagination.pageIndex + 1,
     pagination.pageSize,
     customerFilter || undefined,
-    startDate || undefined,
-    endDate || undefined,
+    startDate ? formatDate(startDate, "YYYY-MM-DD") : undefined,
+    endDate ? formatDate(endDate, "YYYY-MM-DD") : undefined,
   );
 
   // Filter customers based on search
@@ -62,8 +63,8 @@ export function Ledgers() {
   const handleClearFilters = () => {
     setCustomerFilter("");
     setCustomerSearch("");
-    setStartDate("");
-    setEndDate("");
+    setStartDate(undefined);
+    setEndDate(undefined);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
@@ -107,7 +108,7 @@ export function Ledgers() {
             }
             className="text-left hover:underline cursor-pointer"
           >
-            <div className="font-medium">
+            <div className="font-medium text-blue-600 underline hover:text-blue-700 hover:underline">
               {customer.firstName} {customer.lastName}
             </div>
           </button>
@@ -123,16 +124,10 @@ export function Ledgers() {
       accessorKey: "amount",
       header: "Amount",
       cell: ({ row }) => (
-        <div className="font-medium">PKR {row.original.amount}</div>
+        <div className="font-medium">{formatCurrency(row.original.amount)}</div>
       ),
     },
-    {
-      accessorKey: "balance",
-      header: "Balance",
-      cell: ({ row }) => (
-        <div className="font-medium">PKR {row.original.balance}</div>
-      ),
-    },
+
     {
       accessorKey: "createdAt",
       header: "Date",
@@ -214,26 +209,22 @@ export function Ledgers() {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="space-y-2">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <Label htmlFor="startDate">Start Date</Label>
-            <Input
-              id="startDate"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-40"
+            <DatePicker
+              date={startDate}
+              onDateChange={setStartDate}
+              placeholder="01-Feb-2025"
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="flex items-center gap-2">
             <Label htmlFor="endDate">End Date</Label>
-            <Input
-              id="endDate"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-40"
+            <DatePicker
+              date={endDate}
+              onDateChange={setEndDate}
+              placeholder="28-Feb-2025"
             />
           </div>
 
