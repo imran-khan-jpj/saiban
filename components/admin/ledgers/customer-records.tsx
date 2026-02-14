@@ -75,18 +75,6 @@ export function CustomerLedgerRecords({
   // Column definitions
   const columns: ColumnDef<CustomerLedgerEntry & { id: string }>[] = [
     {
-      accessorKey: "entryType",
-      header: "Type",
-      cell: ({ row }) => getEntryTypeBadge(row.original.entryType),
-    },
-    {
-      accessorKey: "amount",
-      header: "Amount",
-      cell: ({ row }) => (
-        <div className="font-medium">{formatCurrency(row.original.amount)}</div>
-      ),
-    },
-    {
       accessorKey: "sourceType",
       header: "Source Type",
       cell: ({ row }) => (
@@ -94,13 +82,16 @@ export function CustomerLedgerRecords({
       ),
     },
     {
-      accessorKey: "balance",
-      header: "Balance",
+      accessorKey: "amount",
+      header: "Order amount",
       cell: ({ row }) => (
-        <div className="font-medium">
-          {formatCurrency(row.original.balance)}
-        </div>
+        <div className="font-medium">{formatCurrency(row.original.amount)}</div>
       ),
+    },
+    {
+      accessorKey: "entryType",
+      header: "Type",
+      cell: ({ row }) => getEntryTypeBadge(row.original.entryType),
     },
     {
       accessorKey: "createdAt",

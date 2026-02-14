@@ -29,7 +29,7 @@ export const Login = () => {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "admin@saiban.com", password: "Admin@123" },
+    // defaultValues: { email: "admin@saiban.com", password: "Admin@123" },
   });
 
   const onSubmit = (data: LoginFormData) => {

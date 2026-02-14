@@ -115,19 +115,19 @@ export function Ledgers() {
         );
       },
     },
+
+    {
+      accessorKey: "amount",
+      header: "Balance",
+      cell: ({ row }) => (
+        <div className="font-medium">{formatCurrency(row.original.amount)}</div>
+      ),
+    },
     {
       accessorKey: "entryType",
       header: "Type",
       cell: ({ row }) => getEntryTypeBadge(row.original.entryType),
     },
-    {
-      accessorKey: "amount",
-      header: "Amount",
-      cell: ({ row }) => (
-        <div className="font-medium">{formatCurrency(row.original.amount)}</div>
-      ),
-    },
-
     {
       accessorKey: "createdAt",
       header: "Date",
