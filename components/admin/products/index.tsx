@@ -191,7 +191,7 @@ export function Products({
               {row.original.quantityInStock}
             </span>
             {isLowStock && (
-              <Badge variant="destructive" className="text-xs">
+              <Badge variant="destructive" className="text-xs text-white">
                 Low
               </Badge>
             )}

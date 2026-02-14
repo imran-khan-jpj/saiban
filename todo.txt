@@ -1,5 +1,5 @@
 Pending
-
+- backend url should be explicity for each environment
 
 
 in progress
@@ -13,3 +13,15 @@ fix the format of start date and end date on ledger table
 remove PKR everywhere
 record payment modal should hide the order id input while on admin/customer/:id page
 in ledger table customer name should be blue
+
+
+- in products table is product qty is low then low badge have black text it should white
+- in the profile tab remove unnecessory links
+- default login credentials in login form should be removed
+- customer ledger 1. source type, 2. Order mount , 3. Type, 4. Date
+- admin/ledger/id/record  remove balance column
+- all ledger table column name should be Balance
+- remove PKR from dashboad it should be RS
+- remove validation on reference and note in record pament modal
+- logout button should in the sidebar where 3 dots are being displayed
+- ledgers table type should be before date 

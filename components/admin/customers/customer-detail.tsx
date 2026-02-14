@@ -380,7 +380,9 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
                                       className="h-6 w-6 cursor-pointer"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        router.push(`/admin/orders/${order._id}`);
+                                        router.push(
+                                          `/admin/orders/${order._id}`,
+                                        );
                                       }}
                                     >
                                       <IconEye className="h-3 w-3" />

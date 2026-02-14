@@ -29,8 +29,8 @@ const paymentFormSchema = z.object({
     "card",
     "other",
   ]),
-  reference: z.string().min(1, "Reference is required"),
-  note: z.string().min(1, "Note is required"),
+  reference: z.string(),
+  note: z.string(),
 });
 
 type PaymentFormValues = z.infer<typeof paymentFormSchema>;
@@ -131,7 +131,7 @@ export function PaymentForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="reference">Reference *</Label>
+        <Label htmlFor="reference">Reference</Label>
         <Input
           id="reference"
           placeholder="CASH-001"
@@ -142,7 +142,7 @@ export function PaymentForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="note">Note *</Label>
+        <Label htmlFor="note">Note</Label>
         <Textarea
           id="note"
           placeholder="Payment received"

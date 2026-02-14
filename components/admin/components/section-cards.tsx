@@ -52,7 +52,7 @@ export function SectionCards() {
         href="/admin/orders"
       />
       <SectionCard
-        description="Revenue (PKR)"
+        description="Revenue"
         value={formatCurrency(balance)}
         badgeIcon={balance >= 0 ? <IconTrendingUp /> : <IconTrendingDown />}
         badgeText={formatCurrency(Math.abs(totalReceivable))}
