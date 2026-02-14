@@ -15,6 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { logout } from "@/lib/auth";
+import { useApp } from "@/providers/app-provider";
 
 export function NavUser({
   user,
@@ -25,6 +26,13 @@ export function NavUser({
     avatar: string;
   };
 }) {
+  const { setUser } = useApp();
+
+  const handleLogout = () => {
+    setUser(null);
+    logout();
+  };
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -43,7 +51,7 @@ export function NavUser({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="ml-auto flex items-center justify-center text-destructive hover:opacity-80 transition-opacity cursor-pointer"
                 >
                   <IconLogout className="size-4" />

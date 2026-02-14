@@ -13,6 +13,7 @@ import {
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
+import { useApp } from "@/providers/app-provider";
 import {
   Sidebar,
   SidebarContent,
@@ -23,42 +24,37 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-const data = {
-  user: {
-    name: "admin",
-    email: "admin@saiban.com",
-    avatar: "/avatars/shadcn.jpg",
+const navMainItems = [
+  {
+    title: "Dashboard",
+    url: "/admin/dashboard",
+    icon: IconDashboard,
   },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/admin/dashboard",
-      icon: IconDashboard,
-    },
-    {
-      title: "Products Management",
-      url: "/admin/products",
-      icon: IconPackage,
-    },
-    {
-      title: "Customers Management",
-      url: "/admin/customers",
-      icon: IconUsers,
-    },
-    {
-      title: "Orders Management",
-      url: "/admin/orders",
-      icon: IconShoppingCart,
-    },
-    {
-      title: "Ledger Management",
-      url: "/admin/ledgers",
-      icon: IconBook2,
-    },
-  ],
-};
+  {
+    title: "Products Management",
+    url: "/admin/products",
+    icon: IconPackage,
+  },
+  {
+    title: "Customers Management",
+    url: "/admin/customers",
+    icon: IconUsers,
+  },
+  {
+    title: "Orders Management",
+    url: "/admin/orders",
+    icon: IconShoppingCart,
+  },
+  {
+    title: "Ledger Management",
+    url: "/admin/ledgers",
+    icon: IconBook2,
+  },
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useApp();
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -66,7 +62,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
+              className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <a href="#">
                 <IconInnerShadowTop className="size-5" />
@@ -77,13 +73,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMainItems} />
         {/* <NavDocuments items={data.documents} /> */}
         {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={data.user} />
-      </SidebarFooter>
+      <SidebarFooter>{user && <NavUser user={user} />}</SidebarFooter>
     </Sidebar>
   );
 }

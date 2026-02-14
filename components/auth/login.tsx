@@ -11,6 +11,7 @@ import { useLogin } from "@/app/api/auth/use-login";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
 import { setAuthToken } from "@/lib/cookies";
+import { useApp } from "@/providers/app-provider";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -22,6 +23,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export const Login = () => {
   const router = useRouter();
   const { mutate, isPending } = useLogin();
+  const { setUser } = useApp();
 
   const {
     register,
@@ -38,8 +40,14 @@ export const Login = () => {
       {
         onSuccess: (data) => {
           setAuthToken(data.access_token);
+          setUser({
+            id: data.user.id,
+            name: data.user.email.split("@")[0],
+            email: data.user.email,
+            role: data.user.role,
+            avatar: "/avatars/shadcn.jpg",
+          });
           toast.success("Login successful!");
-          console.log("Logged in:", data.user);
           router.push("/admin/dashboard");
         },
         onError: (error) => {
