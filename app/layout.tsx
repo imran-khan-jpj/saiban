@@ -4,6 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { Roboto } from "next/font/google";
 import { QueryProvider } from "@/providers/query-client-provider";
+import { AppProvider } from "@/providers/app-provider";
 import NextTopLoader from "nextjs-toploader";
 import { ToastContainer } from "react-toastify";
 
@@ -36,20 +37,22 @@ export default function RootLayout({
           zIndex={9999}
           shadow="0 0 10px oklch(0.205 0 0),0 0 5px oklch(0.205 0 0)"
         />
-        <QueryProvider>
-          {children}
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-          />
-        </QueryProvider>
+        <AppProvider>
+          <QueryProvider>
+            {children}
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
+          </QueryProvider>
+        </AppProvider>
       </body>
     </html>
   );

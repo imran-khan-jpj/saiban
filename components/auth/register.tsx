@@ -10,6 +10,7 @@ import { useRegister } from "@/app/api/auth/use-register";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
 import { setAuthToken } from "@/lib/cookies";
+import { useApp } from "@/providers/app-provider";
 import Link from "next/link";
 
 const registerSchema = z
@@ -29,6 +30,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export const Register = () => {
   const router = useRouter();
   const { mutate, isPending } = useRegister();
+  const { setUser } = useApp();
 
   const {
     register,
@@ -44,8 +46,14 @@ export const Register = () => {
       {
         onSuccess: (data) => {
           setAuthToken(data.access_token);
+          setUser({
+            id: data.user.id,
+            name: data.user.name,
+            email: data.user.email,
+            role: data.user.role,
+            avatar: "/avatars/shadcn.jpg",
+          });
           toast.success("Registration successful!");
-          console.log("Registered:", data.user);
           router.push("/admin/dashboard");
         },
         onError: (error) => {
@@ -63,15 +71,6 @@ export const Register = () => {
           <h2 className="text-center text-3xl font-bold text-gray-900">
             Create your account
           </h2>
-          <p className="mt-2 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-medium text-primary hover:text-primary/80"
-            >
-              Sign in
-            </Link>
-          </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-2">
