@@ -8,13 +8,14 @@ import {
   CustomerLedgerEntry,
 } from "@/app/api/ledgers/use-get-customer-entries";
 import { Spinner } from "@/components/ui/spinner";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { IconArrowLeft, IconX } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+
 import { useRouter } from "next/navigation";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface CustomerLedgerRecordsProps {
   customerId: string;
@@ -30,21 +31,21 @@ export function CustomerLedgerRecords({
     pageIndex: 0,
     pageSize: 10,
   });
-  const [startDate, setStartDate] = React.useState("");
-  const [endDate, setEndDate] = React.useState("");
+  const [startDate, setStartDate] = React.useState<Date | undefined>();
+  const [endDate, setEndDate] = React.useState<Date | undefined>();
 
   // Fetch ledger entries from API with pagination and filters
   const { data, isLoading, isError, error } = useGetCustomerLedgerEntries(
     customerId,
     pagination.pageIndex + 1,
     pagination.pageSize,
-    startDate || undefined,
-    endDate || undefined,
+    startDate ? formatDate(startDate, "YYYY-MM-DD") : undefined,
+    endDate ? formatDate(endDate, "YYYY-MM-DD") : undefined,
   );
 
   const handleClearFilters = () => {
-    setStartDate("");
-    setEndDate("");
+    setStartDate(undefined);
+    setEndDate(undefined);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
@@ -82,7 +83,7 @@ export function CustomerLedgerRecords({
       accessorKey: "amount",
       header: "Amount",
       cell: ({ row }) => (
-        <div className="font-medium">PKR {row.original.amount}</div>
+        <div className="font-medium">{formatCurrency(row.original.amount)}</div>
       ),
     },
     {
@@ -96,7 +97,9 @@ export function CustomerLedgerRecords({
       accessorKey: "balance",
       header: "Balance",
       cell: ({ row }) => (
-        <div className="font-medium">PKR {row.original.balance}</div>
+        <div className="font-medium">
+          {formatCurrency(row.original.balance)}
+        </div>
       ),
     },
     {
@@ -141,26 +144,22 @@ export function CustomerLedgerRecords({
             Back to All Ledgers
           </Button>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="space-y-2">
+        <div className="flex items-center gap-4 mt-2">
+          <div className="flex items-center gap-2">
             <Label htmlFor="startDate">Start Date</Label>
-            <Input
-              id="startDate"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-40"
+            <DatePicker
+              date={startDate}
+              onDateChange={setStartDate}
+              placeholder="01-Feb-2025"
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="flex items-center gap-2">
             <Label htmlFor="endDate">End Date</Label>
-            <Input
-              id="endDate"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-40"
+            <DatePicker
+              date={endDate}
+              onDateChange={setEndDate}
+              placeholder="28-Feb-2025"
             />
           </div>
 
@@ -170,7 +169,6 @@ export function CustomerLedgerRecords({
               size="icon"
               onClick={handleClearFilters}
               title="Clear all filters"
-              className="mt-8"
             >
               <IconX className="h-4 w-4" />
             </Button>

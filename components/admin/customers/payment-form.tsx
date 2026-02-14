@@ -39,12 +39,16 @@ interface PaymentFormProps {
   onSubmit: (data: PaymentFormValues) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  hideOrderId?: boolean;
+  defaultOrderId?: string;
 }
 
 export function PaymentForm({
   onSubmit,
   onCancel,
   isSubmitting = false,
+  hideOrderId = false,
+  defaultOrderId = "",
 }: PaymentFormProps) {
   const {
     register,
@@ -56,7 +60,7 @@ export function PaymentForm({
   } = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
     defaultValues: {
-      orderId: "",
+      orderId: defaultOrderId,
       amount: 0,
       paymentMethod: "cash",
       reference: "",
@@ -73,14 +77,16 @@ export function PaymentForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="orderId">Order ID (Optional)</Label>
-        <Input
-          id="orderId"
-          placeholder="Enter order ID if payment is for specific order"
-          {...register("orderId")}
-        />
-      </div>
+      {!hideOrderId && (
+        <div className="space-y-2">
+          <Label htmlFor="orderId">Order ID (Optional)</Label>
+          <Input
+            id="orderId"
+            placeholder="Enter order ID if payment is for specific order"
+            {...register("orderId")}
+          />
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="amount">Amount *</Label>

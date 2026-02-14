@@ -34,13 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import {
   Select,
   SelectContent,
@@ -56,7 +50,7 @@ import { useCreateOrder } from "@/app/api/orders/use-create";
 import { useConfirmOrder } from "@/app/api/orders/use-confirm";
 import { useCancelOrder } from "@/app/api/orders/use-cancel";
 import { Spinner } from "@/components/ui/spinner";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -156,24 +150,12 @@ export function Orders({
   // Column definitions
   const columns: ColumnDef<Order & { id: string }>[] = [
     {
-      accessorKey: "_id",
-      header: "Order ID",
-      cell: ({ row }) => (
-        <Link
-          href={`/admin/orders/${row.original._id}`}
-          className="font-mono text-xs hover:text-primary hover:underline"
-        >
-          {row.original._id.slice(-8)}
-        </Link>
-      ),
-    },
-    {
       accessorKey: "customerId",
       header: "Customer",
       cell: ({ row }) => (
         <Link
           href={`/admin/customers/${row.original.customerId._id}`}
-          className="hover:underline"
+          className="text-blue-600 underline hover:text-blue-700 hover:underline"
         >
           <div className="font-medium">
             {row.original.customerId.firstName}{" "}
@@ -195,7 +177,9 @@ export function Orders({
       accessorKey: "grandTotal",
       header: "Total Amount",
       cell: ({ row }) => (
-        <div className="font-medium">PKR {row.original.grandTotal}</div>
+        <div className="font-medium">
+          {formatCurrency(row.original.grandTotal)}
+        </div>
       ),
     },
     {
@@ -244,6 +228,24 @@ export function Orders({
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {formatDate(row.original.createdAt)}
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <Link href={`/admin/orders/${row.original._id}`}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 cursor-pointer"
+              title="View order details"
+            >
+              <IconEye className="h-4 w-4" />
+            </Button>
+          </Link>
         </div>
       ),
     },
@@ -488,13 +490,13 @@ export function Orders({
                           <td className="p-3">{item.productId.name}</td>
                           <td className="p-3 text-right">{item.quantity}</td>
                           <td className="p-3 text-right">
-                            PKR {item.unitPrice}
+                            {formatCurrency(item.unitPrice)}
                           </td>
                           <td className="p-3 text-right">
                             {item.discountPercentage}%
                           </td>
                           <td className="p-3 text-right font-medium">
-                            PKR {item.lineTotal}
+                            {formatCurrency(item.lineTotal)}
                           </td>
                         </tr>
                       ))}
@@ -507,25 +509,25 @@ export function Orders({
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">Subtotal</Label>
                   <p className="text-sm font-medium">
-                    PKR {viewingOrderData.subtotal}
+                    {formatCurrency(viewingOrderData.subtotal)}
                   </p>
                 </div>
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">Discount</Label>
                   <p className="text-sm font-medium">
-                    PKR {viewingOrderData.discountTotal}
+                    {formatCurrency(viewingOrderData.discountTotal)}
                   </p>
                 </div>
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">GST</Label>
                   <p className="text-sm font-medium">
-                    PKR {viewingOrderData.gstTotal}
+                    {formatCurrency(viewingOrderData.gstTotal)}
                   </p>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t">
                   <Label className="text-lg font-semibold">Grand Total</Label>
                   <p className="text-lg font-bold">
-                    PKR {viewingOrderData.grandTotal}
+                    {formatCurrency(viewingOrderData.grandTotal)}
                   </p>
                 </div>
               </div>

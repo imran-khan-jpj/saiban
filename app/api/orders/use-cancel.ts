@@ -25,6 +25,8 @@ export const useCancelOrder = () => {
       // Invalidate orders queries to refetch the list
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["order"] });
+      // Invalidate products queries to update quantities after cancellation
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
 };

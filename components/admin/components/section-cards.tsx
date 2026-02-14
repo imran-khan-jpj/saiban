@@ -4,18 +4,10 @@ import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react";
 
 import { SectionCard } from "./section-card";
 import { useDashboardMetrics } from "@/app/api/dashboard/use-dashboard-metrics";
+import { formatCurrency } from "@/lib/utils";
 
 export function SectionCards() {
   const { data, isLoading } = useDashboardMetrics();
-
-  const formatPKR = (amount: number) => {
-    return new Intl.NumberFormat("en-PK", {
-      style: "currency",
-      currency: "PKR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   if (isLoading) {
     return (
@@ -61,11 +53,11 @@ export function SectionCards() {
       />
       <SectionCard
         description="Revenue (PKR)"
-        value={formatPKR(balance)}
+        value={formatCurrency(balance)}
         badgeIcon={balance >= 0 ? <IconTrendingUp /> : <IconTrendingDown />}
-        badgeText={formatPKR(Math.abs(totalReceivable))}
+        badgeText={formatCurrency(Math.abs(totalReceivable))}
         badgeVariant="outline"
-        footerTitle={`Debit: ${formatPKR(totalDebit)} | Credit: ${formatPKR(totalCredit)}`}
+        footerTitle={`Debit: ${formatCurrency(totalDebit)} | Credit: ${formatCurrency(totalCredit)}`}
         footerIcon={
           balance >= 0 ? (
             <IconTrendingUp className="size-4" />

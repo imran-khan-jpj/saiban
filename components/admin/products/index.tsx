@@ -55,7 +55,7 @@ import { useCreateProduct } from "@/app/api/products/use-create";
 import { useUpdateProduct } from "@/app/api/products/use-update";
 import { useDeleteProduct } from "@/app/api/products/use-delete";
 import { Spinner } from "@/components/ui/spinner";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -174,7 +174,9 @@ export function Products({
       accessorKey: "unitPrice",
       header: "Unit Price",
       cell: ({ row }) => (
-        <div className="font-medium">PKR {row.original.unitPrice}</div>
+        <div className="font-medium">
+          {formatCurrency(row.original.unitPrice)}
+        </div>
       ),
     },
     {
@@ -476,7 +478,7 @@ export function Products({
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Unit Price</Label>
                   <p className="font-medium">
-                    PKR {viewingProductData.unitPrice}
+                    {formatCurrency(viewingProductData.unitPrice)}
                   </p>
                 </div>
               </div>

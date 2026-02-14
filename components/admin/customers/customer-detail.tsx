@@ -40,11 +40,11 @@ import {
   IconChevronRight,
   IconPencil,
   IconCash,
-  IconCopy,
+  IconEye,
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { formatDate } from "@/lib/utils";
+import { formatAmount, formatDate } from "@/lib/utils";
 import { useGetCustomerOrders } from "@/app/api/customers/use-get-customer-orders";
 import { useGetCustomerTransactions } from "@/app/api/customers/use-get-customer-transactions";
 import {
@@ -71,7 +71,6 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   const [transactionPage, setTransactionPage] = React.useState(1);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
-  const [copiedOrderId, setCopiedOrderId] = React.useState<string | null>(null);
   const ordersPerPage = 10;
   const transactionsPerPage = 10;
 
@@ -267,7 +266,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         <Card>
           <CardHeader>
             <CardDescription>Current Balance</CardDescription>
-            <CardTitle className="text-2xl">PKR 0</CardTitle>
+            <CardTitle className="text-2xl">0</CardTitle>
           </CardHeader>
         </Card>
         <Card>
@@ -281,13 +280,13 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         <Card>
           <CardHeader>
             <CardDescription>Total Spent</CardDescription>
-            <CardTitle className="text-2xl">PKR 0</CardTitle>
+            <CardTitle className="text-2xl">0</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader>
             <CardDescription>Total Paid</CardDescription>
-            <CardTitle className="text-2xl">PKR 0</CardTitle>
+            <CardTitle className="text-2xl">0</CardTitle>
           </CardHeader>
         </Card>
       </div>
@@ -321,7 +320,6 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
                   <Table>
                     <TableHeader className="bg-muted">
                       <TableRow>
-                        <TableHead>Order ID</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Amount</TableHead>
                         <TableHead>Status</TableHead>
@@ -333,19 +331,11 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
                         const isPending = order.status === "pending";
                         return (
                           <TableRow key={order._id}>
-                            <TableCell>
-                              <Link
-                                href={`/admin/orders/${order._id}`}
-                                className="font-mono text-xs hover:text-primary hover:underline"
-                              >
-                                {order._id.slice(-8)}
-                              </Link>
-                            </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
                               {formatDate(order.createdAt)}
                             </TableCell>
                             <TableCell className="font-medium">
-                              PKR {order.grandTotal}
+                              {formatAmount(order.grandTotal)}
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
@@ -387,27 +377,17 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className={`h-6 w-6 cursor-pointer ${
-                                        copiedOrderId === order._id
-                                          ? "text-green-600 hover:text-green-700"
-                                          : ""
-                                      }`}
+                                      className="h-6 w-6 cursor-pointer"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        navigator.clipboard.writeText(
-                                          order._id,
-                                        );
-                                        setCopiedOrderId(order._id);
-                                        toast.success("Order ID copied!", {
-                                          description: order._id,
-                                        });
+                                        router.push(`/admin/orders/${order._id}`);
                                       }}
                                     >
-                                      <IconCopy className="h-3 w-3" />
+                                      <IconEye className="h-3 w-3" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>Copy Order ID</p>
+                                    <p>View Order</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -596,6 +576,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
             onSubmit={handleRecordPayment}
             onCancel={() => setIsPaymentDialogOpen(false)}
             isSubmitting={recordPayment.isPending}
+            hideOrderId={true}
           />
         </DialogContent>
       </Dialog>
