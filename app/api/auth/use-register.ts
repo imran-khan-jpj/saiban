@@ -23,7 +23,7 @@ export const useRegister = () => {
   return useMutation<RegisterResponse, Error, RegisterPayload>({
     mutationFn: async (credentials: RegisterPayload) => {
       return await postClient<RegisterResponse>({
-        url: "/auth/register",
+        url: "/api/auth/register",
         body: credentials,
       });
     },
