@@ -182,9 +182,7 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
                   <th className="text-right p-3 text-sm font-medium">
                     Discount
                   </th>
-                  <th className="text-right p-3 text-sm font-medium">
-                    Line Total
-                  </th>
+                  <th className="text-right p-3 text-sm font-medium">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -221,12 +219,7 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
               {formatCurrency(order.discountTotal)}
             </p>
           </div>
-          <div className="flex items-center justify-between">
-            <Label className="text-sm">GST</Label>
-            <p className="text-sm font-medium">
-              {formatCurrency(order.gstTotal)}
-            </p>
-          </div>
+
           <div className="flex items-center justify-between pt-2 border-t">
             <Label className="text-lg font-semibold">Grand Total</Label>
             <p className="text-lg font-bold">

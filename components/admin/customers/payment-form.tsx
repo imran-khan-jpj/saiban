@@ -77,17 +77,6 @@ export function PaymentForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      {!hideOrderId && (
-        <div className="space-y-2">
-          <Label htmlFor="orderId">Order ID (Optional)</Label>
-          <Input
-            id="orderId"
-            placeholder="Enter order ID if payment is for specific order"
-            {...register("orderId")}
-          />
-        </div>
-      )}
-
       <div className="space-y-2">
         <Label htmlFor="amount">Amount *</Label>
         <Input

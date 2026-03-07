@@ -25,6 +25,7 @@ export const useConfirmOrder = () => {
       // Invalidate orders queries to refetch the list
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["order"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
     },
   });
 };

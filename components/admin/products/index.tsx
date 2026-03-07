@@ -5,16 +5,7 @@ import { DataTable } from "@/components/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  IconPlus,
-  IconPencil,
-  IconTrash,
-  IconDotsVertical,
-  IconFilter,
-  IconX,
-  IconEye,
-  IconSearch,
-} from "@tabler/icons-react";
+import { IconPlus, IconFilter, IconX, IconSearch } from "@tabler/icons-react";
 import {
   Dialog,
   DialogContent,
@@ -33,13 +24,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -212,33 +196,29 @@ export function Products({
       id: "actions",
       header: () => <div className="text-right">Actions</div>,
       cell: ({ row }) => (
-        <div className="flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <IconDotsVertical className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleView(row.original._id)}>
-                <IconEye className="mr-2 h-4 w-4" />
-                View
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleEdit(row.original)}>
-                <IconPencil className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => handleDelete(row.original._id)}
-              >
-                <IconTrash className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleView(row.original._id)}
+          >
+            View
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleEdit(row.original)}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="text-white"
+            onClick={() => handleDelete(row.original._id)}
+          >
+            Delete
+          </Button>
         </div>
       ),
     },
@@ -446,7 +426,7 @@ export function Products({
                   <p className="font-medium">{viewingProductData.name}</p>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground">Formulation</Label>
+                  <Label className="text-muted-foreground">Formulation </Label>
                   <Badge variant="outline" className="capitalize">
                     {viewingProductData.formulation}
                   </Badge>
@@ -501,7 +481,10 @@ export function Products({
                     </p>
                     {viewingProductData.quantityInStock <=
                       viewingProductData.lowStockThreshold && (
-                      <Badge variant="destructive" className="text-xs">
+                      <Badge
+                        variant="destructive"
+                        className="text-xs text-white"
+                      >
                         Low Stock
                       </Badge>
                     )}

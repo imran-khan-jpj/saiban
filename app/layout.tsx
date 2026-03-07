@@ -7,6 +7,7 @@ import { QueryProvider } from "@/providers/query-client-provider";
 import { AppProvider } from "@/providers/app-provider";
 import NextTopLoader from "nextjs-toploader";
 import { ToastContainer } from "react-toastify";
+import { Toaster } from "@/components/ui/sonner";
 
 const roboto = Roboto({
   weight: ["100", "300", "400", "500", "700", "900"],
@@ -40,6 +41,7 @@ export default function RootLayout({
         <AppProvider>
           <QueryProvider>
             {children}
+            <Toaster />
             <ToastContainer
               position="top-right"
               autoClose={3000}

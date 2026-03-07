@@ -20,12 +20,8 @@ import {
 // Form validation schema
 const productFormSchema = z.object({
   name: z.string().min(2, "Product name must be at least 2 characters"),
-  shortDescription: z
-    .string()
-    .min(5, "Short description must be at least 5 characters"),
-  descriptionUrdu: z
-    .string()
-    .min(5, "Urdu description must be at least 5 characters"),
+  shortDescription: z.string(),
+  descriptionUrdu: z.string(),
   formulation: z.string().min(1, "Formulation is required"),
   packType: z.string().min(1, "Pack type is required"),
   size: z.number().min(1, "Size must be at least 1"),

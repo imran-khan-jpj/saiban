@@ -28,47 +28,23 @@ export function SectionCards() {
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <SectionCard
         description="Total Products"
-        value={data?.metrics.totalProducts.toString() ?? "0"}
-        badgeText={`${data?.alerts.lowStockProducts.length ?? 0} Low Stock`}
-        badgeVariant="outline"
-        footerTitle="Stock Management"
+        value={totalProducts.toString()}
         href="/admin/products"
       />
       <SectionCard
         description="Total Customers"
-        value={data?.metrics.totalCustomers.toString() ?? "0"}
-        badgeText="Active"
-        badgeVariant="outline"
-        footerTitle="Registered Customers"
+        value={totalCustomers.toString()}
         href="/admin/customers"
       />
 
       <SectionCard
         description="Total Orders"
-        value={data?.metrics.totalOrders.toString() ?? "0"}
-        badgeText={`${data?.alerts.pendingOrders.length ?? 0} Pending`}
-        badgeVariant="outline"
-        footerTitle="Order Management"
+        value={totalOrders.toString()}
         href="/admin/orders"
       />
       <SectionCard
         description="Revenue"
         value={formatCurrency(totalRevenue)}
-        badgeIcon={
-          totalRevenue >= 0 ? <IconTrendingUp /> : <IconTrendingDown />
-        }
-        badgeText={formatCurrency(
-          Math.abs(totalRevenue - (data?.metrics.totalRevenue ?? 0)),
-        )}
-        badgeVariant="outline"
-        footerTitle={`Debit:`}
-        footerIcon={
-          totalRevenue >= 0 ? (
-            <IconTrendingUp className="size-4" />
-          ) : (
-            <IconTrendingDown className="size-4" />
-          )
-        }
         href="/admin/ledgers"
       />
     </div>
