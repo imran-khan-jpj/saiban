@@ -13,7 +13,7 @@ export interface ConfirmOrderResponse {
 
 export const useConfirmOrder = () => {
   const queryClient = useQueryClient();
-  const { customerId } = useParams();
+  const { id } = useParams();
 
   return useMutation<ConfirmOrderResponse, Error, string>({
     mutationFn: async (orderId: string) => {
@@ -28,8 +28,9 @@ export const useConfirmOrder = () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["order"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
-      if (customerId) {
-        queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: ["customer", id] });
+        queryClient.invalidateQueries({ queryKey: ["customer-orders", id] });
       }
     },
   });
