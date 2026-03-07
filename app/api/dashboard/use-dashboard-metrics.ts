@@ -6,16 +6,10 @@ type DashboardMetricsResponse = {
     totalProducts: number;
     totalCustomers: number;
     totalOrders: number;
-    ledger: {
-      totalReceivable: number;
-      totalDebit: number;
-      totalCredit: number;
-    };
+    totalRevenue: number;
   };
   alerts: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     lowStockProducts: any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     pendingOrders: any[];
   };
 };

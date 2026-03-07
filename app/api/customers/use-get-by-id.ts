@@ -13,6 +13,11 @@ export interface Customer {
   createdAt: string;
   updatedAt: string;
   __v: number;
+  balance: {
+    netBalance: number;
+    direction: string;
+    absoluteAmount: number;
+  };
 }
 
 export const useGetCustomerById = (customerId: string) => {

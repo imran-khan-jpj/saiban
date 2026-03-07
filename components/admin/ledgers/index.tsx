@@ -94,6 +94,27 @@ export function Ledgers() {
   // Column definitions
   const columns: ColumnDef<LedgerEntry & { id: string }>[] = [
     {
+      accessorKey: "createdAt",
+      header: "Date",
+      cell: ({ row }) => (
+        <div className="text-muted-foreground">
+          {formatDate(row.original.createdAt)}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "entryType",
+      header: "Type",
+      cell: ({ row }) => getEntryTypeBadge(row.original.entryType),
+    },
+    {
+      accessorKey: "amount",
+      header: "Amount",
+      cell: ({ row }) => (
+        <div className="font-medium">{formatCurrency(row.original.amount)}</div>
+      ),
+    },
+    {
       accessorKey: "customerId",
       header: "Customer",
       cell: ({ row }) => {
@@ -114,28 +135,6 @@ export function Ledgers() {
           </button>
         );
       },
-    },
-
-    {
-      accessorKey: "amount",
-      header: "Balance",
-      cell: ({ row }) => (
-        <div className="font-medium">{formatCurrency(row.original.amount)}</div>
-      ),
-    },
-    {
-      accessorKey: "entryType",
-      header: "Type",
-      cell: ({ row }) => getEntryTypeBadge(row.original.entryType),
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Date",
-      cell: ({ row }) => (
-        <div className="text-muted-foreground">
-          {formatDate(row.original.createdAt)}
-        </div>
-      ),
     },
   ];
 
