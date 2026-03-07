@@ -12,7 +12,7 @@ export interface CancelOrderResponse {
 }
 
 export const useCancelOrder = () => {
-  const { customerId } = useParams();
+  const { id } = useParams();
   const queryClient = useQueryClient();
 
   return useMutation<CancelOrderResponse, Error, string>({
@@ -31,8 +31,9 @@ export const useCancelOrder = () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
 
-      if (customerId) {
-        queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: ["customer", id] });
+        queryClient.invalidateQueries({ queryKey: ["customer-orders", id] });
       }
     },
   });

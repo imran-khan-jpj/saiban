@@ -27,6 +27,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -71,6 +81,12 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   const [transactionPage, setTransactionPage] = React.useState(1);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
+  const [confirmingOrderId, setConfirmingOrderId] = React.useState<
+    string | null
+  >(null);
+  const [cancellingOrderId, setCancellingOrderId] = React.useState<
+    string | null
+  >(null);
   const ordersPerPage = 10;
   const transactionsPerPage = 10;
 
@@ -109,23 +125,45 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   const transactions = transactionsData?.data || [];
 
   const handleConfirm = (orderId: string) => {
-    confirmOrder.mutate(orderId, {
+    setConfirmingOrderId(orderId);
+  };
+
+  const handleConfirmOrder = () => {
+    if (!confirmingOrderId) return;
+
+    confirmOrder.mutate(confirmingOrderId, {
       onSuccess: () => {
         toast.success("Order confirmed successfully");
+        setConfirmingOrderId(null);
+        queryClient.invalidateQueries({
+          queryKey: ["customer-orders", customerId],
+        });
       },
       onError: (error) => {
         toast.error(`Failed to confirm order: ${error.message}`);
+        setConfirmingOrderId(null);
       },
     });
   };
 
   const handleCancel = (orderId: string) => {
-    cancelOrder.mutate(orderId, {
+    setCancellingOrderId(orderId);
+  };
+
+  const handleCancelOrder = () => {
+    if (!cancellingOrderId) return;
+
+    cancelOrder.mutate(cancellingOrderId, {
       onSuccess: () => {
         toast.success("Order cancelled successfully");
+        setCancellingOrderId(null);
+        queryClient.invalidateQueries({
+          queryKey: ["customer-orders", customerId],
+        });
       },
       onError: (error) => {
         toast.error(`Failed to cancel order: ${error.message}`);
+        setCancellingOrderId(null);
       },
     });
   };
@@ -601,6 +639,59 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Order Dialog */}
+      <AlertDialog
+        open={!!confirmingOrderId}
+        onOpenChange={(open) => !open && setConfirmingOrderId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Order?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark the order as confirmed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmingOrderId(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmOrder}
+              className="cursor-pointer"
+            >
+              {confirmOrder.isPending ? "Confirming..." : "Confirm"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel Order Dialog */}
+      <AlertDialog
+        open={!!cancellingOrderId}
+        onOpenChange={(open) => !open && setCancellingOrderId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Order?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently cancel the
+              order.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setCancellingOrderId(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelOrder}
+              className="cursor-pointer bg-destructive text-white hover:bg-destructive/70"
+            >
+              {cancelOrder.isPending ? "Cancelling..." : "Cancel Order"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

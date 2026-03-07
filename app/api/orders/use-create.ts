@@ -41,11 +41,15 @@ export const useCreateOrder = () => {
       });
       return response;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       // Invalidate orders queries to refetch the list
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       // Invalidate products queries to update quantities after order creation
       queryClient.invalidateQueries({ queryKey: ["products"] });
+
+      queryClient.invalidateQueries({
+        queryKey: ["customer-orders", variables.customerId],
+      });
     },
   });
 };
