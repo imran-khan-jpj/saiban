@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { patchClient } from "../api-callers/client";
+import { useParams } from "next/navigation";
 
 export interface CancelOrderResponse {
   data: {
@@ -11,6 +12,7 @@ export interface CancelOrderResponse {
 }
 
 export const useCancelOrder = () => {
+  const { customerId } = useParams();
   const queryClient = useQueryClient();
 
   return useMutation<CancelOrderResponse, Error, string>({
@@ -28,6 +30,10 @@ export const useCancelOrder = () => {
       // Invalidate products queries to update quantities after cancellation
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+
+      if (customerId) {
+        queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+      }
     },
   });
 };

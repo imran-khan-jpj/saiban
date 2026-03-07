@@ -14,3 +14,9 @@ add recored payment button in order table
 on customer details page customer tab should be hilighted
 on order detail order management should be hilighted
 and remove eye icon from the order
+
+
+
+if user confirm/cancel order the invalidate query
+and replace eye icon with details
+add product should open create product form

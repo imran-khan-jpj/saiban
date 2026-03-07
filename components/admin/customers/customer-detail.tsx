@@ -394,9 +394,9 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-6 w-6 cursor-pointer"
+                                      variant="outline"
+                                      className="cursor-pointer"
+                                      size="sm"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         router.push(
@@ -404,7 +404,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
                                         );
                                       }}
                                     >
-                                      <IconEye className="h-3 w-3" />
+                                      Details
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>

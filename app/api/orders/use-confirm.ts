@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { patchClient } from "../api-callers/client";
+import { useParams } from "next/navigation";
 
 export interface ConfirmOrderResponse {
   data: {
@@ -12,6 +13,7 @@ export interface ConfirmOrderResponse {
 
 export const useConfirmOrder = () => {
   const queryClient = useQueryClient();
+  const { customerId } = useParams();
 
   return useMutation<ConfirmOrderResponse, Error, string>({
     mutationFn: async (orderId: string) => {
@@ -26,6 +28,9 @@ export const useConfirmOrder = () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["order"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+      if (customerId) {
+        queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
+      }
     },
   });
 };

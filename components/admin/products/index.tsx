@@ -351,7 +351,7 @@ export function Products({
           </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => setEditingProduct(null)}>
                 <IconPlus className="mr-2 h-4 w-4" />
                 Add Product
               </Button>
