@@ -10,10 +10,10 @@ import {
   IconEye,
   IconCheck,
   IconX as IconCancel,
-  IconDotsVertical,
   IconFilter,
   IconX,
   IconSearch,
+  IconCash,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import {
@@ -44,15 +44,18 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { OrderForm } from "./order-form";
+import { PaymentForm } from "../customers/payment-form";
 import { useGetAllOrders, Order } from "@/app/api/orders/use-get-all";
 import { useGetOrderById } from "@/app/api/orders/use-get-by-id";
 import { useCreateOrder } from "@/app/api/orders/use-create";
 import { useConfirmOrder } from "@/app/api/orders/use-confirm";
 import { useCancelOrder } from "@/app/api/orders/use-cancel";
+import { useRecordPayment } from "@/app/api/customers/use-record-payment";
 import { Spinner } from "@/components/ui/spinner";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Re-export Order type
 export type { Order };
@@ -70,6 +73,7 @@ export function Orders({
   statusFilter,
   onStatusFilterChange,
 }: OrdersProps) {
+  const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const [viewingOrderId, setViewingOrderId] = React.useState<string | null>(
     null,
@@ -78,6 +82,12 @@ export function Orders({
     string | null
   >(null);
   const [cancellingOrderId, setCancellingOrderId] = React.useState<
+    string | null
+  >(null);
+  const [paymentOrderId, setPaymentOrderId] = React.useState<string | null>(
+    null,
+  );
+  const [paymentCustomerId, setPaymentCustomerId] = React.useState<
     string | null
   >(null);
   const [pagination, setPagination] = React.useState({
@@ -114,6 +124,7 @@ export function Orders({
   const createOrder = useCreateOrder();
   const confirmOrder = useConfirmOrder();
   const cancelOrder = useCancelOrder();
+  const recordPayment = useRecordPayment();
 
   // Fetch single order for viewing
   const {
@@ -235,15 +246,24 @@ export function Orders({
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-1">
+          <Button
+            // variant="outline"
+            size="sm"
+            className="cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRecordPaymentClick(
+                row.original._id,
+                row.original.customerId._id,
+              );
+            }}
+          >
+            Record Payment
+          </Button>
           <Link href={`/admin/orders/${row.original._id}`}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 cursor-pointer"
-              title="View order details"
-            >
-              <IconEye className="h-4 w-4" />
+            <Button size="sm" variant="outline" className="cursor-pointer">
+              Details
             </Button>
           </Link>
         </div>
@@ -316,6 +336,43 @@ export function Orders({
 
   const handleDialogClose = () => {
     setIsAddDialogOpen(false);
+  };
+
+  const handleRecordPaymentClick = (orderId: string, customerId: string) => {
+    setPaymentOrderId(orderId);
+    setPaymentCustomerId(customerId);
+  };
+
+  const handleRecordPayment = (data: {
+    orderId?: string;
+    amount: number;
+    paymentMethod: string;
+    reference: string;
+    note: string;
+  }) => {
+    if (!paymentCustomerId || !paymentOrderId) return;
+
+    recordPayment.mutate(
+      {
+        customerId: paymentCustomerId,
+        orderId: paymentOrderId,
+        amount: data.amount,
+        paymentMethod: data.paymentMethod,
+        reference: data.reference,
+        note: data.note,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Payment recorded successfully");
+          setPaymentOrderId(null);
+          setPaymentCustomerId(null);
+          queryClient.invalidateQueries({ queryKey: ["orders"] });
+        },
+        onError: (error) => {
+          toast.error(`Failed to record payment: ${error.message}`);
+        },
+      },
+    );
   };
 
   if (isLoading) {
@@ -613,6 +670,35 @@ export function Orders({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Record Payment Dialog */}
+      <Dialog
+        open={!!paymentOrderId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPaymentOrderId(null);
+            setPaymentCustomerId(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record Payment</DialogTitle>
+            <DialogDescription>
+              Record a payment for this order
+            </DialogDescription>
+          </DialogHeader>
+          <PaymentForm
+            onSubmit={handleRecordPayment}
+            onCancel={() => {
+              setPaymentOrderId(null);
+              setPaymentCustomerId(null);
+            }}
+            isSubmitting={recordPayment.isPending}
+            defaultOrderId={paymentOrderId || undefined}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

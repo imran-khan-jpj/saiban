@@ -1,4 +1,16 @@
-in customers/id page
-show 2 more cars 
- 1. for last order
- 2. pending orders
+pending
+
+
+
+in progress
+
+done
+order id page shoe current balance settled
+on order confirm invalidate dashbord api
+remove GST from order detals page
+update current balance 
+hide order id field while record paymnet modal in the order detail page
+add recored payment button in order table
+on customer details page customer tab should be hilighted
+on order detail order management should be hilighted
+and remove eye icon from the order

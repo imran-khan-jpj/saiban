@@ -44,7 +44,7 @@ import {
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { formatAmount, formatDate } from "@/lib/utils";
+import { formatAmount, formatCurrency, formatDate } from "@/lib/utils";
 import { useGetCustomerOrders } from "@/app/api/customers/use-get-customer-orders";
 import { useGetCustomerTransactions } from "@/app/api/customers/use-get-customer-transactions";
 import {
@@ -217,11 +217,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
       {/* Header with back button and edit */}
       <div className="flex items-center justify-between gap-4 px-4">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/admin/customers")}
-          >
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <IconArrowLeft className="h-5 w-5" />
           </Button>
           <div>
@@ -266,7 +262,24 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         <Card>
           <CardHeader>
             <CardDescription>Current Balance</CardDescription>
-            <CardTitle className="text-2xl">0</CardTitle>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              {formatCurrency(customer.balance.absoluteAmount)}
+              {customer.balance.direction === "settled" && (
+                <Badge className="bg-gray-500 hover:bg-gray-500 text-white">
+                  Settled
+                </Badge>
+              )}
+              {customer.balance.direction === "we_owe_customer" && (
+                <Badge className="bg-green-600 hover:bg-green-600 text-white">
+                  Advance
+                </Badge>
+              )}
+              {customer.balance.direction === "customer_owes" && (
+                <Badge className="bg-red-600 text-white hover:bg-red-600">
+                  Pending payment
+                </Badge>
+              )}
+            </CardTitle>
           </CardHeader>
         </Card>
         <Card>

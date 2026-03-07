@@ -27,6 +27,7 @@ export const useCancelOrder = () => {
       queryClient.invalidateQueries({ queryKey: ["order"] });
       // Invalidate products queries to update quantities after cancellation
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
     },
   });
 };

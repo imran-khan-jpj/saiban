@@ -8,7 +8,7 @@ import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { useRegister } from "@/app/api/auth/use-register";
 import { Input } from "@/components/ui/input";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { setAuthToken } from "@/lib/cookies";
 import { useApp } from "@/providers/app-provider";
 import Link from "next/link";

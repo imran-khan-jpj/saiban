@@ -32,8 +32,10 @@ export const postClient = async <T>({
       credentials: "include",
       body: body instanceof FormData ? body : JSON.stringify(body),
     });
+
     if (!response.ok) {
       const res = await response.json();
+      console.error("Error response:", res);
       throw new Error(res?.message ?? res?.error ?? DEFAULTS.ERROR_MESSAGE);
     }
 

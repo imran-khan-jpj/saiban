@@ -9,7 +9,7 @@ import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { useLogin } from "@/app/api/auth/use-login";
 import { Input } from "@/components/ui/input";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { setAuthToken } from "@/lib/cookies";
 import { useApp } from "@/providers/app-provider";
 
