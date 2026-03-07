@@ -19,10 +19,10 @@ export function SectionCards() {
     );
   }
 
-  const totalReceivable = data?.metrics.ledger.totalReceivable ?? 0;
-  const totalDebit = data?.metrics.ledger.totalDebit ?? 0;
-  const totalCredit = data?.metrics.ledger.totalCredit ?? 0;
-  const balance = totalDebit - totalCredit;
+  const totalProducts = data?.metrics.totalProducts ?? 0;
+  const totalCustomers = data?.metrics.totalCustomers ?? 0;
+  const totalOrders = data?.metrics.totalOrders ?? 0;
+  const totalRevenue = data?.metrics.totalRevenue ?? 0;
 
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
@@ -53,13 +53,17 @@ export function SectionCards() {
       />
       <SectionCard
         description="Revenue"
-        value={formatCurrency(balance)}
-        badgeIcon={balance >= 0 ? <IconTrendingUp /> : <IconTrendingDown />}
-        badgeText={formatCurrency(Math.abs(totalReceivable))}
+        value={formatCurrency(totalRevenue)}
+        badgeIcon={
+          totalRevenue >= 0 ? <IconTrendingUp /> : <IconTrendingDown />
+        }
+        badgeText={formatCurrency(
+          Math.abs(totalRevenue - (data?.metrics.totalRevenue ?? 0)),
+        )}
         badgeVariant="outline"
-        footerTitle={`Debit: ${formatCurrency(totalDebit)} | Credit: ${formatCurrency(totalCredit)}`}
+        footerTitle={`Debit:`}
         footerIcon={
-          balance >= 0 ? (
+          totalRevenue >= 0 ? (
             <IconTrendingUp className="size-4" />
           ) : (
             <IconTrendingDown className="size-4" />

@@ -131,7 +131,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   };
 
   const handleUpdateCustomer = (
-    data: Omit<Customer, "_id" | "createdAt" | "updatedAt" | "__v">,
+    data: Omit<Customer, "_id" | "createdAt" | "updatedAt" | "__v" | "balance">,
   ) => {
     updateCustomer.mutate(
       { customerId, data },
@@ -279,14 +279,20 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         </Card>
         <Card>
           <CardHeader>
-            <CardDescription>Total Spent</CardDescription>
-            <CardTitle className="text-2xl">0</CardTitle>
+            <CardDescription>Last Order</CardDescription>
+            <CardTitle className="text-xl">
+              {orders.length > 0
+                ? formatDate(orders[0].createdAt)
+                : "No orders"}
+            </CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader>
-            <CardDescription>Total Paid</CardDescription>
-            <CardTitle className="text-2xl">0</CardTitle>
+            <CardDescription>Pending Orders</CardDescription>
+            <CardTitle className="text-2xl">
+              {orders.filter((order) => order.status === "pending").length}
+            </CardTitle>
           </CardHeader>
         </Card>
       </div>
