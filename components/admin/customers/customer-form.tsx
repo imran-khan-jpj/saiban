@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -10,24 +9,76 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Customer } from "@/app/api/customers/use-get-all";
 
-// Form validation schema
 const customerFormSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
+  lastName: z
+    .string()
+    .refine(
+      (value) => value.trim() === "" || value.trim().length >= 2,
+      "Last name must be at least 2 characters",
+    ),
+  email: z
+    .string()
+    .refine(
+      (value) =>
+        value.trim() === "" || z.string().email().safeParse(value).success,
+      "Invalid email address",
+    ),
   phoneNumber: z
     .string()
-    .min(10, "Phone number must be at least 10 characters"),
-  streetAddress: z.string().min(5, "Address must be at least 5 characters"),
-  city: z.string().min(2, "City must be at least 2 characters"),
-  state: z.string().min(2, "State must be at least 2 characters"),
+    .refine(
+      (value) => value.trim() === "" || value.trim().length >= 10,
+      "Phone number must be at least 10 characters",
+    ),
+  streetAddress: z
+    .string()
+    .refine(
+      (value) => value.trim() === "" || value.trim().length >= 5,
+      "Address must be at least 5 characters",
+    ),
+  city: z
+    .string()
+    .refine(
+      (value) => value.trim() === "" || value.trim().length >= 2,
+      "City must be at least 2 characters",
+    ),
+  state: z
+    .string()
+    .refine(
+      (value) => value.trim() === "" || value.trim().length >= 2,
+      "State must be at least 2 characters",
+    ),
 });
 
 type CustomerFormValues = z.infer<typeof customerFormSchema>;
 
+type CustomerFormPayload = { firstName: string } & Partial<
+  Omit<CustomerFormValues, "firstName">
+>;
+
+function stripEmptyFields(data: CustomerFormValues): CustomerFormPayload {
+  const result: Partial<CustomerFormValues> = { firstName: data.firstName };
+  const optional = [
+    "lastName",
+    "email",
+    "phoneNumber",
+    "streetAddress",
+    "city",
+    "state",
+  ] as const;
+  for (const key of optional) {
+    if (data[key] !== undefined && data[key].trim() !== "") {
+      result[key] = data[key];
+    }
+  }
+  return result as CustomerFormPayload;
+}
+
+export type { CustomerFormPayload };
+
 interface CustomerFormProps {
   customer?: Customer | null;
-  onSubmit: (data: CustomerFormValues) => void;
+  onSubmit: (data: CustomerFormPayload) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
 }
@@ -67,7 +118,7 @@ export function CustomerForm({
   });
 
   const handleFormSubmit = (data: CustomerFormValues) => {
-    onSubmit(data);
+    onSubmit(stripEmptyFields(data));
     reset();
   };
 
