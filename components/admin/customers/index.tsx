@@ -23,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CustomerForm } from "./customer-form";
+import { CustomerForm, type CustomerFormPayload } from "./customer-form";
 import { useGetAllCustomers, Customer } from "@/app/api/customers/use-get-all";
 import { useCreateCustomer } from "@/app/api/customers/use-create";
 import { useUpdateCustomer } from "@/app/api/customers/use-update";
@@ -140,9 +140,7 @@ export function Customers() {
     },
   ];
 
-  const handleAddCustomer = (
-    data: Omit<Customer, "_id" | "createdAt" | "updatedAt">,
-  ) => {
+  const handleAddCustomer = (data: CustomerFormPayload) => {
     createCustomer.mutate(data, {
       onSuccess: () => {
         toast.success("Customer created successfully");
@@ -159,9 +157,7 @@ export function Customers() {
     setIsAddDialogOpen(true);
   };
 
-  const handleUpdateCustomer = (
-    data: Omit<Customer, "_id" | "createdAt" | "updatedAt">,
-  ) => {
+  const handleUpdateCustomer = (data: CustomerFormPayload) => {
     if (!editingCustomer) return;
 
     updateCustomer.mutate(
