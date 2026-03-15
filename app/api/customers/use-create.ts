@@ -3,12 +3,12 @@ import { postClient } from "../api-callers/client";
 
 export interface CreateCustomerPayload {
   firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  email: string;
-  streetAddress: string;
-  city: string;
-  state: string;
+  lastName?: string;
+  phoneNumber?: string;
+  email?: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
 }
 
 export interface CreateCustomerResponse {
