@@ -21,15 +21,7 @@ import {
 const paymentFormSchema = z.object({
   orderId: z.string().optional(),
   amount: z.number().min(1, "Amount must be at least 1"),
-  paymentMethod: z.enum([
-    "on_account",
-    "cash",
-    "jazzcash",
-    "bank_transfer",
-    "card",
-    "other",
-  ]),
-  reference: z.string(),
+  paymentMethod: z.enum(["cash", "jazzcash", "easypaisa", "bank_transfer"]),
   note: z.string(),
 });
 
@@ -63,7 +55,6 @@ export function PaymentForm({
       orderId: defaultOrderId,
       amount: 0,
       paymentMethod: "cash",
-      reference: "",
       note: "",
     },
   });
@@ -107,27 +98,14 @@ export function PaymentForm({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="cash">Cash</SelectItem>
-            <SelectItem value="on_account">On Account</SelectItem>
             <SelectItem value="jazzcash">JazzCash</SelectItem>
+            <SelectItem value="easypaisa">EasyPaisa</SelectItem>
             <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-            <SelectItem value="card">Card</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
           </SelectContent>
         </Select>
         {errors.paymentMethod && (
           <p className="text-sm text-red-500">{errors.paymentMethod.message}</p>
         )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="reference">Reference</Label>
-        <Input
-          id="reference"
-          placeholder="CASH-001"
-          error={!!errors.reference}
-          errorMessage={errors.reference?.message}
-          {...register("reference")}
-        />
       </div>
 
       <div className="space-y-2">

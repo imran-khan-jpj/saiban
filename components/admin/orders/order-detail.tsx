@@ -43,7 +43,6 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
-  const [copiedOrderId, setCopiedOrderId] = React.useState(false);
   const { data: order, isLoading, isError } = useGetOrderById(orderId);
   const recordPayment = useRecordPayment();
 
@@ -51,7 +50,6 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
     orderId?: string;
     amount: number;
     paymentMethod: string;
-    reference: string;
     note: string;
   }) => {
     if (!order) return;
@@ -61,7 +59,6 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
         orderId: orderId,
         amount: data.amount,
         paymentMethod: data.paymentMethod,
-        reference: data.reference,
         note: data.note,
       },
       {

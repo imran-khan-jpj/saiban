@@ -12,6 +12,9 @@ export interface Product {
   unitPrice: number;
   lowStockThreshold: number;
   quantityInStock: number;
+  batchNo?: string;
+  expiry?: string;
+  mfg?: string;
   createdAt: string;
   updatedAt: string;
   __v: number;

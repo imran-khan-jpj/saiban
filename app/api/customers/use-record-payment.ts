@@ -8,7 +8,6 @@ interface RecordPaymentData {
   orderId?: string;
   amount: number;
   paymentMethod: string;
-  reference: string;
   note: string;
 }
 
@@ -17,7 +16,6 @@ interface PaymentResponse {
   orderId: string | null;
   amount: number;
   paymentMethod: string;
-  reference: string;
   note: string;
   _id: string;
   createdAt: string;

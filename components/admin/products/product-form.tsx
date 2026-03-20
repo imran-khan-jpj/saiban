@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Product } from "@/app/api/products/use-get-all";
+import { MonthYearPicker } from "@/components/ui/month-year-picker";
 import {
   Select,
   SelectContent,
@@ -24,19 +25,36 @@ const productFormSchema = z.object({
   descriptionUrdu: z.string(),
   formulation: z.string().min(1, "Formulation is required"),
   packType: z.string().min(1, "Pack type is required"),
-  size: z.number().min(1, "Size must be at least 1"),
-  unitPrice: z.number().min(1, "Unit price must be at least 1"),
-  lowStockThreshold: z
-    .number()
-    .min(0, "Low stock threshold must be at least 0"),
-  quantityInStock: z.number().min(0, "Quantity in stock must be at least 0"),
+  size: z.string().min(1, "Size is required"),
+  unitPrice: z.string().min(1, "Unit price is required"),
+  lowStockThreshold: z.string().min(1, "Low stock threshold is required"),
+  quantityInStock: z.string().min(1, "Quantity in stock is required"),
+  batchNo: z.string().optional(),
+  expiry: z.string().optional(),
+  mfg: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
 
+// Type for the transformed data with numbers
+type ProductFormOutput = {
+  name: string;
+  shortDescription: string;
+  descriptionUrdu: string;
+  formulation: string;
+  packType: string;
+  size: number;
+  unitPrice: number;
+  lowStockThreshold: number;
+  quantityInStock: number;
+  batchNo?: string;
+  expiry?: string;
+  mfg?: string;
+};
+
 interface ProductFormProps {
   product?: Product | null;
-  onSubmit: (data: ProductFormValues) => void;
+  onSubmit: (data: ProductFormOutput) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
 }
@@ -63,10 +81,13 @@ export function ProductForm({
           descriptionUrdu: product.descriptionUrdu,
           formulation: product.formulation,
           packType: product.packType,
-          size: product.size,
-          unitPrice: product.unitPrice,
-          lowStockThreshold: product.lowStockThreshold,
-          quantityInStock: product.quantityInStock,
+          size: String(product.size),
+          unitPrice: String(product.unitPrice),
+          lowStockThreshold: String(product.lowStockThreshold),
+          quantityInStock: String(product.quantityInStock),
+          batchNo: product.batchNo || "",
+          expiry: product.expiry || "",
+          mfg: product.mfg || "",
         }
       : {
           name: "",
@@ -74,18 +95,31 @@ export function ProductForm({
           descriptionUrdu: "",
           formulation: "",
           packType: "",
-          size: 0,
-          unitPrice: 0,
-          lowStockThreshold: 0,
-          quantityInStock: 0,
+          size: "",
+          unitPrice: "",
+          lowStockThreshold: "",
+          quantityInStock: "",
+          batchNo: "",
+          expiry: "",
+          mfg: "",
         },
   });
 
   const formulation = watch("formulation");
   const packType = watch("packType");
+  const mfgValue = watch("mfg");
+  const expiryValue = watch("expiry");
 
   const handleFormSubmit = (data: ProductFormValues) => {
-    onSubmit(data);
+    // Convert string values to numbers before submitting
+    const outputData: ProductFormOutput = {
+      ...data,
+      size: Number(data.size),
+      unitPrice: Number(data.unitPrice),
+      lowStockThreshold: Number(data.lowStockThreshold),
+      quantityInStock: Number(data.quantityInStock),
+    };
+    onSubmit(outputData);
     reset();
   };
 
@@ -182,11 +216,17 @@ export function ProductForm({
           <Label htmlFor="size">Size</Label>
           <Input
             id="size"
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="120"
             error={!!errors.size}
             errorMessage={errors.size?.message}
-            {...register("size", { valueAsNumber: true })}
+            {...register("size", {
+              onChange: (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+              },
+            })}
           />
         </div>
 
@@ -194,11 +234,19 @@ export function ProductForm({
           <Label htmlFor="unitPrice">Unit Price (PKR)</Label>
           <Input
             id="unitPrice"
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*\.?[0-9]*"
             placeholder="250"
             error={!!errors.unitPrice}
             errorMessage={errors.unitPrice?.message}
-            {...register("unitPrice", { valueAsNumber: true })}
+            {...register("unitPrice", {
+              onChange: (e) => {
+                e.target.value = e.target.value
+                  .replace(/[^0-9.]/g, "")
+                  .replace(/(\..*)\./g, "$1");
+              },
+            })}
           />
         </div>
       </div>
@@ -208,11 +256,17 @@ export function ProductForm({
           <Label htmlFor="lowStockThreshold">Low Stock Threshold</Label>
           <Input
             id="lowStockThreshold"
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="20"
             error={!!errors.lowStockThreshold}
             errorMessage={errors.lowStockThreshold?.message}
-            {...register("lowStockThreshold", { valueAsNumber: true })}
+            {...register("lowStockThreshold", {
+              onChange: (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+              },
+            })}
           />
         </div>
 
@@ -220,12 +274,57 @@ export function ProductForm({
           <Label htmlFor="quantityInStock">Quantity in Stock</Label>
           <Input
             id="quantityInStock"
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="100"
             error={!!errors.quantityInStock}
             errorMessage={errors.quantityInStock?.message}
-            {...register("quantityInStock", { valueAsNumber: true })}
+            {...register("quantityInStock", {
+              onChange: (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+              },
+            })}
           />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="batchNo">Batch No</Label>
+          <Input
+            id="batchNo"
+            placeholder="AL-5433"
+            error={!!errors.batchNo}
+            errorMessage={errors.batchNo?.message}
+            {...register("batchNo")}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="mfg">Mfg. Date</Label>
+          <MonthYearPicker
+            value={mfgValue}
+            onChange={(value) => setValue("mfg", value)}
+            placeholder="Select month/year"
+            className="w-full"
+          />
+          {errors.mfg && (
+            <p className="text-sm text-red-500">{errors.mfg.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="expiry">Expiry Date</Label>
+          <MonthYearPicker
+            value={expiryValue}
+            onChange={(value) => setValue("expiry", value)}
+            placeholder="Select month/year"
+            className="w-full"
+          />
+          {errors.expiry && (
+            <p className="text-sm text-red-500">{errors.expiry.message}</p>
+          )}
         </div>
       </div>
 
