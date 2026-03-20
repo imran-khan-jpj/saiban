@@ -8,7 +8,6 @@ export interface CreateOrderPayload {
     quantity: number;
     discountPercentage: number;
   }>;
-  paymentMethod: string;
   note: string;
 }
 
