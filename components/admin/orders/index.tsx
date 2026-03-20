@@ -278,7 +278,6 @@ export function Orders({
       quantity: number;
       discountPercentage: number;
     }>;
-    paymentMethod: string;
     note: string;
   }) => {
     createOrder.mutate(data, {
@@ -347,7 +346,6 @@ export function Orders({
     orderId?: string;
     amount: number;
     paymentMethod: string;
-    reference: string;
     note: string;
   }) => {
     if (!paymentCustomerId || !paymentOrderId) return;
@@ -358,7 +356,6 @@ export function Orders({
         orderId: paymentOrderId,
         amount: data.amount,
         paymentMethod: data.paymentMethod,
-        reference: data.reference,
         note: data.note,
       },
       {

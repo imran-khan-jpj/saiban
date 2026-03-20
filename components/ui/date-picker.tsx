@@ -15,6 +15,7 @@ interface DatePickerProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  formatString?: string;
 }
 
 export function DatePicker({
@@ -23,6 +24,7 @@ export function DatePicker({
   placeholder = "Pick a date",
   className,
   disabled,
+  formatString = "dd-MMM-yyyy",
 }: DatePickerProps) {
   return (
     <Popover>
@@ -36,7 +38,7 @@ export function DatePicker({
           )}
           disabled={disabled}
         >
-          {date ? format(date, "dd-MMM-yyyy") : <span>{placeholder}</span>}
+          {date ? format(date, formatString) : <span>{placeholder}</span>}
           <ChevronDownIcon className="h-4 w-4" />
         </Button>
       </PopoverTrigger>

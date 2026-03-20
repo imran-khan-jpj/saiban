@@ -190,7 +190,6 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
     orderId?: string;
     amount: number;
     paymentMethod: string;
-    reference: string;
     note: string;
   }) => {
     recordPayment.mutate(
@@ -199,7 +198,6 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         orderId: data.orderId || undefined,
         amount: data.amount,
         paymentMethod: data.paymentMethod,
-        reference: data.reference,
         note: data.note,
       },
       {

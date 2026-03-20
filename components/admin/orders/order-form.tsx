@@ -42,7 +42,6 @@ import { formatCurrency } from "@/lib/utils";
 // Form validation schema
 const orderFormSchema = z.object({
   customer: z.string().min(1, "Customer is required"),
-  paymentMethod: z.enum(["cash", "on_account", "card"] as const),
   note: z.string().optional(),
   items: z
     .array(
@@ -66,7 +65,6 @@ interface OrderFormProps {
       quantity: number;
       discountPercentage: number;
     }>;
-    paymentMethod: string;
     note: string;
   }) => void;
   onCancel: () => void;
@@ -86,12 +84,10 @@ export function OrderForm({
     setValue,
     watch,
     control,
-    trigger,
   } = useForm<OrderFormValues>({
     resolver: zodResolver(orderFormSchema),
     defaultValues: {
       customer: "",
-      paymentMethod: "cash",
       note: "",
       items: [{ product: "", quantity: 1, price: 0, discountPercentage: 0 }],
     },
@@ -104,7 +100,6 @@ export function OrderForm({
 
   const items = watch("items");
   const selectedCustomer = watch("customer");
-  const selectedPaymentMethod = watch("paymentMethod");
   const [customerOpen, setCustomerOpen] = React.useState(false);
   const [productOpenStates, setProductOpenStates] = React.useState<
     Record<number, boolean>
@@ -175,7 +170,6 @@ export function OrderForm({
         quantity: item.quantity,
         discountPercentage: item.discountPercentage,
       })),
-      paymentMethod: data.paymentMethod,
       note: data.note || "",
     };
     onSubmit(payload as any);
@@ -235,29 +229,6 @@ export function OrderForm({
         </Popover>
         {errors.customer && (
           <p className="text-sm text-red-500">{errors.customer.message}</p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="paymentMethod">Payment Method</Label>
-        <Select
-          value={selectedPaymentMethod}
-          onValueChange={(value) => setValue("paymentMethod", value as any)}
-        >
-          <SelectTrigger
-            id="paymentMethod"
-            className={errors.paymentMethod ? "border-red-500" : ""}
-          >
-            <SelectValue placeholder="Select payment method" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="cash">Cash</SelectItem>
-            <SelectItem value="on_account">On Account</SelectItem>
-            <SelectItem value="card">Card</SelectItem>
-          </SelectContent>
-        </Select>
-        {errors.paymentMethod && (
-          <p className="text-sm text-red-500">{errors.paymentMethod.message}</p>
         )}
       </div>
 
