@@ -8,6 +8,7 @@ export interface Order {
     firstName: string;
     lastName: string;
     email: string;
+    phoneNumber?: string;
   };
   items: Array<{
     productId: {
