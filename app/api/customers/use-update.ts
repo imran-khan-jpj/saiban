@@ -2,13 +2,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { patchClient } from "../api-callers/client";
 
 export interface UpdateCustomerPayload {
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  email: string;
-  streetAddress: string;
-  city: string;
-  state: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  email?: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
 }
 
 export interface UpdateCustomerResponse {

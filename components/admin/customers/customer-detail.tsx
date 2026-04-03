@@ -50,10 +50,8 @@ import {
   IconChevronRight,
   IconPencil,
   IconCash,
-  IconEye,
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { formatAmount, formatCurrency, formatDate } from "@/lib/utils";
 import { useGetCustomerOrders } from "@/app/api/customers/use-get-customer-orders";
 import { useGetCustomerTransactions } from "@/app/api/customers/use-get-customer-transactions";
@@ -66,7 +64,7 @@ import { useRecordPayment } from "@/app/api/customers/use-record-payment";
 import { useBalanceAdjustment } from "@/app/api/customers/use-balance-adjustment";
 import { useConfirmOrder } from "@/app/api/orders/use-confirm";
 import { useCancelOrder } from "@/app/api/orders/use-cancel";
-import { CustomerForm } from "./customer-form";
+import { CustomerForm, type CustomerFormPayload } from "./customer-form";
 import { PaymentForm } from "./payment-form";
 import { BalanceAdjustmentForm } from "./balance-adjustment-form";
 import { toast } from "sonner";
@@ -173,9 +171,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
     });
   };
 
-  const handleUpdateCustomer = (
-    data: Omit<Customer, "_id" | "createdAt" | "updatedAt" | "__v" | "balance">,
-  ) => {
+  const handleUpdateCustomer = (data: CustomerFormPayload) => {
     updateCustomer.mutate(
       { customerId, data },
       {

@@ -18,11 +18,21 @@ import {
 } from "@/components/ui/select";
 import { Customer } from "@/app/api/customers/use-get-all";
 
-// Form validation schema
 const customerFormSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
+  lastName: z
+    .string()
+    .refine(
+      (value) => value.trim() === "" || value.trim().length >= 2,
+      "Last name must be at least 2 characters",
+    ),
+  email: z
+    .string()
+    .refine(
+      (value) =>
+        value.trim() === "" || z.string().email().safeParse(value).success,
+      "Invalid email address",
+    ),
   phoneNumber: z
     .string()
     .min(10, "Phone number must be at least 10 characters"),
@@ -40,9 +50,33 @@ const customerFormSchema = z.object({
 
 type CustomerFormValues = z.infer<typeof customerFormSchema>;
 
+type CustomerFormPayload = { firstName: string } & Partial<
+  Omit<CustomerFormValues, "firstName">
+>;
+
+function stripEmptyFields(data: CustomerFormValues): CustomerFormPayload {
+  const result: Partial<CustomerFormValues> = { firstName: data.firstName };
+  const optional = [
+    "lastName",
+    "email",
+    "phoneNumber",
+    "streetAddress",
+    "city",
+    "state",
+  ] as const;
+  for (const key of optional) {
+    if (data[key] !== undefined && data[key].trim() !== "") {
+      result[key] = data[key];
+    }
+  }
+  return result as CustomerFormPayload;
+}
+
+export type { CustomerFormPayload };
+
 interface CustomerFormProps {
   customer?: Customer | null;
-  onSubmit: (data: CustomerFormValues) => void;
+  onSubmit: (data: CustomerFormPayload) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
 }
