@@ -19,20 +19,34 @@ import {
 } from "@/components/ui/select";
 
 // Form validation schema
-const productFormSchema = z.object({
-  name: z.string().min(2, "Product name must be at least 2 characters"),
-  shortDescription: z.string(),
-  descriptionUrdu: z.string(),
-  formulation: z.string().min(1, "Formulation is required"),
-  packType: z.string().min(1, "Pack type is required"),
-  size: z.string().min(1, "Size is required"),
-  unitPrice: z.string().min(1, "Unit price is required"),
-  lowStockThreshold: z.string().min(1, "Low stock threshold is required"),
-  quantityInStock: z.string().min(1, "Quantity in stock is required"),
-  batchNo: z.string().optional(),
-  expiry: z.string().optional(),
-  mfg: z.string().optional(),
-});
+const productFormSchema = z
+  .object({
+    name: z.string().min(2, "Product name must be at least 2 characters"),
+    shortDescription: z.string(),
+    descriptionUrdu: z.string(),
+    formulation: z.string().min(1, "Formulation is required"),
+    packType: z.string().min(1, "Pack type is required"),
+    customPackType: z.string().optional(),
+    size: z.string().min(1, "Size is required"),
+    unitPrice: z.string().min(1, "Unit price is required"),
+    lowStockThreshold: z.string().min(1, "Low stock threshold is required"),
+    quantityInStock: z.string().min(1, "Quantity in stock is required"),
+    batchNo: z.string().optional(),
+    expiry: z.string().optional(),
+    mfg: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.packType === "other") {
+        return data.customPackType && data.customPackType.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Custom pack type is required",
+      path: ["customPackType"],
+    },
+  );
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
 
@@ -81,6 +95,7 @@ export function ProductForm({
           descriptionUrdu: product.descriptionUrdu,
           formulation: product.formulation,
           packType: product.packType,
+          customPackType: (product as any).customPackType || "",
           size: String(product.size),
           unitPrice: String(product.unitPrice),
           lowStockThreshold: String(product.lowStockThreshold),
@@ -95,6 +110,7 @@ export function ProductForm({
           descriptionUrdu: "",
           formulation: "",
           packType: "",
+          customPackType: "",
           size: "",
           unitPrice: "",
           lowStockThreshold: "",
@@ -112,12 +128,25 @@ export function ProductForm({
 
   const handleFormSubmit = (data: ProductFormValues) => {
     // Convert string values to numbers before submitting
+    // If packType is "other", replace it with the customPackType value
+    const finalPackType =
+      data.packType === "other" && data.customPackType
+        ? data.customPackType
+        : data.packType;
+
     const outputData: ProductFormOutput = {
-      ...data,
+      name: data.name,
+      shortDescription: data.shortDescription,
+      descriptionUrdu: data.descriptionUrdu,
+      formulation: data.formulation,
+      packType: finalPackType,
       size: Number(data.size),
       unitPrice: Number(data.unitPrice),
       lowStockThreshold: Number(data.lowStockThreshold),
       quantityInStock: Number(data.quantityInStock),
+      batchNo: data.batchNo,
+      expiry: data.expiry,
+      mfg: data.mfg,
     };
     onSubmit(outputData);
     reset();
@@ -160,7 +189,7 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 relative">
         <div className="space-y-2">
           <Label htmlFor="formulation">Formulation</Label>
           <Select
@@ -202,6 +231,7 @@ export function ProductForm({
             <SelectContent>
               <SelectItem value="tabs">Tabs</SelectItem>
               <SelectItem value="ml">ml</SelectItem>
+              <SelectItem value="gram">Gram</SelectItem>
               <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>
@@ -209,6 +239,18 @@ export function ProductForm({
             <p className="text-sm text-red-500">{errors.packType.message}</p>
           )}
         </div>
+        {packType === "other" && (
+          <div className="space-y-2 absolute right-0 top-16 w-[48.3%]">
+            <Input
+              id="customPackType"
+              className="max-h-8"
+              placeholder="Enter custom pack type"
+              error={!!errors.customPackType}
+              errorMessage={errors.customPackType?.message}
+              {...register("customPackType")}
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">

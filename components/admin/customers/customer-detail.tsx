@@ -61,10 +61,12 @@ import {
 } from "@/app/api/customers/use-get-by-id";
 import { useUpdateCustomer } from "@/app/api/customers/use-update";
 import { useRecordPayment } from "@/app/api/customers/use-record-payment";
+import { useBalanceAdjustment } from "@/app/api/customers/use-balance-adjustment";
 import { useConfirmOrder } from "@/app/api/orders/use-confirm";
 import { useCancelOrder } from "@/app/api/orders/use-cancel";
 import { CustomerForm, type CustomerFormPayload } from "./customer-form";
 import { PaymentForm } from "./payment-form";
+import { BalanceAdjustmentForm } from "./balance-adjustment-form";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -79,6 +81,8 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   const [transactionPage, setTransactionPage] = React.useState(1);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
+  const [isBalanceAdjustmentDialogOpen, setIsBalanceAdjustmentDialogOpen] =
+    React.useState(false);
   const [confirmingOrderId, setConfirmingOrderId] = React.useState<
     string | null
   >(null);
@@ -118,6 +122,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   const cancelOrder = useCancelOrder();
   const updateCustomer = useUpdateCustomer();
   const recordPayment = useRecordPayment();
+  const balanceAdjustment = useBalanceAdjustment();
 
   const orders = ordersData?.data || [];
   const transactions = transactionsData?.data || [];
@@ -201,11 +206,36 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
           toast.success("Payment recorded successfully");
           setIsPaymentDialogOpen(false);
           queryClient.invalidateQueries({
+            queryKey: ["customer", customerId],
+          });
+          queryClient.invalidateQueries({
             queryKey: ["customer-transactions", customerId],
           });
         },
         onError: (error) => {
           toast.error(`Failed to record payment: ${error.message}`);
+        },
+      },
+    );
+  };
+
+  const handleBalanceAdjustment = (data: {
+    amount: number;
+    direction: "customer_owes" | "we_owe_customer";
+    note?: string;
+  }) => {
+    balanceAdjustment.mutate(
+      {
+        customerId,
+        payload: data,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Balance adjusted successfully");
+          setIsBalanceAdjustmentDialogOpen(false);
+        },
+        onError: (error) => {
+          toast.error(`Failed to adjust balance: ${error.message}`);
         },
       },
     );
@@ -277,6 +307,13 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
           >
             <IconPencil className="h-4 w-4 mr-2" />
             Edit Customer
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsBalanceAdjustmentDialogOpen(true)}
+          >
+            Balance Adjustment
           </Button>
           <Button
             size="sm"
@@ -630,6 +667,26 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
             onCancel={() => setIsPaymentDialogOpen(false)}
             isSubmitting={recordPayment.isPending}
             hideOrderId={true}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Balance Adjustment Dialog */}
+      <Dialog
+        open={isBalanceAdjustmentDialogOpen}
+        onOpenChange={setIsBalanceAdjustmentDialogOpen}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Balance Adjustment</DialogTitle>
+            <DialogDescription>
+              Adjust the customer's balance manually
+            </DialogDescription>
+          </DialogHeader>
+          <BalanceAdjustmentForm
+            onSubmit={handleBalanceAdjustment}
+            onCancel={() => setIsBalanceAdjustmentDialogOpen(false)}
+            isSubmitting={balanceAdjustment.isPending}
           />
         </DialogContent>
       </Dialog>

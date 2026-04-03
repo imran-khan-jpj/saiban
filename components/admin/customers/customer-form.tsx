@@ -1,12 +1,21 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import * as React from "react";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Customer } from "@/app/api/customers/use-get-all";
 
 const customerFormSchema = z.object({
@@ -26,28 +35,17 @@ const customerFormSchema = z.object({
     ),
   phoneNumber: z
     .string()
-    .refine(
-      (value) => value.trim() === "" || value.trim().length >= 10,
-      "Phone number must be at least 10 characters",
-    ),
-  streetAddress: z
-    .string()
-    .refine(
-      (value) => value.trim() === "" || value.trim().length >= 5,
-      "Address must be at least 5 characters",
-    ),
-  city: z
-    .string()
-    .refine(
-      (value) => value.trim() === "" || value.trim().length >= 2,
-      "City must be at least 2 characters",
-    ),
-  state: z
-    .string()
-    .refine(
-      (value) => value.trim() === "" || value.trim().length >= 2,
-      "State must be at least 2 characters",
-    ),
+    .min(10, "Phone number must be at least 10 characters"),
+  streetAddress: z.string().min(5, "Address must be at least 5 characters"),
+  city: z.string().min(2, "City must be at least 2 characters"),
+  state: z.string().min(2, "State must be at least 2 characters"),
+  balanceAdjustment: z
+    .object({
+      amount: z.number().positive("Amount must be positive"),
+      direction: z.enum(["customer_owes", "we_owe_customer"]),
+      note: z.string().optional(),
+    })
+    .optional(),
 });
 
 type CustomerFormValues = z.infer<typeof customerFormSchema>;
@@ -94,6 +92,7 @@ export function CustomerForm({
     handleSubmit,
     formState: { errors },
     reset,
+    control,
   } = useForm<CustomerFormValues>({
     resolver: zodResolver(customerFormSchema),
     defaultValues: customer
@@ -118,7 +117,16 @@ export function CustomerForm({
   });
 
   const handleFormSubmit = (data: CustomerFormValues) => {
-    onSubmit(stripEmptyFields(data));
+    // Clean up balanceAdjustment - only include if amount is provided
+    const formData = { ...data };
+    if (
+      !formData.balanceAdjustment?.amount ||
+      isNaN(formData.balanceAdjustment.amount)
+    ) {
+      delete formData.balanceAdjustment;
+    }
+
+    onSubmit(formData);
     reset();
   };
 
@@ -205,6 +213,79 @@ export function CustomerForm({
             errorMessage={errors.state?.message}
             {...register("state")}
           />
+        </div>
+      </div>
+
+      {/* Balance Adjustment Section */}
+      <div className="border-t pt-4 mt-6">
+        <h3 className="text-sm font-semibold mb-4">
+          Opening Balance (Optional)
+        </h3>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="balanceAmount">Amount</Label>
+            <Input
+              id="balanceAmount"
+              type="number"
+              placeholder="1500"
+              error={!!errors.balanceAdjustment?.amount}
+              errorMessage={errors.balanceAdjustment?.amount?.message}
+              {...register("balanceAdjustment.amount", {
+                valueAsNumber: true,
+              })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="balanceDirection">Direction</Label>
+            <Controller
+              name="balanceAdjustment.direction"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger
+                    id="balanceDirection"
+                    className={
+                      errors.balanceAdjustment?.direction
+                        ? "border-destructive"
+                        : ""
+                    }
+                  >
+                    <SelectValue placeholder="Select direction" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="customer_owes">Customer Owes</SelectItem>
+                    <SelectItem value="we_owe_customer">
+                      We Owe Customer
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.balanceAdjustment?.direction && (
+              <p className="text-sm text-destructive">
+                {errors.balanceAdjustment.direction.message}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2 mt-4">
+          <Label htmlFor="balanceNote">Note</Label>
+          <Textarea
+            id="balanceNote"
+            placeholder="Opening balance from previous ledger"
+            className={
+              errors.balanceAdjustment?.note ? "border-destructive" : ""
+            }
+            {...register("balanceAdjustment.note")}
+          />
+          {errors.balanceAdjustment?.note && (
+            <p className="text-sm text-destructive">
+              {errors.balanceAdjustment.note.message}
+            </p>
+          )}
         </div>
       </div>
 
