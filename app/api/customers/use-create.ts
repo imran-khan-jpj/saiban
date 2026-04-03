@@ -9,6 +9,11 @@ export interface CreateCustomerPayload {
   streetAddress: string;
   city: string;
   state: string;
+  balanceAdjustment?: {
+    amount: number;
+    direction: "customer_owes" | "we_owe_customer";
+    note?: string;
+  };
 }
 
 export interface CreateCustomerResponse {

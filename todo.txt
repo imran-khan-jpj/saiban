@@ -1,11 +1,2 @@
-1. approve PR
-2. while creation product add expiry, batch-num, mfg-date
-3. 
-3. while creating product add Gram on click of other open an input field where user can type something by his will
-4. generate bill pdf with logo
-5. while generating bill give an input so user can put some notes
-6. remove payment type field while creating order
-7. while recording payment remove on account, other io
-8. remove reference field from record payment
-9. after record payment invalidte user balance api on the dashboard
-10. in the ledger show the customer current balance
+create customer api payload
+Adjust customer balance
