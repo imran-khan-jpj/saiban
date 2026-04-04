@@ -10,7 +10,7 @@ export interface CreateCustomerPayload {
   city?: string;
   state?: string;
   balanceAdjustment?: {
-    amount: number;
+    amount?: number;
     direction: "customer_owes" | "we_owe_customer";
     note?: string;
   };
