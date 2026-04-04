@@ -20,17 +20,35 @@ import { Customer } from "@/app/api/customers/use-get-all";
 
 const customerFormSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
+  lastName: z
+    .string()
+    .min(2, "Last name must be at least 2 characters")
+    .optional()
+    .or(z.literal("")),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
   phoneNumber: z
     .string()
-    .min(10, "Phone number must be at least 10 characters"),
-  streetAddress: z.string().min(5, "Address must be at least 5 characters"),
-  city: z.string().min(2, "City must be at least 2 characters"),
-  state: z.string().min(2, "State must be at least 2 characters"),
+    .min(10, "Phone number must be at least 10 characters")
+    .optional()
+    .or(z.literal("")),
+  streetAddress: z
+    .string()
+    .min(5, "Address must be at least 5 characters")
+    .optional()
+    .or(z.literal("")),
+  city: z
+    .string()
+    .min(2, "City must be at least 2 characters")
+    .optional()
+    .or(z.literal("")),
+  state: z
+    .string()
+    .min(2, "State must be at least 2 characters")
+    .optional()
+    .or(z.literal("")),
   balanceAdjustment: z
     .object({
-      amount: z.number().positive("Amount must be positive"),
+      amount: z.number().min(0, "Amount cannot be negative").optional(),
       direction: z.enum(["customer_owes", "we_owe_customer"]),
       note: z.string().optional(),
     })
@@ -41,14 +59,14 @@ type CustomerFormValues = z.infer<typeof customerFormSchema>;
 
 export type CustomerFormPayload = {
   firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  email: string;
-  streetAddress: string;
-  city: string;
-  state: string;
+  lastName?: string;
+  phoneNumber?: string;
+  email?: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
   balanceAdjustment?: {
-    amount: number;
+    amount?: number;
     direction: "customer_owes" | "we_owe_customer";
     note?: string;
   };
@@ -93,17 +111,46 @@ export function CustomerForm({
           streetAddress: "",
           city: "",
           state: "",
+          balanceAdjustment: {
+            amount: 0,
+            direction: "customer_owes",
+          },
         },
   });
 
   const handleFormSubmit = (data: CustomerFormValues) => {
-    // Clean up balanceAdjustment - only include if amount is provided
-    const formData = { ...data };
+    // Clean up the data - convert empty strings to undefined and remove balanceAdjustment if not filled
+    const formData: CustomerFormPayload = {
+      firstName: data.firstName,
+    };
+
+    // Add optional fields only if they have values
+    if (data.lastName && data.lastName.trim() !== "") {
+      formData.lastName = data.lastName;
+    }
+    if (data.email && data.email.trim() !== "") {
+      formData.email = data.email;
+    }
+    if (data.phoneNumber && data.phoneNumber.trim() !== "") {
+      formData.phoneNumber = data.phoneNumber;
+    }
+    if (data.streetAddress && data.streetAddress.trim() !== "") {
+      formData.streetAddress = data.streetAddress;
+    }
+    if (data.city && data.city.trim() !== "") {
+      formData.city = data.city;
+    }
+    if (data.state && data.state.trim() !== "") {
+      formData.state = data.state;
+    }
+
+    // Add balanceAdjustment only if amount is provided and greater than 0
     if (
-      !formData.balanceAdjustment?.amount ||
-      isNaN(formData.balanceAdjustment.amount)
+      data.balanceAdjustment?.amount &&
+      !isNaN(data.balanceAdjustment.amount) &&
+      data.balanceAdjustment.amount > 0
     ) {
-      delete formData.balanceAdjustment;
+      formData.balanceAdjustment = data.balanceAdjustment;
     }
 
     onSubmit(formData);
@@ -125,7 +172,7 @@ export function CustomerForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="lastName">Last Name</Label>
+          <Label htmlFor="lastName">Last Name (Optional)</Label>
           <Input
             id="lastName"
             placeholder="Khan"
@@ -138,7 +185,7 @@ export function CustomerForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Email (Optional)</Label>
           <Input
             id="email"
             type="email"
@@ -150,7 +197,7 @@ export function CustomerForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="phoneNumber">Phone Number</Label>
+          <Label htmlFor="phoneNumber">Phone Number (Optional)</Label>
           <Input
             id="phoneNumber"
             placeholder="+92-300-9876543"
@@ -162,7 +209,7 @@ export function CustomerForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="streetAddress">Street Address</Label>
+        <Label htmlFor="streetAddress">Street Address (Optional)</Label>
         <Input
           id="streetAddress"
           placeholder="House 123, Street 5, Block A"
@@ -174,7 +221,7 @@ export function CustomerForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="city">City</Label>
+          <Label htmlFor="city">City (Optional)</Label>
           <Input
             id="city"
             placeholder="Sialkot"
@@ -185,7 +232,7 @@ export function CustomerForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="state">State/Province</Label>
+          <Label htmlFor="state">State/Province (Optional)</Label>
           <Input
             id="state"
             placeholder="Punjab"
@@ -196,11 +243,12 @@ export function CustomerForm({
         </div>
       </div>
 
-      {/* Balance Adjustment Section */}
-      <div className="border-t pt-4 mt-6">
-        <h3 className="text-sm font-semibold mb-4">
-          Opening Balance (Optional)
-        </h3>
+      {/* Balance Adjustment Section - Only show when creating new customer */}
+      {!customer && (
+        <div className="border-t pt-4 mt-6">
+          <h3 className="text-sm font-semibold mb-4">
+            Opening Balance (Optional)
+          </h3>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -222,6 +270,7 @@ export function CustomerForm({
             <Controller
               name="balanceAdjustment.direction"
               control={control}
+              defaultValue="customer_owes"
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger
@@ -267,7 +316,8 @@ export function CustomerForm({
             </p>
           )}
         </div>
-      </div>
+        </div>
+      )}
 
       <div className="flex justify-end gap-2 pt-4">
         <Button

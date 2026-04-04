@@ -203,6 +203,11 @@ export function Customers() {
     setEditingCustomer(null);
   };
 
+  const handleAddDialogOpen = () => {
+    setEditingCustomer(null);
+    setIsAddDialogOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-10">
@@ -230,13 +235,11 @@ export function Customers() {
             {data?.pagination.total || 0} total)
           </p>
         </div>
+        <Button onClick={handleAddDialogOpen}>
+          <IconPlus className="mr-2 h-4 w-4" />
+          Add Customer
+        </Button>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <IconPlus className="mr-2 h-4 w-4" />
-              Add Customer
-            </Button>
-          </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>

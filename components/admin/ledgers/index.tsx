@@ -130,7 +130,7 @@ export function Ledgers() {
             className="text-left hover:underline cursor-pointer"
           >
             <div className="font-medium text-blue-600 underline hover:text-blue-700 hover:underline">
-              {customer.firstName} {customer.lastName}
+              {customer?.firstName ?? ""} {customer?.lastName ?? ""}
             </div>
           </button>
         );
