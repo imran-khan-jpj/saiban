@@ -34,8 +34,8 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   logo: {
-    width: 60,
-    height: 60,
+    width: 120,
+    height: 120,
     objectFit: "contain",
   },
   companyHeader: {
@@ -55,8 +55,8 @@ const styles = StyleSheet.create({
   // Invoice and Customer boxes
   topBoxesContainer: {
     flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 10,
-    gap: 10,
   },
   invoiceBox: {
     width: "48%",
@@ -116,34 +116,38 @@ const styles = StyleSheet.create({
   },
   // Table columns
   colSrNo: {
-    width: "6%",
+    width: "5%",
     textAlign: "center",
   },
   colItem: {
-    width: "24%",
+    width: "20%",
+  },
+  colBatchNo: {
+    width: "10%",
+    textAlign: "center",
   },
   colPacking: {
-    width: "12%",
+    width: "10%",
     textAlign: "center",
   },
   colQty: {
-    width: "8%",
+    width: "7%",
     textAlign: "right",
   },
   colRetail: {
-    width: "12%",
+    width: "11%",
     textAlign: "right",
   },
   colDisc: {
-    width: "8%",
+    width: "7%",
     textAlign: "right",
   },
   colDiscPrice: {
-    width: "12%",
+    width: "11%",
     textAlign: "right",
   },
   colNetValue: {
-    width: "18%",
+    width: "19%",
     textAlign: "right",
   },
   // Totals row
@@ -155,66 +159,102 @@ const styles = StyleSheet.create({
   },
   // Bottom section
   bottomSection: {
+    position: "absolute",
+    bottom: 20,
+    left: 20,
+    right: 20,
+  },
+  topRow: {
     flexDirection: "row",
-    marginTop: 10,
-    borderTop: "2pt solid #000",
-    paddingTop: 8,
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderTop: "1pt solid #ddd",
+    paddingTop: 10,
+    paddingBottom: 10,
+    marginBottom: 10,
   },
-  bottomLeft: {
-    width: "33%",
-    paddingRight: 10,
-  },
-  bottomCenter: {
-    width: "33%",
-    paddingRight: 10,
-  },
-  bottomRight: {
-    width: "34%",
-  },
-  bottomLabel: {
-    fontSize: 8,
-    marginBottom: 4,
-  },
-  bottomValue: {
-    fontSize: 8,
+  totalItems: {
+    fontSize: 10,
     fontWeight: "bold",
-    marginBottom: 4,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  invoiceGrossContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  invoiceGrossLabel: {
+    fontSize: 10,
+  },
+  invoiceGrossValue: {
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  summaryContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginBottom: 15,
+  },
+  summaryBox: {
+    width: "40%",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: "#fff",
+  },
+  summaryTitle: {
+    fontSize: 12,
+    fontWeight: "bold",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  summaryDivider: {
+    borderBottom: "1pt solid #ddd",
+    marginBottom: 8,
   },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 3,
+    marginBottom: 6,
   },
   summaryLabel: {
-    fontSize: 8,
-    fontWeight: "bold",
+    fontSize: 9,
   },
   summaryValue: {
-    fontSize: 8,
+    fontSize: 9,
     textAlign: "right",
   },
-  // Footer
-  warrantySection: {
-    marginTop: 10,
-    paddingTop: 8,
-    borderTop: "1pt solid #000",
+  netPayableRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 4,
   },
-  warrantyTitle: {
-    fontSize: 8,
+  netPayableLabel: {
+    fontSize: 10,
     fontWeight: "bold",
-    textAlign: "center",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  netPayableValue: {
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  dispatchSection: {
+    alignItems: "center",
+    marginTop: 10,
+  },
+  dispatchLabel: {
+    fontSize: 9,
+    color: "#666",
     marginBottom: 4,
   },
-  warrantyText: {
-    fontSize: 6,
-    textAlign: "center",
-    lineHeight: 1.3,
-  },
-  automatedBy: {
-    fontSize: 6,
-    textAlign: "center",
-    color: "#666",
-    marginTop: 4,
+  signatureLine: {
+    width: 200,
+    borderBottom: "1pt solid #000",
+    marginTop: 20,
   },
 });
 
@@ -245,21 +285,31 @@ const OrderPDF = ({
         {/* Company Header with Logos */}
         <View style={styles.headerContainer} fixed>
           {/* Left Logo */}
-          {companyLogo && <Image src={companyLogo} style={styles.logo} />}
+          {parentCompanyLogo && (
+            <Image src={parentCompanyLogo} style={styles.logo} />
+          )}
 
           {/* Company Info */}
           <View style={styles.companyHeader}>
             <Text style={styles.companyName}>Saiban Homoeopathic Pharma</Text>
             <Text style={styles.companyDetails}>
-              Head Office: Your Address Here
+              Email: saqibch51700@gmail.com
             </Text>
+            <Text style={styles.companyDetails}>Phone number: 03167072121</Text>
+
             <Text style={styles.companyDetails}>
-              Factory: Your Factory Address | Ph: Your Phone Number
+              Mfg. By/Root's Pharma Lahore
             </Text>
+            <Text style={styles.companyDetails}>DRAP ENLISTMENT #00553</Text>
           </View>
 
           {/* Right Logo */}
-          {companyLogo && <Image src={companyLogo} style={styles.logo} />}
+          {companyLogo && (
+            <Image
+              src={companyLogo}
+              style={{ height: 100, width: 100, objectFit: "contain" }}
+            />
+          )}
         </View>
 
         {/* Invoice and Customer Boxes */}
@@ -267,10 +317,7 @@ const OrderPDF = ({
           {/* Invoice Box */}
           <View style={styles.invoiceBox}>
             <Text style={styles.boxTitle}>INVOICE</Text>
-            <View style={styles.boxRow}>
-              <Text style={styles.boxLabel}>No:</Text>
-              <Text style={styles.boxValue}>{order._id}</Text>
-            </View>
+
             <View style={styles.boxRow}>
               <Text style={styles.boxLabel}>Date:</Text>
               <Text style={styles.boxValue}>{formatDate(order.createdAt)}</Text>
@@ -291,7 +338,7 @@ const OrderPDF = ({
             </View>
             {order.customerId.phoneNumber && (
               <View style={styles.boxRow}>
-                <Text style={styles.boxLabel}>Ph:</Text>
+                <Text style={styles.boxLabel}>Phone:</Text>
                 <Text style={styles.boxValue}>
                   {order.customerId.phoneNumber}
                 </Text>
@@ -306,6 +353,9 @@ const OrderPDF = ({
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderText, styles.colSrNo]}>Sr No</Text>
             <Text style={[styles.tableHeaderText, styles.colItem]}>Item</Text>
+            <Text style={[styles.tableHeaderText, styles.colBatchNo]}>
+              Batch No
+            </Text>
             <Text style={[styles.tableHeaderText, styles.colPacking]}>
               Packing
             </Text>
@@ -330,6 +380,9 @@ const OrderPDF = ({
               </Text>
               <Text style={[styles.tableRowText, styles.colItem]}>
                 {item.productId.name}
+              </Text>
+              <Text style={[styles.tableRowText, styles.colBatchNo]}>
+                {item.productId.batchNo || "-"}
               </Text>
               <Text style={[styles.tableRowText, styles.colPacking]}>
                 {item.productId.packType || "-"}
@@ -359,6 +412,7 @@ const OrderPDF = ({
           <View style={styles.totalsRow}>
             <Text style={[styles.tableRowText, styles.colSrNo]}></Text>
             <Text style={[styles.tableRowText, styles.colItem]}></Text>
+            <Text style={[styles.tableRowText, styles.colBatchNo]}></Text>
             <Text
               style={[
                 styles.tableRowText,
@@ -393,90 +447,65 @@ const OrderPDF = ({
         </View>
 
         {/* Bottom Section */}
-        <View style={styles.bottomSection}>
-          {/* Left Column - Additional Info */}
-          <View style={styles.bottomLeft}>
-            <Text style={styles.bottomLabel}>Transporter:</Text>
-            <Text style={styles.bottomLabel}>Bilty No.:</Text>
-            <Text style={styles.bottomLabel}>No Of Carton.:</Text>
-            <Text style={styles.bottomLabel}>No of Bundles.:</Text>
-          </View>
-
-          {/* Center Column - Summary */}
-          <View style={styles.bottomCenter}>
-            <Text style={styles.bottomValue}>
+        <View style={styles.bottomSection} wrap={false}>
+          {/* Top Row - Total Items and Invoice Gross Value */}
+          <View style={styles.topRow}>
+            <Text style={styles.totalItems}>
               Total Items: {order.items.length}
             </Text>
-            <View style={{ marginTop: 10 }}>
+            <View style={styles.invoiceGrossContainer}>
+              <Text style={styles.invoiceGrossLabel}>Invoice Gross Value</Text>
+              <Text style={styles.invoiceGrossValue}>
+                {formatCurrency(order.subtotal)}
+              </Text>
+            </View>
+          </View>
+
+          {/* Summary Box */}
+          <View style={styles.summaryContainer}>
+            <View style={styles.summaryBox}>
+              <Text style={styles.summaryTitle}>Summary</Text>
+              <View style={styles.summaryDivider} />
+
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Invoice Gross Value</Text>
+                <Text style={styles.summaryLabel}>Subtotal:</Text>
                 <Text style={styles.summaryValue}>
                   {formatCurrency(order.subtotal)}
                 </Text>
               </View>
-            </View>
-          </View>
 
-          {/* Right Column - Payment Summary */}
-          <View style={styles.bottomRight}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Subtotal:</Text>
-              <Text style={styles.summaryValue}>
-                {formatCurrency(order.subtotal)}
-              </Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Discount:</Text>
-              <Text style={styles.summaryValue}>
-                -{formatCurrency(order.discountTotal)}
-              </Text>
-            </View>
-            {order.gstTotal > 0 && (
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>GST:</Text>
+                <Text style={styles.summaryLabel}>Discount:</Text>
                 <Text style={styles.summaryValue}>
-                  {formatCurrency(order.gstTotal)}
+                  -{formatCurrency(order.discountTotal)}
                 </Text>
               </View>
-            )}
-            <View
-              style={[
-                styles.summaryRow,
-                { borderTop: "1pt solid #000", paddingTop: 4, marginTop: 4 },
-              ]}
-            >
-              <Text style={[styles.summaryLabel, { fontSize: 9 }]}>
-                Net Payable:
-              </Text>
-              <Text style={[styles.summaryValue, { fontSize: 9 }]}>
-                {formatCurrency(order.grandTotal)}
-              </Text>
-            </View>
-            <Text style={[styles.bottomLabel, { marginTop: 8 }]}>
-              Dispatch Officer:
-            </Text>
-          </View>
-        </View>
 
-        {/* Warranty/Note Section */}
-        <View style={styles.warrantySection}>
-          {customNote && (
-            <>
-              <Text style={styles.warrantyTitle}>NOTE</Text>
-              <Text style={styles.warrantyText}>{customNote}</Text>
-            </>
-          )}
-          {order.note && (
-            <>
-              <Text style={[styles.warrantyTitle, { marginTop: 6 }]}>
-                ORDER NOTE
-              </Text>
-              <Text style={styles.warrantyText}>{order.note}</Text>
-            </>
-          )}
-          <Text style={styles.automatedBy}>
-            Generated by Your Company Management System
-          </Text>
+              {order.gstTotal > 0 && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>GST:</Text>
+                  <Text style={styles.summaryValue}>
+                    {formatCurrency(order.gstTotal)}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.summaryDivider} />
+
+              <View style={styles.netPayableRow}>
+                <Text style={styles.netPayableLabel}>✓ Net Payable:</Text>
+                <Text style={styles.netPayableValue}>
+                  {formatCurrency(order.grandTotal)}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Dispatch Officer Section */}
+          <View style={styles.dispatchSection}>
+            <Text style={styles.dispatchLabel}>Dispatch Officer</Text>
+            <View style={styles.signatureLine} />
+          </View>
         </View>
       </Page>
     </Document>
@@ -492,8 +521,8 @@ export function GeneratePDF({ order }: GeneratePDFProps) {
   const [isClient, setIsClient] = React.useState(false);
 
   // Logo URLs - Replace these with your actual logo URLs or set to empty string if not available
-  const parentCompanyLogo = "/logos/saiban-logo.png"; // Parent company logo
-  const companyLogo = "/logos/saiban-logo.png"; // Company logo
+  const parentCompanyLogo = "/logos/roots-logo.jpeg"; // Parent company logo
+  const companyLogo = "/logos/saiban-logo.jpeg"; // Company logo
 
   React.useEffect(() => {
     setIsClient(true);
@@ -528,7 +557,7 @@ export function GeneratePDF({ order }: GeneratePDFProps) {
           fileName={`invoice-${order._id}.pdf`}
         >
           {({ loading }) => (
-            <Button className="w-full" disabled={loading} size="lg">
+            <Button className="" disabled={loading} size="lg">
               <IconDownload className="h-4 w-4 mr-2" />
               {loading ? "Generating PDF..." : "Download Invoice PDF"}
             </Button>

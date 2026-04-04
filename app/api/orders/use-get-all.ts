@@ -18,6 +18,7 @@ export interface Order {
       descriptionUrdu: string;
       formulation: string;
       packType: string;
+      batchNo?: string;
       size: number;
       unitPrice: number;
       lowStockThreshold: number;
