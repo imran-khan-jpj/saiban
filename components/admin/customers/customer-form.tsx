@@ -20,19 +20,35 @@ import { Customer } from "@/app/api/customers/use-get-all";
 
 const customerFormSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters").optional().or(z.literal("")),
+  lastName: z
+    .string()
+    .min(2, "Last name must be at least 2 characters")
+    .optional()
+    .or(z.literal("")),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
   phoneNumber: z
     .string()
     .min(10, "Phone number must be at least 10 characters")
     .optional()
     .or(z.literal("")),
-  streetAddress: z.string().min(5, "Address must be at least 5 characters").optional().or(z.literal("")),
-  city: z.string().min(2, "City must be at least 2 characters").optional().or(z.literal("")),
-  state: z.string().min(2, "State must be at least 2 characters").optional().or(z.literal("")),
+  streetAddress: z
+    .string()
+    .min(5, "Address must be at least 5 characters")
+    .optional()
+    .or(z.literal("")),
+  city: z
+    .string()
+    .min(2, "City must be at least 2 characters")
+    .optional()
+    .or(z.literal("")),
+  state: z
+    .string()
+    .min(2, "State must be at least 2 characters")
+    .optional()
+    .or(z.literal("")),
   balanceAdjustment: z
     .object({
-      amount: z.number().positive("Amount must be positive"),
+      amount: z.number().min(0, "Amount cannot be negative").optional(),
       direction: z.enum(["customer_owes", "we_owe_customer"]),
       note: z.string().optional(),
     })
@@ -50,7 +66,7 @@ export type CustomerFormPayload = {
   city?: string;
   state?: string;
   balanceAdjustment?: {
-    amount: number;
+    amount?: number;
     direction: "customer_owes" | "we_owe_customer";
     note?: string;
   };
@@ -95,6 +111,10 @@ export function CustomerForm({
           streetAddress: "",
           city: "",
           state: "",
+          balanceAdjustment: {
+            amount: 0,
+            direction: "customer_owes",
+          },
         },
   });
 
@@ -124,10 +144,11 @@ export function CustomerForm({
       formData.state = data.state;
     }
 
-    // Add balanceAdjustment only if amount is provided
+    // Add balanceAdjustment only if amount is provided and greater than 0
     if (
       data.balanceAdjustment?.amount &&
-      !isNaN(data.balanceAdjustment.amount)
+      !isNaN(data.balanceAdjustment.amount) &&
+      data.balanceAdjustment.amount > 0
     ) {
       formData.balanceAdjustment = data.balanceAdjustment;
     }
