@@ -32,6 +32,7 @@ import { formatDate, formatCurrency } from "@/lib/utils";
 import { useGetOrderById } from "@/app/api/orders/use-get-by-id";
 import { useRecordPayment } from "@/app/api/customers/use-record-payment";
 import { PaymentForm } from "../customers/payment-form";
+import { GeneratePDF } from "./generate-pdf";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -231,6 +232,12 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
             <p className="text-sm p-3 bg-muted rounded-lg">{order.note}</p>
           </div>
         )}
+
+        {/* Generate PDF Section */}
+        <div className="space-y-1">
+          <Label className="text-muted-foreground">Generate Invoice</Label>
+          <GeneratePDF order={order} />
+        </div>
       </div>
 
       {/* Record Payment Dialog */}

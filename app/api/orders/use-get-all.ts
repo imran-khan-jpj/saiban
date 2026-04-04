@@ -8,6 +8,7 @@ export interface Order {
     firstName: string;
     lastName: string;
     email: string;
+    phoneNumber?: string;
   };
   items: Array<{
     productId: {
@@ -17,6 +18,7 @@ export interface Order {
       descriptionUrdu: string;
       formulation: string;
       packType: string;
+      batchNo?: string;
       size: number;
       unitPrice: number;
       lowStockThreshold: number;
