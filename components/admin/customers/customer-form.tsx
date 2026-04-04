@@ -243,11 +243,12 @@ export function CustomerForm({
         </div>
       </div>
 
-      {/* Balance Adjustment Section */}
-      <div className="border-t pt-4 mt-6">
-        <h3 className="text-sm font-semibold mb-4">
-          Opening Balance (Optional)
-        </h3>
+      {/* Balance Adjustment Section - Only show when creating new customer */}
+      {!customer && (
+        <div className="border-t pt-4 mt-6">
+          <h3 className="text-sm font-semibold mb-4">
+            Opening Balance (Optional)
+          </h3>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -315,7 +316,8 @@ export function CustomerForm({
             </p>
           )}
         </div>
-      </div>
+        </div>
+      )}
 
       <div className="flex justify-end gap-2 pt-4">
         <Button
