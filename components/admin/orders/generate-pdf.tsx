@@ -24,12 +24,24 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontFamily: "Helvetica",
   },
-  // Company Header
-  companyHeader: {
-    textAlign: "center",
+  // Company Header with Logos
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
     borderBottom: "2pt solid #000",
     paddingBottom: 8,
+  },
+  logo: {
+    width: 60,
+    height: 60,
+    objectFit: "contain",
+  },
+  companyHeader: {
+    flex: 1,
+    textAlign: "center",
+    paddingHorizontal: 10,
   },
   companyName: {
     fontSize: 14,
@@ -230,15 +242,24 @@ const OrderPDF = ({
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Company Header */}
-        <View style={styles.companyHeader} fixed>
-          <Text style={styles.companyName}>YOUR COMPANY NAME</Text>
-          <Text style={styles.companyDetails}>
-            Head Office: Your Address Here
-          </Text>
-          <Text style={styles.companyDetails}>
-            Factory: Your Factory Address | Ph: Your Phone Number
-          </Text>
+        {/* Company Header with Logos */}
+        <View style={styles.headerContainer} fixed>
+          {/* Left Logo */}
+          {companyLogo && <Image src={companyLogo} style={styles.logo} />}
+
+          {/* Company Info */}
+          <View style={styles.companyHeader}>
+            <Text style={styles.companyName}>Saiban Homoeopathic Pharma</Text>
+            <Text style={styles.companyDetails}>
+              Head Office: Your Address Here
+            </Text>
+            <Text style={styles.companyDetails}>
+              Factory: Your Factory Address | Ph: Your Phone Number
+            </Text>
+          </View>
+
+          {/* Right Logo */}
+          {companyLogo && <Image src={companyLogo} style={styles.logo} />}
         </View>
 
         {/* Invoice and Customer Boxes */}
@@ -471,8 +492,8 @@ export function GeneratePDF({ order }: GeneratePDFProps) {
   const [isClient, setIsClient] = React.useState(false);
 
   // Logo URLs - Replace these with your actual logo URLs or set to empty string if not available
-  const parentCompanyLogo = ""; // "/logos/parent-company.png" - Add path when logo is available
-  const companyLogo = ""; // "/logos/company.png" - Add path when logo is available
+  const parentCompanyLogo = "/logos/saiban-logo.png"; // Parent company logo
+  const companyLogo = "/logos/saiban-logo.png"; // Company logo
 
   React.useEffect(() => {
     setIsClient(true);
