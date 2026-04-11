@@ -9,6 +9,9 @@ export interface Order {
     lastName: string;
     email: string;
     phoneNumber?: string;
+    streetAddress: string;
+    city: string;
+    state: string;
   };
   items: Array<{
     productId: {
@@ -25,6 +28,8 @@ export interface Order {
       quantityInStock: number;
       createdAt: string;
       updatedAt: string;
+      mfg: string;
+      expiry: string;
       __v: number;
     };
     quantity: number;
@@ -42,6 +47,11 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   __v: number;
+  customerBalance: {
+    netBalance: number;
+    direction: "customer_owes" | "we_owe_customer";
+    absoluteAmount: number;
+  };
 }
 
 export interface GetAllOrdersResponse {
