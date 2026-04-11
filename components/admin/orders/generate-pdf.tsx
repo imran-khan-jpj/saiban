@@ -29,9 +29,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
-    borderBottom: "2pt solid #000",
-    paddingBottom: 8,
+    borderBottom: "1pt solid #000",
+    marginBottom: 2,
+    // padding: 4,
+    padding: 0,
   },
   logo: {
     width: 120,
@@ -42,32 +43,34 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "center",
     paddingHorizontal: 10,
+    paddingVertical: 2,
   },
   companyName: {
     fontSize: 14,
     fontWeight: "bold",
-    marginBottom: 2,
+    marginBottom: 1,
   },
   companyDetails: {
     fontSize: 7,
-    marginBottom: 1,
+    marginBottom: 0.5,
   },
   // Invoice and Customer boxes
   topBoxesContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom: 8,
+    gap: 4,
   },
   invoiceBox: {
-    width: "48%",
-    borderWidth: 2,
+    width: "49%",
+    borderWidth: 1,
     borderColor: "#000",
     borderRadius: 6,
     padding: 8,
   },
   customerBox: {
-    width: "48%",
-    borderWidth: 2,
+    width: "49%",
+    borderWidth: 1,
     borderColor: "#000",
     borderRadius: 6,
     padding: 8,
@@ -92,27 +95,39 @@ const styles = StyleSheet.create({
   },
   // Table styles
   table: {
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: "#000",
   },
   tableHeader: {
     flexDirection: "row",
-    borderBottom: "2pt solid #000",
+    borderBottom: "1pt solid #000",
     backgroundColor: "#fff",
-    padding: 4,
   },
   tableHeaderText: {
     fontSize: 7,
     fontWeight: "bold",
     textAlign: "center",
+    padding: 4,
+    borderRight: "1pt solid #000",
+  },
+  tableHeaderTextLast: {
+    fontSize: 7,
+    fontWeight: "bold",
+    textAlign: "center",
+    padding: 4,
   },
   tableRow: {
     flexDirection: "row",
     borderBottom: "1pt solid #000",
-    padding: 4,
   },
   tableRowText: {
     fontSize: 8,
+    padding: 4,
+    borderRight: "1pt solid #000",
+  },
+  tableRowTextLast: {
+    fontSize: 8,
+    padding: 4,
   },
   // Table columns
   colSrNo: {
@@ -121,22 +136,23 @@ const styles = StyleSheet.create({
   },
   colItem: {
     width: "15%",
+    textAlign: "left",
   },
   colBatchNo: {
     width: "8%",
-    textAlign: "center",
+    textAlign: "left",
   },
   colPacking: {
     width: "8%",
-    textAlign: "center",
+    textAlign: "left",
   },
   colMfgDate: {
     width: "8%",
-    textAlign: "center",
+    textAlign: "left",
   },
   colExpDate: {
     width: "8%",
-    textAlign: "center",
+    textAlign: "left",
   },
   colQty: {
     width: "6%",
@@ -161,7 +177,16 @@ const styles = StyleSheet.create({
   // Totals row
   totalsRow: {
     flexDirection: "row",
-    borderTop: "2pt solid #000",
+    fontWeight: "bold",
+  },
+  totalsRowText: {
+    fontSize: 8,
+    padding: 4,
+    borderRight: "1pt solid #000",
+    fontWeight: "bold",
+  },
+  totalsRowTextLast: {
+    fontSize: 8,
     padding: 4,
     fontWeight: "bold",
   },
@@ -176,7 +201,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    borderTop: "1pt solid #ddd",
+    borderTop: "1pt solid #000",
     paddingTop: 10,
     paddingBottom: 10,
     marginBottom: 10,
@@ -207,7 +232,7 @@ const styles = StyleSheet.create({
   summaryBox: {
     width: "40%",
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#000",
     borderRadius: 8,
     padding: 12,
     backgroundColor: "#fff",
@@ -219,7 +244,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   summaryDivider: {
-    borderBottom: "1pt solid #ddd",
+    borderBottom: "1pt solid #000",
     marginBottom: 8,
   },
   summaryRow: {
@@ -336,7 +361,7 @@ const OrderPDF = ({
           {companyLogo && (
             <Image
               src={companyLogo}
-              style={{ height: 100, width: 100, objectFit: "contain" }}
+              style={{ height: 120, width: 120, objectFit: "contain" }}
             />
           )}
         </View>
@@ -349,7 +374,7 @@ const OrderPDF = ({
 
             <View style={styles.boxRow}>
               <Text style={styles.boxLabel}>ID:</Text>
-              <Text style={styles.boxValue}>{order._id}</Text>
+              <Text style={styles.boxValue}>{order.invoiceNumber}</Text>
             </View>
             <View style={styles.boxRow}>
               <Text style={styles.boxLabel}>Date:</Text>
@@ -359,10 +384,6 @@ const OrderPDF = ({
 
           {/* Customer Box */}
           <View style={styles.customerBox}>
-            <View style={styles.boxRow}>
-              <Text style={styles.boxLabel}>Customer ID:</Text>
-              <Text style={styles.boxValue}>{order.customerId._id}</Text>
-            </View>
             <View style={styles.boxRow}>
               <Text style={styles.boxLabel}>Name:</Text>
               <Text style={styles.boxValue}>
@@ -422,7 +443,7 @@ const OrderPDF = ({
             <Text style={[styles.tableHeaderText, styles.colDiscPrice]}>
               Disc Price
             </Text>
-            <Text style={[styles.tableHeaderText, styles.colNetValue]}>
+            <Text style={[styles.tableHeaderTextLast, styles.colNetValue]}>
               Net Value
             </Text>
           </View>
@@ -463,7 +484,7 @@ const OrderPDF = ({
                     (item.unitPrice * item.discountPercentage) / 100,
                 )}
               </Text>
-              <Text style={[styles.tableRowText, styles.colNetValue]}>
+              <Text style={[styles.tableRowTextLast, styles.colNetValue]}>
                 {formatCurrency(item.lineTotal)}
               </Text>
             </View>
@@ -471,39 +492,21 @@ const OrderPDF = ({
 
           {/* Totals Row */}
           <View style={styles.totalsRow}>
-            <Text style={[styles.tableRowText, styles.colSrNo]}></Text>
-            <Text style={[styles.tableRowText, styles.colItem]}></Text>
-            <Text style={[styles.tableRowText, styles.colBatchNo]}></Text>
-            <Text
-              style={[
-                styles.tableRowText,
-                styles.colPacking,
-                { fontWeight: "bold" },
-              ]}
-            >
+            <Text style={[styles.totalsRowText, styles.colSrNo]}></Text>
+            <Text style={[styles.totalsRowText, styles.colItem]}></Text>
+            <Text style={[styles.totalsRowText, styles.colBatchNo]}></Text>
+            <Text style={[styles.totalsRowText, styles.colPacking]}>
               Totals:
             </Text>
-            <Text style={[styles.tableRowText, styles.colMfgDate]}></Text>
-            <Text style={[styles.tableRowText, styles.colExpDate]}></Text>
-            <Text
-              style={[
-                styles.tableRowText,
-                styles.colQty,
-                { fontWeight: "bold" },
-              ]}
-            >
+            <Text style={[styles.totalsRowText, styles.colMfgDate]}></Text>
+            <Text style={[styles.totalsRowText, styles.colExpDate]}></Text>
+            <Text style={[styles.totalsRowText, styles.colQty]}>
               {totalQty}
             </Text>
-            <Text style={[styles.tableRowText, styles.colRetail]}></Text>
-            <Text style={[styles.tableRowText, styles.colDisc]}></Text>
-            <Text style={[styles.tableRowText, styles.colDiscPrice]}></Text>
-            <Text
-              style={[
-                styles.tableRowText,
-                styles.colNetValue,
-                { fontWeight: "bold" },
-              ]}
-            >
+            <Text style={[styles.totalsRowText, styles.colRetail]}></Text>
+            <Text style={[styles.totalsRowText, styles.colDisc]}></Text>
+            <Text style={[styles.totalsRowText, styles.colDiscPrice]}></Text>
+            <Text style={[styles.totalsRowTextLast, styles.colNetValue]}>
               {formatCurrency(order.grandTotal)}
             </Text>
           </View>
@@ -542,29 +545,6 @@ const OrderPDF = ({
               <View style={styles.summaryDivider} />
 
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Subtotal:</Text>
-                <Text style={styles.summaryValue}>
-                  {formatCurrency(order.subtotal)}
-                </Text>
-              </View>
-
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Discount:</Text>
-                <Text style={styles.summaryValue}>
-                  {formatCurrency(-order.discountTotal)}
-                </Text>
-              </View>
-
-              {order.gstTotal > 0 && (
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>GST:</Text>
-                  <Text style={styles.summaryValue}>
-                    {formatCurrency(order.gstTotal)}
-                  </Text>
-                </View>
-              )}
-
-              <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Current Bill:</Text>
                 <Text style={styles.summaryValue}>
                   {formatCurrency(order.grandTotal)}
@@ -576,9 +556,7 @@ const OrderPDF = ({
                   <Text style={styles.summaryLabel}>Previous Balance:</Text>
                   <Text style={styles.summaryValue}>
                     {formatCurrency(
-                      order.customerBalance.direction === "customer_owes"
-                        ? order.customerBalance.absoluteAmount
-                        : -order.customerBalance.absoluteAmount,
+                      order.customerBalance.absoluteAmount - order.grandTotal,
                     )}
                   </Text>
                 </View>
@@ -589,15 +567,7 @@ const OrderPDF = ({
               <View style={styles.netPayableRow}>
                 <Text style={styles.netPayableLabel}>✓ Net Payable:</Text>
                 <Text style={styles.netPayableValue}>
-                  {formatCurrency(
-                    order.customerBalance
-                      ? order.customerBalance.direction === "customer_owes"
-                        ? order.grandTotal +
-                          order.customerBalance.absoluteAmount
-                        : order.grandTotal -
-                          order.customerBalance.absoluteAmount
-                      : order.grandTotal,
-                  )}
+                  {formatCurrency(order.customerBalance.absoluteAmount)}
                 </Text>
               </View>
             </View>
@@ -628,11 +598,8 @@ export function GeneratePDF({ order }: GeneratePDFProps) {
 
   // Generate filename with customer name and date
   const generateFileName = () => {
-    const date = new Date();
-    const day = date.getDate();
-    const month = date
-      .toLocaleDateString("en-US", { month: "short" })
-      .toLowerCase();
+    const day = formatDate(order.createdAt, "dd");
+    const month = formatDate(order.createdAt, "MMM").toLowerCase();
     const customerName =
       `${order.customerId.firstName}-${order.customerId.lastName}`.toLowerCase();
     return `${customerName}-${day}-${month}-invoice.pdf`;
