@@ -46,6 +46,7 @@ export interface Order {
   grandTotal: number;
   createdAt: string;
   updatedAt: string;
+  invoiceNumber: string;
   __v: number;
   customerBalance: {
     netBalance: number;
