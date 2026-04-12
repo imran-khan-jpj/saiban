@@ -231,9 +231,6 @@ const styles = StyleSheet.create({
   },
   summaryBox: {
     width: "40%",
-    borderWidth: 1,
-    borderColor: "#000",
-    borderRadius: 8,
     padding: 12,
     backgroundColor: "#fff",
   },
@@ -241,7 +238,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "bold",
     marginBottom: 8,
-    textAlign: "center",
   },
   summaryDivider: {
     borderBottom: "1pt solid #000",
@@ -250,7 +246,9 @@ const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 6,
+    paddingBottom: 8,
+    marginBottom: 8,
+    borderBottom: "1pt solid #000",
   },
   summaryLabel: {
     fontSize: 9,
@@ -259,24 +257,46 @@ const styles = StyleSheet.create({
     fontSize: 9,
     textAlign: "right",
   },
+  summaryDirection: {
+    fontSize: 7,
+    color: "#666",
+    marginLeft: 4,
+  },
   netPayableRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 4,
+    alignItems: "flex-start",
+    paddingTop: 8,
+    paddingBottom: 8,
+    borderBottom: "1pt solid #000",
+  },
+  netPayableLeft: {
+    flexDirection: "column",
+  },
+  netPayableRight: {
+    flexDirection: "column",
+    alignItems: "flex-end",
   },
   netPayableLabel: {
     fontSize: 10,
     fontWeight: "bold",
-    flexDirection: "row",
-    alignItems: "center",
+  },
+  netPayableSubtitle: {
+    fontSize: 7,
+    color: "#666",
+    marginTop: 2,
   },
   netPayableValue: {
     fontSize: 12,
     fontWeight: "bold",
   },
+  netPayableStatus: {
+    fontSize: 7,
+    color: "#666",
+    marginTop: 2,
+  },
   dispatchSection: {
-    alignItems: "center",
+    alignItems: "flex-end",
     marginTop: 10,
   },
   dispatchLabel: {
@@ -390,10 +410,7 @@ const OrderPDF = ({
                 {order.customerId.firstName} {order.customerId.lastName}
               </Text>
             </View>
-            <View style={styles.boxRow}>
-              <Text style={styles.boxLabel}>Email:</Text>
-              <Text style={styles.boxValue}>{order.customerId.email}</Text>
-            </View>
+
             {order.customerId.phoneNumber && (
               <View style={styles.boxRow}>
                 <Text style={styles.boxLabel}>Phone:</Text>
@@ -402,18 +419,17 @@ const OrderPDF = ({
                 </Text>
               </View>
             )}
-            {(order.customerId as any).streetAddress && (
-              <View style={styles.boxRow}>
-                <Text style={styles.boxLabel}>Address:</Text>
-                <Text style={styles.boxValue}>
-                  {(order.customerId as any)?.streetAddress}
-                  {(order.customerId as any)?.city &&
-                    `, ${(order.customerId as any)?.city}`}
-                  {(order.customerId as any)?.state &&
-                    `, ${(order.customerId as any)?.state}`}
-                </Text>
-              </View>
-            )}
+
+            <View style={styles.boxRow}>
+              <Text style={styles.boxLabel}>Address:</Text>
+              <Text style={styles.boxValue}>
+                {(order.customerId as any)?.streetAddress}
+                {(order.customerId as any)?.city &&
+                  ` ${(order.customerId as any)?.city}`}
+                {(order.customerId as any)?.state &&
+                  ` ${(order.customerId as any)?.state}`}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -534,49 +550,71 @@ const OrderPDF = ({
           <View style={styles.summaryContainer}>
             {customNote ? (
               <View style={styles.noteSection}>
-                <Text style={styles.noteTitle}>Note:</Text>
+                <Text style={styles.noteTitle}>Warranty:</Text>
                 <Text style={styles.noteText}>{customNote}</Text>
               </View>
             ) : (
               <View style={{ width: "40%" }} />
             )}
-            <View style={styles.summaryBox}>
-              <Text style={styles.summaryTitle}>Summary</Text>
-              <View style={styles.summaryDivider} />
+            <View style={{ width: "40%" }}>
+              <View style={styles.summaryBox}>
+                <Text style={styles.summaryTitle}>Invoice summary</Text>
 
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Current Bill:</Text>
-                <Text style={styles.summaryValue}>
-                  {formatCurrency(order.grandTotal)}
-                </Text>
-              </View>
-
-              {order.customerBalance && (
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Previous Balance:</Text>
+                  <Text style={styles.summaryLabel}>Current Bill:</Text>
                   <Text style={styles.summaryValue}>
                     {formatCurrency(
-                      order.customerBalance.absoluteAmount - order.grandTotal,
+                      order.invoiceBalanceSummary.currentOrderBill.amount,
                     )}
                   </Text>
                 </View>
-              )}
 
-              <View style={styles.summaryDivider} />
+                {order.invoiceBalanceSummary && (
+                  <View style={styles.summaryRow}>
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <Text style={styles.summaryLabel}>Previous Balance:</Text>
+                      <Text style={styles.summaryDirection}>
+                        {order.invoiceBalanceSummary.previousBalance
+                          .direction === "we_owe_customer"
+                          ? "credit"
+                          : "debit"}
+                      </Text>
+                    </View>
+                    <Text style={styles.summaryValue}>
+                      {order.invoiceBalanceSummary.previousBalance.sign}{" "}
+                      {formatCurrency(
+                        order.invoiceBalanceSummary.previousBalance.amount,
+                      )}
+                    </Text>
+                  </View>
+                )}
 
-              <View style={styles.netPayableRow}>
-                <Text style={styles.netPayableLabel}>✓ Net Payable:</Text>
-                <Text style={styles.netPayableValue}>
-                  {formatCurrency(order.customerBalance.absoluteAmount)}
-                </Text>
+                <View style={styles.netPayableRow}>
+                  <View style={styles.netPayableLeft}>
+                    <Text style={styles.netPayableLabel}>Net Payable:</Text>
+                    <Text style={styles.netPayableSubtitle}>
+                      Previous balance + current bill
+                    </Text>
+                  </View>
+                  <View style={styles.netPayableRight}>
+                    <Text style={styles.netPayableValue}>
+                      {order.invoiceBalanceSummary.netPayable.sign}{" "}
+                      {formatCurrency(
+                        order.invoiceBalanceSummary.netPayable.amount,
+                      )}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Dispatch Officer Section */}
+              <View style={styles.dispatchSection}>
+                <Text style={styles.dispatchLabel}>Dispatch Officer</Text>
+                <View style={styles.signatureLine} />
               </View>
             </View>
-          </View>
-
-          {/* Dispatch Officer Section */}
-          <View style={styles.dispatchSection}>
-            <Text style={styles.dispatchLabel}>Dispatch Officer</Text>
-            <View style={styles.signatureLine} />
           </View>
         </View>
       </Page>
@@ -588,8 +626,13 @@ interface GeneratePDFProps {
   order: Order;
 }
 
+const defaultNote = `We Do Hereby Give This Warranty That
+The Medicines Prepared By Root's Pharma Lhr.
+As Sold By Us Are Homeopathic Medicines And
+Do Not Contravene in Any Way With Any Provision of The Drap Act 2012`;
+
 export function GeneratePDF({ order }: GeneratePDFProps) {
-  const [customNote, setCustomNote] = React.useState("");
+  const [customNote, setCustomNote] = React.useState(defaultNote);
   const [isClient, setIsClient] = React.useState(false);
 
   // Logo URLs - Replace these with your actual logo URLs or set to empty string if not available
@@ -610,40 +653,42 @@ export function GeneratePDF({ order }: GeneratePDFProps) {
   }, []);
 
   return (
-    <div className="space-y-4 p-4 border rounded-lg bg-card max-w-md">
-      <div className="space-y-2 max-w-xl">
-        <Label htmlFor="customNote">Custom Note (Optional)</Label>
-        <Textarea
-          id="customNote"
-          placeholder="Enter any additional notes to include in the invoice..."
-          value={customNote}
-          onChange={(e) => setCustomNote(e.target.value)}
-          rows={3}
-        />
-        <p className="text-xs text-muted-foreground">
-          This note will appear at the bottom left of the invoice
-        </p>
+    <div className="space-y-4 rounded-lg bg-card max-w-4xl">
+      <div className="space-y-2 flex items-center gap-2">
+        <div className="flex-1">
+          <Label htmlFor="customNote">Warranty (Optional)</Label>
+          <Textarea
+            id="customNote"
+            placeholder="Enter any additional notes to include in the invoice..."
+            value={customNote}
+            onChange={(e) => setCustomNote(e.target.value)}
+            rows={5}
+          />
+          <p className="text-xs text-muted-foreground">
+            This note will appear at the bottom left of the invoice
+          </p>
+        </div>
+        {isClient && (
+          <PDFDownloadLink
+            document={
+              <OrderPDF
+                order={order}
+                customNote={customNote}
+                parentCompanyLogo={parentCompanyLogo}
+                companyLogo={companyLogo}
+              />
+            }
+            fileName={generateFileName()}
+          >
+            {({ loading }) => (
+              <Button className="" disabled={loading} size="lg">
+                <IconDownload className="h-4 w-4 mr-2" />
+                {loading ? "Generating PDF..." : "Download Invoice PDF"}
+              </Button>
+            )}
+          </PDFDownloadLink>
+        )}
       </div>
-      {isClient && (
-        <PDFDownloadLink
-          document={
-            <OrderPDF
-              order={order}
-              customNote={customNote}
-              parentCompanyLogo={parentCompanyLogo}
-              companyLogo={companyLogo}
-            />
-          }
-          fileName={generateFileName()}
-        >
-          {({ loading }) => (
-            <Button className="" disabled={loading} size="lg">
-              <IconDownload className="h-4 w-4 mr-2" />
-              {loading ? "Generating PDF..." : "Download Invoice PDF"}
-            </Button>
-          )}
-        </PDFDownloadLink>
-      )}
     </div>
   );
 }

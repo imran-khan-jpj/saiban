@@ -18,6 +18,11 @@ export const useDeleteCustomer = () => {
     onSuccess: () => {
       // Invalidate customers queries to refetch the list
       queryClient.invalidateQueries({ queryKey: ["customers"] });
+      // Invalidate ledger entries and orders since they may reference this customer
+      queryClient.invalidateQueries({ queryKey: ["ledger-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["customer-ledger-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["customer-orders"] });
     },
   });
 };

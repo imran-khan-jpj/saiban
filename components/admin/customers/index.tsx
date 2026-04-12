@@ -100,8 +100,11 @@ export function Customers() {
       accessorKey: "address",
       header: "Address",
       cell: ({ row }) => (
-        <div className="text-muted-foreground">
-          {row.original.streetAddress}, {row.original.city}
+        <div
+          className="text-muted-foreground line-clamp-1"
+          title={`${row.original.streetAddress} ${row.original.city} ${row.original.state}`}
+        >
+          {row.original.streetAddress} {row.original.city} {row.original.state}
         </div>
       ),
     },

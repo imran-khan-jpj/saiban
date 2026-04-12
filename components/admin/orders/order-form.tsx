@@ -218,8 +218,7 @@ export function OrderForm({
                             : "opacity-0"
                         }`}
                       />
-                      {customer.firstName} {customer.lastName} -{" "}
-                      {customer.email}
+                      {customer.firstName} {customer.lastName}
                     </CommandItem>
                   ))}
                 </CommandGroup>
