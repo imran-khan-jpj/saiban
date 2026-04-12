@@ -16,6 +16,7 @@ interface SectionCardProps {
   value: string | number;
   className?: string;
   href?: string;
+  valueClassName?: string;
 }
 
 export const SectionCard = ({
@@ -23,6 +24,7 @@ export const SectionCard = ({
   value,
   className,
   href,
+  valueClassName,
 }: SectionCardProps) => {
   const cardContent = (
     <Card
@@ -30,7 +32,9 @@ export const SectionCard = ({
     >
       <CardHeader className="pb-2">
         <CardDescription>{description}</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+        <CardTitle
+          className={`text-2xl font-semibold tabular-nums @[250px]/card:text-3xl ${valueClassName || ""}`}
+        >
           {value}
         </CardTitle>
       </CardHeader>
