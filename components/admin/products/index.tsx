@@ -171,7 +171,9 @@ export function Products({
           row.original.quantityInStock <= row.original.lowStockThreshold;
         return (
           <div className="flex items-center gap-2">
-            <span className={isLowStock ? "text-destructive font-medium" : ""}>
+            <span
+              className={`w-12 ${isLowStock ? "text-destructive font-medium" : ""}`}
+            >
               {row.original.quantityInStock}
             </span>
             {isLowStock && (

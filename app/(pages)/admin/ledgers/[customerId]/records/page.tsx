@@ -19,10 +19,10 @@ export default function CustomerLedgerRecordsPage() {
   const customerId = params.customerId as string;
 
   // Fetch customer details with balance
-  const { data: customer, isLoading } = useGetCustomerById(customerId);
+  const { data: customer } = useGetCustomerById(customerId);
 
   const customerName = customer
-    ? `${customer.firstName} ${customer.lastName}`
+    ? `${customer.firstName} ${customer?.lastName ?? ""}`
     : "Customer";
 
   return (
@@ -38,7 +38,7 @@ export default function CustomerLedgerRecordsPage() {
                   <div>
                     <h3 className="font-semibold">{customerName}</h3>
                     <p className="text-sm text-muted-foreground font-normal">
-                      {customer.email} • {customer.phoneNumber}
+                      {customer.email} {customer.phoneNumber}
                     </p>
                   </div>
                 </CardTitle>

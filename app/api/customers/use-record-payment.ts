@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { postClient } from "../api-callers/client";
 
 interface RecordPaymentData {
@@ -24,6 +24,8 @@ interface PaymentResponse {
 }
 
 export function useRecordPayment() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (data: RecordPaymentData) => {
       const response = await postClient<PaymentResponse>({
@@ -31,6 +33,12 @@ export function useRecordPayment() {
         body: data,
       });
       return response;
+    },
+    onSuccess: () => {
+      // Invalidate ledger entries to refetch updated data
+      queryClient.invalidateQueries({
+        queryKey: ["ledger-entries"],
+      });
     },
   });
 }

@@ -24,9 +24,7 @@ const balanceAdjustmentFormSchema = z.object({
   note: z.string().optional(),
 });
 
-type BalanceAdjustmentFormValues = z.infer<
-  typeof balanceAdjustmentFormSchema
->;
+type BalanceAdjustmentFormValues = z.infer<typeof balanceAdjustmentFormSchema>;
 
 interface BalanceAdjustmentFormProps {
   onSubmit: (data: BalanceAdjustmentFormValues) => void;
@@ -87,16 +85,14 @@ export function BalanceAdjustmentForm({
                 <SelectValue placeholder="Select direction" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="customer_owes">Customer Owes</SelectItem>
-                <SelectItem value="we_owe_customer">We Owe Customer</SelectItem>
+                <SelectItem value="customer_owes">Due payment</SelectItem>
+                <SelectItem value="we_owe_customer">Advance payment</SelectItem>
               </SelectContent>
             </Select>
           )}
         />
         {errors.direction && (
-          <p className="text-sm text-destructive">
-            {errors.direction.message}
-          </p>
+          <p className="text-sm text-destructive">{errors.direction.message}</p>
         )}
       </div>
 

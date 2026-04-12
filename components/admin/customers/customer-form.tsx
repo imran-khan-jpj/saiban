@@ -250,72 +250,72 @@ export function CustomerForm({
             Opening Balance (Optional)
           </h3>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="balanceAmount">Amount</Label>
-            <Input
-              id="balanceAmount"
-              type="number"
-              placeholder="1500"
-              error={!!errors.balanceAdjustment?.amount}
-              errorMessage={errors.balanceAdjustment?.amount?.message}
-              {...register("balanceAdjustment.amount", {
-                valueAsNumber: true,
-              })}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="balanceAmount">Amount</Label>
+              <Input
+                id="balanceAmount"
+                type="number"
+                placeholder="1500"
+                error={!!errors.balanceAdjustment?.amount}
+                errorMessage={errors.balanceAdjustment?.amount?.message}
+                {...register("balanceAdjustment.amount", {
+                  valueAsNumber: true,
+                })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="balanceDirection">Direction</Label>
+              <Controller
+                name="balanceAdjustment.direction"
+                control={control}
+                defaultValue="customer_owes"
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger
+                      id="balanceDirection"
+                      className={
+                        errors.balanceAdjustment?.direction
+                          ? "border-destructive"
+                          : ""
+                      }
+                    >
+                      <SelectValue placeholder="Select direction" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="customer_owes">Due payment</SelectItem>
+                      <SelectItem value="we_owe_customer">
+                        Advance payment
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.balanceAdjustment?.direction && (
+                <p className="text-sm text-destructive">
+                  {errors.balanceAdjustment.direction.message}
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="balanceDirection">Direction</Label>
-            <Controller
-              name="balanceAdjustment.direction"
-              control={control}
-              defaultValue="customer_owes"
-              render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger
-                    id="balanceDirection"
-                    className={
-                      errors.balanceAdjustment?.direction
-                        ? "border-destructive"
-                        : ""
-                    }
-                  >
-                    <SelectValue placeholder="Select direction" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="customer_owes">Customer Owes</SelectItem>
-                    <SelectItem value="we_owe_customer">
-                      We Owe Customer
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
+          <div className="space-y-2 mt-4">
+            <Label htmlFor="balanceNote">Note</Label>
+            <Textarea
+              id="balanceNote"
+              placeholder="Opening balance from previous ledger"
+              className={
+                errors.balanceAdjustment?.note ? "border-destructive" : ""
+              }
+              {...register("balanceAdjustment.note")}
             />
-            {errors.balanceAdjustment?.direction && (
+            {errors.balanceAdjustment?.note && (
               <p className="text-sm text-destructive">
-                {errors.balanceAdjustment.direction.message}
+                {errors.balanceAdjustment.note.message}
               </p>
             )}
           </div>
-        </div>
-
-        <div className="space-y-2 mt-4">
-          <Label htmlFor="balanceNote">Note</Label>
-          <Textarea
-            id="balanceNote"
-            placeholder="Opening balance from previous ledger"
-            className={
-              errors.balanceAdjustment?.note ? "border-destructive" : ""
-            }
-            {...register("balanceAdjustment.note")}
-          />
-          {errors.balanceAdjustment?.note && (
-            <p className="text-sm text-destructive">
-              {errors.balanceAdjustment.note.message}
-            </p>
-          )}
-        </div>
         </div>
       )}
 

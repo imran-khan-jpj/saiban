@@ -44,6 +44,10 @@ export const useBalanceAdjustment = () => {
         queryKey: ["customer-transactions", variables.customerId],
       });
       queryClient.invalidateQueries({ queryKey: ["customers"] });
+      // Invalidate ledger entries to refetch updated data
+      queryClient.invalidateQueries({
+        queryKey: ["ledger-entries"],
+      });
     },
   });
 };

@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Ledgers } from "@/components/admin/ledgers";
 import { SiteHeader } from "@/components/site-header";
 

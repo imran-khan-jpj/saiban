@@ -40,13 +40,14 @@ export function Ledgers() {
   const customers = customersData?.data || [];
 
   // Fetch ledger entries from API with pagination and filters
-  const { data, isLoading, isError, error } = useGetAllLedgerEntries(
-    pagination.pageIndex + 1,
-    pagination.pageSize,
-    customerFilter || undefined,
-    startDate ? formatDate(startDate, "YYYY-MM-DD") : undefined,
-    endDate ? formatDate(endDate, "YYYY-MM-DD") : undefined,
-  );
+  const { data, isLoading, isFetching, isError, error } =
+    useGetAllLedgerEntries(
+      pagination.pageIndex + 1,
+      pagination.pageSize,
+      customerFilter || undefined,
+      startDate ? formatDate(startDate, "YYYY-MM-DD") : undefined,
+      endDate ? formatDate(endDate, "YYYY-MM-DD") : undefined,
+    );
 
   // Filter customers based on search
   const filteredCustomers = React.useMemo(() => {
@@ -138,7 +139,7 @@ export function Ledgers() {
     },
   ];
 
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <div className="flex items-center justify-center py-10">
         <Spinner className="h-8 w-8" />

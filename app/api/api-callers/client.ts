@@ -1,6 +1,13 @@
 import { CONFIG } from "@/app/config";
 import { DEFAULTS } from "@/app/defaults";
-import { getAuthToken } from "@/lib/cookies";
+import { getAuthToken, deleteAuthToken } from "@/lib/cookies";
+
+const handleUnauthorized = () => {
+  deleteAuthToken();
+  if (typeof window !== "undefined") {
+    window.location.href = "/login";
+  }
+};
 
 type FetchPostOptions = {
   url: string;
@@ -32,6 +39,11 @@ export const postClient = async <T>({
       credentials: "include",
       body: body instanceof FormData ? body : JSON.stringify(body),
     });
+
+    if (response.status === 401) {
+      handleUnauthorized();
+      throw new Error("Unauthorized");
+    }
 
     if (!response.ok) {
       const res = await response.json();
@@ -77,6 +89,12 @@ export const patchClient = async <T>({
       credentials: "include",
       body: body instanceof FormData ? body : JSON.stringify(body),
     });
+
+    if (response.status === 401) {
+      handleUnauthorized();
+      throw new Error("Unauthorized");
+    }
+
     if (!response.ok) {
       const res = await response.json();
       throw new Error(res?.message ?? res?.error ?? DEFAULTS.ERROR_MESSAGE);
@@ -112,7 +130,8 @@ export const getClient = async <T>({
     });
 
     if (response.status === 401) {
-      throw new Error("unauthorized");
+      handleUnauthorized();
+      throw new Error("Unauthorized");
     }
 
     if (response.status === 403) {
@@ -156,6 +175,12 @@ export const deleteClient = async <T>({
       credentials: "include",
       body: body instanceof FormData ? body : JSON.stringify(body),
     });
+
+    if (response.status === 401) {
+      handleUnauthorized();
+      throw new Error("Unauthorized");
+    }
+
     if (!response.ok) {
       const res = await response.json();
       throw new Error(res?.message ?? res?.error ?? DEFAULTS.ERROR_MESSAGE);
