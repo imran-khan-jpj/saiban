@@ -1,11 +1,9 @@
 "use client";
 
-import { useDashboardMetrics } from "@/app/api/dashboard/use-dashboard-metrics";
 import { SectionCards } from "./components/section-cards";
 import { SiteHeader } from "@/components/site-header";
 import { useGetAllCustomers } from "@/app/api/customers/use-get-all";
 import { useGetAllProducts } from "@/app/api/products/use-get-all";
-import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
@@ -37,13 +35,6 @@ export default function Dashboard() {
   const outOfStockProducts = React.useMemo(() => {
     return products.filter((p) => p.quantityInStock === 0).slice(0, 5);
   }, [products]);
-
-  // Get stock badge class
-  const getStockBadgeClass = (stock: number) => {
-    if (stock === 0)
-      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-    return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
-  };
 
   return (
     <div>

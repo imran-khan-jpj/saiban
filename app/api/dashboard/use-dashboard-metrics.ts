@@ -7,6 +7,8 @@ type DashboardMetricsResponse = {
     totalCustomers: number;
     totalOrders: number;
     totalRevenue: number;
+    pendingPayments: number;
+    receivedPayments: number;
   };
   alerts: {
     lowStockProducts: any[];

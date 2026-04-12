@@ -48,10 +48,38 @@ export interface Order {
   updatedAt: string;
   invoiceNumber: string;
   __v: number;
-  customerBalance: {
-    netBalance: number;
-    direction: "customer_owes" | "we_owe_customer";
-    absoluteAmount: number;
+
+  invoiceBalanceSummary: {
+    previousBalance: {
+      amount: number;
+      sign: string;
+      direction: "we_owe_customer" | "customer_owes_us";
+      note: string;
+    };
+    currentOrderBill: {
+      amount: number;
+      sign: string;
+      balanceImpact: number;
+      note: string;
+    };
+    netPayable: {
+      amount: number;
+      sign: string;
+      direction: "settled";
+      note: string;
+    };
+    calculation: {
+      previousBalance: number;
+      orderImpact: number;
+      netPayable: number;
+      expression: string;
+    };
+    legend: {
+      positive: string;
+      negative: string;
+      zero: string;
+    };
+    basis: "as_of_invoice_issue";
   };
 }
 

@@ -69,6 +69,7 @@ import { PaymentForm } from "./payment-form";
 import { BalanceAdjustmentForm } from "./balance-adjustment-form";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { custom } from "zod";
 
 interface CustomerDetailProps {
   customerId: string;
@@ -287,15 +288,23 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
               <h2 className="text-lg font-bold">
                 {customer.firstName} {customer.lastName}
               </h2>
-              <span className="text-muted-foreground">•</span>
-              <p className="text-muted-foreground">{customer.email}</p>
+              {customer.email && (
+                <div>
+                  <span className="text-muted-foreground">•</span>
+                  <p className="text-muted-foreground">{customer.email}</p>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>{customer.phoneNumber}</span>
-              <span>•</span>
-              <span>
-                {customer.streetAddress}, {customer.city}, {customer.state}
-              </span>
+              {(customer.streetAddress || customer.city || customer.state) && (
+                <div className="inline">
+                  <span>•</span>
+                  <span>
+                    {customer.streetAddress} {customer.city} {customer.state}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
