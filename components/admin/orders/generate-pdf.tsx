@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   summaryBox: {
-    width: "40%",
+    // width: "40%",
     padding: 12,
     backgroundColor: "#fff",
   },
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingBottom: 8,
     marginBottom: 8,
-    borderBottom: "1pt solid #000",
+    borderBottom: "1pt solid #ddd",
   },
   summaryLabel: {
     fontSize: 9,
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   summaryDirection: {
     fontSize: 7,
     color: "#666",
-    marginLeft: 4,
+    marginTop: 2,
   },
   netPayableRow: {
     flexDirection: "row",
@@ -561,19 +561,21 @@ const OrderPDF = ({
                 <Text style={styles.summaryTitle}>Invoice summary</Text>
 
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Current Bill:</Text>
-                  <Text style={styles.summaryValue}>
-                    {formatCurrency(
-                      order.invoiceBalanceSummary.currentOrderBill.amount,
-                    )}
-                  </Text>
+                  <View>
+                    <Text style={styles.summaryLabel}>Current Bill:</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.summaryValue}>
+                      {formatCurrency(
+                        order.invoiceBalanceSummary.currentOrderBill.amount,
+                      )}
+                    </Text>
+                  </View>
                 </View>
 
                 {order.invoiceBalanceSummary && (
                   <View style={styles.summaryRow}>
-                    <View
-                      style={{ flexDirection: "row", alignItems: "center" }}
-                    >
+                    <View>
                       <Text style={styles.summaryLabel}>Previous Balance:</Text>
                       <Text style={styles.summaryDirection}>
                         {order.invoiceBalanceSummary.previousBalance
@@ -582,12 +584,13 @@ const OrderPDF = ({
                           : "debit"}
                       </Text>
                     </View>
-                    <Text style={styles.summaryValue}>
-                      {order.invoiceBalanceSummary.previousBalance.sign}{" "}
-                      {formatCurrency(
-                        order.invoiceBalanceSummary.previousBalance.amount,
-                      )}
-                    </Text>
+                    <View>
+                      <Text style={styles.summaryValue}>
+                        {formatCurrency(
+                          order.invoiceBalanceSummary.previousBalance.amount,
+                        )}
+                      </Text>
+                    </View>
                   </View>
                 )}
 
@@ -600,7 +603,6 @@ const OrderPDF = ({
                   </View>
                   <View style={styles.netPayableRight}>
                     <Text style={styles.netPayableValue}>
-                      {order.invoiceBalanceSummary.netPayable.sign}{" "}
                       {formatCurrency(
                         order.invoiceBalanceSummary.netPayable.amount,
                       )}
