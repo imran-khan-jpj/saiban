@@ -49,6 +49,9 @@ const orderFormSchema = z.object({
         product: z.string().min(1, "Product is required"),
         quantity: z.number().min(1, "Quantity must be at least 1"),
         price: z.number().min(0, "Price must be at least 0"),
+        discountedPrice: z
+          .number()
+          .min(0, "Discounted price must be at least 0"),
         discountPercentage: z.number().min(0).max(100),
       }),
     )
@@ -89,7 +92,15 @@ export function OrderForm({
     defaultValues: {
       customer: "",
       note: "",
-      items: [{ product: "", quantity: 1, price: 0, discountPercentage: 0 }],
+      items: [
+        {
+          product: "",
+          quantity: 1,
+          price: 0,
+          discountedPrice: 0,
+          discountPercentage: 0,
+        },
+      ],
     },
   });
 
@@ -139,6 +150,11 @@ export function OrderForm({
         shouldDirty: true,
         shouldValidate: true,
       });
+      setValue(`items.${index}.discountedPrice`, product.unitPrice, {
+        shouldTouch: true,
+        shouldDirty: true,
+        shouldValidate: true,
+      });
       // Store stock limit for this item
       setProductStockLimits((prev) => ({
         ...prev,
@@ -159,6 +175,56 @@ export function OrderForm({
       // Force re-render of total amount
       setProductChangeCounter((prev) => prev + 1);
     }
+  };
+
+  // Calculate discount percentage from discounted price
+  const handleDiscountedPriceChange = (
+    index: number,
+    discountedPrice: number,
+  ) => {
+    const price = items[index]?.price || 0;
+
+    // If discounted price is empty/NaN/0, reset discount to 0
+    if (!discountedPrice || isNaN(discountedPrice)) {
+      setValue(`items.${index}.discountPercentage`, 0, {
+        shouldTouch: true,
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setProductChangeCounter((prev) => prev + 1);
+      return;
+    }
+
+    if (price > 0) {
+      const discountPercentage = ((price - discountedPrice) / price) * 100;
+      const roundedPercentage = Math.round(discountPercentage * 100) / 100;
+      setValue(
+        `items.${index}.discountPercentage`,
+        Math.max(0, Math.min(100, roundedPercentage)),
+        {
+          shouldTouch: true,
+          shouldDirty: true,
+          shouldValidate: true,
+        },
+      );
+    }
+    setProductChangeCounter((prev) => prev + 1);
+  };
+
+  // Calculate discounted price from discount percentage
+  const handleDiscountPercentageChange = (
+    index: number,
+    discountPercentage: number,
+  ) => {
+    const price = items[index]?.price || 0;
+    const discountedPrice = price * (1 - discountPercentage / 100);
+    const roundedDiscountedPrice = Math.round(discountedPrice * 100) / 100;
+    setValue(`items.${index}.discountedPrice`, roundedDiscountedPrice, {
+      shouldTouch: true,
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setProductChangeCounter((prev) => prev + 1);
   };
 
   const handleFormSubmit = (data: OrderFormValues) => {
@@ -253,6 +319,7 @@ export function OrderForm({
                 product: "",
                 quantity: 1,
                 price: 0,
+                discountedPrice: 0,
                 discountPercentage: 0,
               })
             }
@@ -265,7 +332,7 @@ export function OrderForm({
         {fields.map((field, index) => (
           <div
             key={field.id}
-            className="grid grid-cols-12 gap-2 items-start p-4 border rounded-lg"
+            className="grid grid-cols-14 gap-2 items-start p-4 border rounded-lg"
           >
             <div className="col-span-4 space-y-2">
               <Label htmlFor={`items.${index}.product`}>Product</Label>
@@ -399,6 +466,30 @@ export function OrderForm({
             </div>
 
             <div className="col-span-2 space-y-2">
+              <Label htmlFor={`items.${index}.discountedPrice`}>
+                Adjusted Price
+              </Label>
+              <Input
+                id={`items.${index}.discountedPrice`}
+                type="number"
+                placeholder="0"
+                min="0"
+                max={items[index]?.price || undefined}
+                step="0.01"
+                error={!!errors.items?.[index]?.discountedPrice}
+                errorMessage={errors.items?.[index]?.discountedPrice?.message}
+                {...register(`items.${index}.discountedPrice`, {
+                  valueAsNumber: true,
+                  onChange: (e) =>
+                    handleDiscountedPriceChange(
+                      index,
+                      parseFloat(e.target.value) || 0,
+                    ),
+                })}
+              />
+            </div>
+
+            <div className="col-span-2 space-y-2">
               <Label htmlFor={`items.${index}.discountPercentage`}>
                 Discount %
               </Label>
@@ -408,13 +499,18 @@ export function OrderForm({
                 placeholder="0"
                 min="0"
                 max="100"
+                step="0.01"
                 error={!!errors.items?.[index]?.discountPercentage}
                 errorMessage={
                   errors.items?.[index]?.discountPercentage?.message
                 }
                 {...register(`items.${index}.discountPercentage`, {
                   valueAsNumber: true,
-                  onChange: () => setProductChangeCounter((prev) => prev + 1),
+                  onChange: (e) =>
+                    handleDiscountPercentageChange(
+                      index,
+                      parseFloat(e.target.value) || 0,
+                    ),
                 })}
               />
             </div>

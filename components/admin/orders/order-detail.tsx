@@ -44,6 +44,12 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
+  const [customNote, setCustomNote] = React.useState(
+    `We Do Hereby Give This Warranty That
+The Medicines Prepared By Root's Pharma Lhr.
+As Sold By Us Are Homeopathic Medicines And
+Do Not Contravene in Any Way With Any Provision of The Drap Act 2012`,
+  );
   const { data: order, isLoading, isError } = useGetOrderById(orderId);
   const recordPayment = useRecordPayment();
 
@@ -126,14 +132,16 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
             </p>
           </div>
         </div>
-        <Button
-          size="sm"
-          className="bg-black text-white hover:bg-black/90"
-          onClick={() => setIsPaymentDialogOpen(true)}
-        >
-          <IconCash className="h-4 w-4 mr-2" />
-          Record Payment
-        </Button>
+        <div className="flex items-center gap-2">
+          <GeneratePDF order={order} customNote={customNote} buttonOnly />
+          <Button
+            className="bg-black text-white hover:bg-black/90"
+            onClick={() => setIsPaymentDialogOpen(true)}
+          >
+            <IconCash className="h-4 w-4 mr-2" />
+            Record Payment
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -233,10 +241,15 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
           </div>
         )}
 
-        {/* Generate PDF Section */}
+        {/* Invoice Warranty Note */}
         <div className="space-y-1">
-          <Label className="text-muted-foreground">Generate Invoice</Label>
-          <GeneratePDF order={order} />
+          <Label className="text-muted-foreground">Warranty (Optional)</Label>
+          <GeneratePDF
+            order={order}
+            customNote={customNote}
+            onNoteChange={setCustomNote}
+            textareaOnly
+          />
         </div>
       </div>
 

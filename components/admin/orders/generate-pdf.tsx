@@ -378,12 +378,7 @@ const OrderPDF = ({
           </View>
 
           {/* Right Logo */}
-          {companyLogo && (
-            <Image
-              src={companyLogo}
-              style={{ height: 120, width: 120, objectFit: "contain" }}
-            />
-          )}
+          {companyLogo && <Image src={companyLogo} style={styles.logo} />}
         </View>
 
         {/* Invoice and Customer Boxes */}
@@ -411,14 +406,12 @@ const OrderPDF = ({
               </Text>
             </View>
 
-            {order.customerId.phoneNumber && (
-              <View style={styles.boxRow}>
-                <Text style={styles.boxLabel}>Phone:</Text>
-                <Text style={styles.boxValue}>
-                  {order.customerId.phoneNumber}
-                </Text>
-              </View>
-            )}
+            <View style={styles.boxRow}>
+              <Text style={styles.boxLabel}>Phone:</Text>
+              <Text style={styles.boxValue}>
+                {order.customerId.phoneNumber}
+              </Text>
+            </View>
 
             <View style={styles.boxRow}>
               <Text style={styles.boxLabel}>Address:</Text>
@@ -577,12 +570,6 @@ const OrderPDF = ({
                   <View style={styles.summaryRow}>
                     <View>
                       <Text style={styles.summaryLabel}>Previous Balance:</Text>
-                      <Text style={styles.summaryDirection}>
-                        {order.invoiceBalanceSummary.previousBalance
-                          .direction === "we_owe_customer"
-                          ? "credit"
-                          : "debit"}
-                      </Text>
                     </View>
                     <View>
                       <Text style={styles.summaryValue}>
@@ -626,6 +613,10 @@ const OrderPDF = ({
 
 interface GeneratePDFProps {
   order: Order;
+  customNote?: string;
+  onNoteChange?: (note: string) => void;
+  buttonOnly?: boolean;
+  textareaOnly?: boolean;
 }
 
 const defaultNote = `We Do Hereby Give This Warranty That
@@ -633,13 +624,26 @@ The Medicines Prepared By Root's Pharma Lhr.
 As Sold By Us Are Homeopathic Medicines And
 Do Not Contravene in Any Way With Any Provision of The Drap Act 2012`;
 
-export function GeneratePDF({ order }: GeneratePDFProps) {
-  const [customNote, setCustomNote] = React.useState(defaultNote);
+export function GeneratePDF({
+  order,
+  customNote: controlledNote,
+  onNoteChange,
+  buttonOnly = false,
+  textareaOnly = false,
+}: GeneratePDFProps) {
+  const [internalNote, setInternalNote] = React.useState(defaultNote);
   const [isClient, setIsClient] = React.useState(false);
 
-  // Logo URLs - Replace these with your actual logo URLs or set to empty string if not available
-  const parentCompanyLogo = "/logos/roots-logo.jpeg"; // Parent company logo
-  const companyLogo = "/logos/saiban-logo.jpeg"; // Company logo
+  // Use controlled note if provided, otherwise use internal state
+  const customNote =
+    controlledNote !== undefined ? controlledNote : internalNote;
+  const handleNoteChange = (value: string) => {
+    if (onNoteChange) {
+      onNoteChange(value);
+    } else {
+      setInternalNote(value);
+    }
+  };
 
   // Generate filename with customer name and date
   const generateFileName = () => {
@@ -654,6 +658,50 @@ export function GeneratePDF({ order }: GeneratePDFProps) {
     setIsClient(true);
   }, []);
 
+  // Render only the download button
+  if (buttonOnly && isClient) {
+    return (
+      <PDFDownloadLink
+        document={
+          <OrderPDF
+            order={order}
+            customNote={customNote || defaultNote}
+            parentCompanyLogo="/logos/roots-logo.jpeg"
+            companyLogo="/logos/saiban-logo.jpeg"
+          />
+        }
+        fileName={generateFileName()}
+      >
+        {({ loading }) => (
+          <Button disabled={loading}>
+            <IconDownload className="h-4 w-4 mr-2" />
+            {loading ? "Generating..." : "Download Invoice PDF"}
+          </Button>
+        )}
+      </PDFDownloadLink>
+    );
+  }
+
+  // Render only the textarea
+  if (textareaOnly) {
+    return (
+      <div className="space-y-2 p-[1px]">
+        <Textarea
+          id="customNote"
+          placeholder="Enter any additional notes to include in the invoice..."
+          value={customNote}
+          onChange={(e) => handleNoteChange(e.target.value)}
+          rows={5}
+          className="z-20"
+        />
+        <p className="text-xs text-muted-foreground">
+          This note will appear at the bottom left of the invoice
+        </p>
+      </div>
+    );
+  }
+
+  // Render both (original layout)
   return (
     <div className="space-y-4 rounded-lg bg-card max-w-4xl">
       <div className="space-y-2 flex items-center gap-2">
@@ -663,7 +711,7 @@ export function GeneratePDF({ order }: GeneratePDFProps) {
             id="customNote"
             placeholder="Enter any additional notes to include in the invoice..."
             value={customNote}
-            onChange={(e) => setCustomNote(e.target.value)}
+            onChange={(e) => handleNoteChange(e.target.value)}
             rows={5}
           />
           <p className="text-xs text-muted-foreground">
@@ -676,8 +724,8 @@ export function GeneratePDF({ order }: GeneratePDFProps) {
               <OrderPDF
                 order={order}
                 customNote={customNote}
-                parentCompanyLogo={parentCompanyLogo}
-                companyLogo={companyLogo}
+                parentCompanyLogo="/logos/roots-logo.jpeg"
+                companyLogo="/logos/saiban-logo.jpeg"
               />
             }
             fileName={generateFileName()}
