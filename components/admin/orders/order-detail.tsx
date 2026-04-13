@@ -45,10 +45,9 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
   const queryClient = useQueryClient();
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
   const [customNote, setCustomNote] = React.useState(
-    `We Do Hereby Give This Warranty That
-The Medicines Prepared By Root's Pharma Lhr.
-As Sold By Us Are Homeopathic Medicines And
-Do Not Contravene in Any Way With Any Provision of The Drap Act 2012`,
+    `We do hereby give this warranty that the medicines described in this invoice has sold by us do not contravene in any way in any provision of the DRAP ACT 2012. 
+Sales Manager Roots Pharma (Pvt) Ltd
+Note: Claim atleast 3 months before the expiry of medicine`,
   );
   const { data: order, isLoading, isError } = useGetOrderById(orderId);
   const recordPayment = useRecordPayment();
