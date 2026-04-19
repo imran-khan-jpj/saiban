@@ -36,14 +36,14 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 120,
-    height: 120,
+    height: 90,
     objectFit: "contain",
   },
   companyHeader: {
     flex: 1,
     textAlign: "center",
     paddingHorizontal: 10,
-    paddingVertical: 2,
+    // paddingVertical: 2,
   },
   companyName: {
     fontSize: 14,
@@ -311,7 +311,9 @@ const styles = StyleSheet.create({
   },
   // Custom Note Section
   noteSection: {
+    width: "62%",
     marginTop: 8,
+    padding: 8,
   },
   noteTitle: {
     fontSize: 9,
