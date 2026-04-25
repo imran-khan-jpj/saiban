@@ -4,7 +4,8 @@ import * as React from "react";
 import { DataTable } from "@/components/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { IconPlus } from "@tabler/icons-react";
+import { Input } from "@/components/ui/input";
+import { IconPlus, IconSearch } from "@tabler/icons-react";
 import {
   Dialog,
   DialogContent,
@@ -49,12 +50,40 @@ export function Customers() {
     pageIndex: 0,
     pageSize: 10,
   });
+  const [searchInput, setSearchInput] = React.useState("");
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Fetch customers from API with pagination
+  // Debounce search input with 400ms delay
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      // Reset to first page when search changes
+      if (searchInput !== debouncedSearch) {
+        setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchInput, debouncedSearch]);
+
+  // Fetch customers from API with pagination and search
   const { data, isLoading, isError, error } = useGetAllCustomers(
     pagination.pageIndex + 1, // API uses 1-based page numbering
     pagination.pageSize,
+    debouncedSearch,
   );
+
+  // Keep search input focused after search completes
+  React.useEffect(() => {
+    if (
+      !isLoading &&
+      searchInputRef.current &&
+      document.activeElement !== searchInputRef.current
+    ) {
+      searchInputRef.current.focus();
+    }
+  }, [isLoading, debouncedSearch]);
 
   // Mutations
   const createCustomer = useCreateCustomer();
@@ -211,24 +240,6 @@ export function Customers() {
     setIsAddDialogOpen(true);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-10">
-        <Spinner className="h-8 w-8" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="rounded-lg border border-destructive p-4">
-        <p className="text-destructive">
-          Error loading customers: {error?.message || "Unknown error"}
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full space-y-4 min-h-0">
       <div className="shrink-0 flex items-center justify-between mt-2">
@@ -268,16 +279,41 @@ export function Customers() {
         </Dialog>
       </div>
 
-      <div className="flex-1 min-h-0">
-        <DataTable
-          data={customers}
-          columns={columns}
-          enableRowSelection={false}
-          manualPagination={true}
-          pageCount={data?.pagination.pages}
-          pagination={pagination}
-          onPaginationChange={setPagination}
+      {/* Search Input */}
+      <div className="shrink-0 relative max-w-md">
+        <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          ref={searchInputRef}
+          type="text"
+          placeholder="Search customers by name"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="pl-10"
         />
+      </div>
+
+      <div className="flex-1 min-h-0">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <Spinner className="h-8 w-8" />
+          </div>
+        ) : isError ? (
+          <div className="rounded-lg border border-destructive p-4">
+            <p className="text-destructive">
+              Error loading customers: {error?.message || "Unknown error"}
+            </p>
+          </div>
+        ) : (
+          <DataTable
+            data={customers}
+            columns={columns}
+            enableRowSelection={false}
+            manualPagination={true}
+            pageCount={data?.pagination.pages}
+            pagination={pagination}
+            onPaginationChange={setPagination}
+          />
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}

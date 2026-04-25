@@ -24,12 +24,13 @@ export interface GetAllCustomersResponse {
   };
 }
 
-export const useGetAllCustomers = (page: number = 1, limit: number = 10) => {
+export const useGetAllCustomers = (page: number = 1, limit: number = 10, search?: string) => {
   return useQuery<GetAllCustomersResponse>({
-    queryKey: ["customers", page, limit],
+    queryKey: ["customers", page, limit, search],
     queryFn: async () => {
+      const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
       const response = await getClient<GetAllCustomersResponse>({
-        url: `/api/customers?page=${page}&limit=${limit}`,
+        url: `/api/customers?page=${page}&limit=${limit}${searchParam}`,
       });
       return response;
     },

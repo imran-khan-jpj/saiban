@@ -32,12 +32,48 @@ export function Ledgers() {
   });
   const [customerFilter, setCustomerFilter] = React.useState("");
   const [customerSearch, setCustomerSearch] = React.useState("");
+  const [debouncedCustomerSearch, setDebouncedCustomerSearch] =
+    React.useState("");
   const [startDate, setStartDate] = React.useState<Date | undefined>();
   const [endDate, setEndDate] = React.useState<Date | undefined>();
+  const [customersPagination, setCustomersPagination] = React.useState({
+    page: 1,
+    limit: 50,
+  });
 
-  // Fetch customers for filter
-  const { data: customersData } = useGetAllCustomers(1, 100);
+  // Debounce customer search input with 400ms delay
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedCustomerSearch(customerSearch);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [customerSearch]);
+
+  // Fetch customers for filter with search
+  const { data: customersData } = useGetAllCustomers(
+    customersPagination.page,
+    customersPagination.limit,
+    debouncedCustomerSearch,
+  );
   const customers = customersData?.data || [];
+
+  // Clear customer filter when search input changes (user is typing new search)
+  React.useEffect(() => {
+    // Only clear if customerSearch doesn't match the selected customer's name
+    if (customerFilter && customerSearch) {
+      const selectedCustomer = customers.find((c) => c._id === customerFilter);
+      if (selectedCustomer) {
+        const fullName = `${selectedCustomer.firstName} ${selectedCustomer.lastName}`;
+        if (customerSearch !== fullName) {
+          setCustomerFilter("");
+        }
+      }
+    } else if (customerFilter && !customerSearch) {
+      // Clear filter if search input is empty
+      setCustomerFilter("");
+    }
+  }, [customerSearch, customerFilter, customers]);
 
   // Fetch ledger entries from API with pagination and filters
   const { data, isLoading, isFetching, isError, error } =
@@ -49,21 +85,10 @@ export function Ledgers() {
       endDate ? formatDate(endDate, "YYYY-MM-DD") : undefined,
     );
 
-  // Filter customers based on search
-  const filteredCustomers = React.useMemo(() => {
-    if (!customerSearch) return customers;
-    const search = customerSearch.toLowerCase();
-    return customers.filter(
-      (c) =>
-        c.firstName.toLowerCase().includes(search) ||
-        c.lastName.toLowerCase().includes(search) ||
-        c.email.toLowerCase().includes(search),
-    );
-  }, [customers, customerSearch]);
-
   const handleClearFilters = () => {
     setCustomerFilter("");
     setCustomerSearch("");
+    setDebouncedCustomerSearch("");
     setStartDate(undefined);
     setEndDate(undefined);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
@@ -160,54 +185,49 @@ export function Ledgers() {
   return (
     <div className="flex flex-col h-full space-y-4 min-h-0">
       <div className="shrink-0 flex items-end justify-between mt-2">
-        <div className="flex items-center gap-2">
-          <div className="relative w-64">
-            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search customers..."
-              value={customerSearch}
-              onChange={(e) => setCustomerSearch(e.target.value)}
-              className="pl-9"
-            />
-            {customerSearch && filteredCustomers.length > 0 && (
-              <div className="absolute top-full mt-1 w-full bg-popover border rounded-md shadow-md max-h-60 overflow-y-auto z-50">
-                {filteredCustomers.map((customer) => (
-                  <div
-                    key={customer._id}
-                    className={cn(
-                      "w-full px-3 py-2 hover:bg-accent transition-colors border-b last:border-b-0",
-                      customerFilter === customer._id && "bg-accent",
-                    )}
+        <div className="relative w-64">
+          <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search customers..."
+            value={customerSearch}
+            onChange={(e) => setCustomerSearch(e.target.value)}
+            className="pl-9"
+          />
+          {customerSearch && customers.length > 0 && (
+            <div className="absolute top-full mt-1 w-full bg-popover border rounded-md shadow-md max-h-60 overflow-y-auto z-50">
+              {customers.map((customer) => (
+                <div
+                  key={customer._id}
+                  className={cn(
+                    "w-full px-3 py-2 hover:bg-accent transition-colors border-b last:border-b-0",
+                    customerFilter === customer._id && "bg-accent",
+                  )}
+                >
+                  <button
+                    onClick={() => {
+                      setCustomerFilter(customer._id);
+                      setCustomerSearch(
+                        `${customer.firstName} ${customer.lastName}`,
+                      );
+                    }}
+                    className="w-full text-left"
                   >
-                    <button
-                      onClick={() => {
-                        setCustomerFilter(customer._id);
-                        setCustomerSearch(
-                          `${customer.firstName} ${customer.lastName}`,
-                        );
-                      }}
-                      className="w-full text-left"
-                    >
-                      <div className="font-medium">
-                        {customer.firstName} {customer.lastName}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {customer.email}
-                      </div>
-                    </button>
-                    <button
-                      onClick={() =>
-                        router.push(`/admin/ledgers/${customer._id}/records`)
-                      }
-                      className="text-xs text-primary hover:underline mt-1"
-                    >
-                      View ledger records →
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                    <div className="font-medium">
+                      {customer.firstName} {customer.lastName}
+                    </div>
+                  </button>
+                  <button
+                    onClick={() =>
+                      router.push(`/admin/ledgers/${customer._id}/records`)
+                    }
+                    className="text-xs text-primary hover:underline mt-1"
+                  >
+                    View ledger records →
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
