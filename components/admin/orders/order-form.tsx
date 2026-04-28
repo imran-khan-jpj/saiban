@@ -2,6 +2,15 @@
 
 import * as React from "react";
 import { useForm, useFieldArray } from "react-hook-form";
+// Debounce hook
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = React.useState(value);
+  React.useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -111,6 +120,10 @@ export function OrderForm({
 
   const items = watch("items");
   const selectedCustomer = watch("customer");
+  const [searchCustomer, setSearchCustomer] = React.useState("");
+  const [searchProduct, setSearchProduct] = React.useState("");
+  const debouncedSearchCustomer = useDebouncedValue(searchCustomer, 400);
+  const debouncedSearchProduct = useDebouncedValue(searchProduct, 400);
   const [customerOpen, setCustomerOpen] = React.useState(false);
   const [productOpenStates, setProductOpenStates] = React.useState<
     Record<number, boolean>
@@ -121,8 +134,8 @@ export function OrderForm({
   >({});
 
   // Fetch customers and products
-  const { data: customersData } = useGetAllCustomers(1, 100);
-  const { data: productsData } = useGetAllProducts(1, 100);
+  const { data: customersData } = useGetAllCustomers(1, 10, debouncedSearchCustomer);
+  const { data: productsData } = useGetAllProducts(1, 10, debouncedSearchProduct);
 
   const customers = customersData?.data || [];
   const products = productsData?.data || [];
@@ -264,7 +277,11 @@ export function OrderForm({
           </PopoverTrigger>
           <PopoverContent className="w-full p-0" align="start">
             <Command>
-              <CommandInput placeholder="Search customer..." />
+              <CommandInput
+                placeholder="Search customer..."
+                value={searchCustomer}
+                onValueChange={setSearchCustomer}
+              />
               <CommandList>
                 <CommandEmpty>No customer found.</CommandEmpty>
                 <CommandGroup>
@@ -360,7 +377,11 @@ export function OrderForm({
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Search product..." />
+                    <CommandInput
+                      placeholder="Search product..."
+                      value={searchProduct}
+                      onValueChange={setSearchProduct}
+                    />
                     <CommandList>
                       <CommandEmpty>No product found.</CommandEmpty>
                       <CommandGroup>
