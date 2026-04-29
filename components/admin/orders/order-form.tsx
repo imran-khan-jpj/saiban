@@ -2,15 +2,6 @@
 
 import * as React from "react";
 import { useForm, useFieldArray } from "react-hook-form";
-// Debounce hook
-function useDebouncedValue<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = React.useState(value);
-  React.useEffect(() => {
-    const handler = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-  return debouncedValue;
-}
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -18,13 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Command,
   CommandEmpty,
@@ -47,6 +31,15 @@ import {
 import { useGetAllCustomers } from "@/app/api/customers/use-get-all";
 import { useGetAllProducts } from "@/app/api/products/use-get-all";
 import { formatCurrency } from "@/lib/utils";
+// Debounce hook
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = React.useState(value);
+  React.useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 // Form validation schema
 const orderFormSchema = z.object({
@@ -128,17 +121,40 @@ export function OrderForm({
   const [productOpenStates, setProductOpenStates] = React.useState<
     Record<number, boolean>
   >({});
+
   const [productChangeCounter, setProductChangeCounter] = React.useState(0);
   const [productStockLimits, setProductStockLimits] = React.useState<
     Record<number, number>
   >({});
+  // Store selected products to persist them in dropdown
+  const [selectedProducts, setSelectedProducts] = React.useState<any[]>([]);
 
   // Fetch customers and products
-  const { data: customersData } = useGetAllCustomers(1, 10, debouncedSearchCustomer);
-  const { data: productsData } = useGetAllProducts(1, 10, debouncedSearchProduct);
+  const { data: customersData } = useGetAllCustomers(
+    1,
+    10,
+    debouncedSearchCustomer,
+  );
+
+  const { data: productsData, isLoading } = useGetAllProducts(
+    1,
+    10,
+    debouncedSearchProduct,
+  );
 
   const customers = customersData?.data || [];
-  const products = productsData?.data || [];
+  // Merge API products and selectedProducts, deduplicated by _id
+  const apiProducts = productsData?.data || [];
+  const products = React.useMemo(() => {
+    const all = [...apiProducts, ...selectedProducts];
+    const seen = new Set();
+    return all.filter((p) => {
+      if (!p || !p._id) return false;
+      if (seen.has(p._id)) return false;
+      seen.add(p._id);
+      return true;
+    });
+  }, [apiProducts, selectedProducts]);
 
   // Calculate total amount with discounts
   const totalAmount = React.useMemo(() => {
@@ -151,8 +167,13 @@ export function OrderForm({
 
   // Update price when product is selected
   const handleProductChange = (index: number, productId: string) => {
-    const product = products.find((p) => p._id === productId);
+    let product = products.find((p) => p._id === productId);
     if (product) {
+      // Add to selectedProducts if not already present
+      setSelectedProducts((prev) => {
+        if (prev.find((p) => p._id === productId)) return prev;
+        return [...prev, product];
+      });
       setValue(`items.${index}.product`, productId, {
         shouldTouch: true,
         shouldDirty: true,
@@ -383,7 +404,9 @@ export function OrderForm({
                       onValueChange={setSearchProduct}
                     />
                     <CommandList>
-                      <CommandEmpty>No product found.</CommandEmpty>
+                      <CommandEmpty>
+                        {isLoading ? "Loading..." : "No product found."}
+                      </CommandEmpty>
                       <CommandGroup>
                         {products
                           .filter((product) => {
