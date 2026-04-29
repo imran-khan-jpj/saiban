@@ -24,13 +24,23 @@ export interface GetAllCustomersResponse {
   };
 }
 
-export const useGetAllCustomers = (page: number = 1, limit: number = 10, search?: string) => {
+/** `name` — alphabetical (default API behavior); `recent` — newest customers first (`createdAt` desc). */
+export type CustomersListSort = "name" | "recent";
+
+export const useGetAllCustomers = (
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+  sort?: CustomersListSort,
+) => {
   return useQuery<GetAllCustomersResponse>({
-    queryKey: ["customers", page, limit, search],
+    queryKey: ["customers", page, limit, search, sort],
     queryFn: async () => {
-      const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+      const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
+      const sortParam =
+        sort === "recent" || sort === "name" ? `&sort=${sort}` : "";
       const response = await getClient<GetAllCustomersResponse>({
-        url: `/api/customers?page=${page}&limit=${limit}${searchParam}`,
+        url: `/api/customers?page=${page}&limit=${limit}${searchParam}${sortParam}`,
       });
       return response;
     },

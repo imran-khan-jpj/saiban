@@ -10,9 +10,9 @@ import { formatDate } from "@/lib/utils";
 import * as React from "react";
 
 export default function Dashboard() {
-  // Fetch recent customers (latest 5)
+  // Fetch recent customers (newest first per API `sort=recent`)
   const { data: customersData, isLoading: isLoadingCustomers } =
-    useGetAllCustomers(1, 5);
+    useGetAllCustomers(1, 5, undefined, "recent");
   const recentCustomers = customersData?.data || [];
 
   // Fetch all products to filter low stock items
