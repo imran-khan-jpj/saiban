@@ -1,5 +1,3 @@
-"use client";
-
 import { Ledgers } from "@/components/admin/ledgers";
 import { SiteHeader } from "@/components/site-header";
 

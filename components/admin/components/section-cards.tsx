@@ -1,7 +1,5 @@
 "use client";
 
-import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react";
-
 import { SectionCard } from "./section-card";
 import { useDashboardMetrics } from "@/app/api/dashboard/use-dashboard-metrics";
 import { formatCurrency } from "@/lib/utils";

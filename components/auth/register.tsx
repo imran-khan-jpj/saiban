@@ -9,7 +9,6 @@ import { Label } from "../ui/label";
 import { useRegister } from "@/app/api/auth/use-register";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { setAuthToken } from "@/lib/cookies";
 import { useApp } from "@/providers/app-provider";
 import Link from "next/link";
 
@@ -45,13 +44,14 @@ export const Register = () => {
       { name: data.name, email: data.email, password: data.password },
       {
         onSuccess: (data) => {
-          setAuthToken(data.access_token);
+          const userName =
+            data.user.name?.trim() || data.user.email.split("@")[0];
           setUser({
             id: data.user.id,
-            name: data.user.name,
+            name: userName,
             email: data.user.email,
             role: data.user.role,
-            avatar: "/avatars/shadcn.jpg",
+            avatar: "",
           });
           toast.success("Registration successful!");
           router.push("/admin/dashboard");

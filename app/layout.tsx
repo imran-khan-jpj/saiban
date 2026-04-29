@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import "react-toastify/dist/ReactToastify.css";
 
 import { Roboto } from "next/font/google";
 import { QueryProvider } from "@/providers/query-client-provider";
 import { AppProvider } from "@/providers/app-provider";
 import NextTopLoader from "nextjs-toploader";
-import { ToastContainer } from "react-toastify";
 import { Toaster } from "@/components/ui/sonner";
 
 const roboto = Roboto({
@@ -42,17 +40,6 @@ export default function RootLayout({
           <QueryProvider>
             {children}
             <Toaster />
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
           </QueryProvider>
         </AppProvider>
       </body>

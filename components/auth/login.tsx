@@ -10,7 +10,6 @@ import { Label } from "../ui/label";
 import { useLogin } from "@/app/api/auth/use-login";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { setAuthToken } from "@/lib/cookies";
 import { useApp } from "@/providers/app-provider";
 
 const loginSchema = z.object({
@@ -39,13 +38,14 @@ export const Login = () => {
       { email: data.email, password: data.password },
       {
         onSuccess: (data) => {
-          setAuthToken(data.access_token);
+          const userName =
+            data.user.name?.trim() || data.user.email.split("@")[0];
           setUser({
             id: data.user.id,
-            name: data.user.email.split("@")[0],
+            name: userName,
             email: data.user.email,
             role: data.user.role,
-            avatar: "/avatars/shadcn.jpg",
+            avatar: "",
           });
           toast.success("Login successful!");
           router.push("/admin/dashboard");

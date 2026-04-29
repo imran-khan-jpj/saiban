@@ -9,8 +9,8 @@ import {
 } from "@/app/api/ledgers/use-get-customer-entries";
 import { Spinner } from "@/components/ui/spinner";
 import { formatDate, formatCurrency } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { StatusBadge } from "@/components/common/status-badge";
 import { IconArrowLeft, IconX } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 
@@ -19,12 +19,10 @@ import { DatePicker } from "@/components/ui/date-picker";
 
 interface CustomerLedgerRecordsProps {
   customerId: string;
-  customerName?: string;
 }
 
 export function CustomerLedgerRecords({
   customerId,
-  customerName,
 }: CustomerLedgerRecordsProps) {
   const router = useRouter();
   const [pagination, setPagination] = React.useState({
@@ -57,23 +55,9 @@ export function CustomerLedgerRecords({
     }));
   }, [data]);
 
-  const getEntryTypeBadge = (entryType: string) => {
-    const statusStyles: Record<string, string> = {
-      credit: "bg-green-600 text-white hover:bg-green-700",
-      debit: "bg-red-600 text-white hover:bg-red-700",
-    };
-
-    return (
-      <Badge
-        className={`capitalize ${statusStyles[entryType] || "bg-gray-500 text-white"}`}
-      >
-        {entryType}
-      </Badge>
-    );
-  };
-
-  // Column definitions
-  const columns: ColumnDef<CustomerLedgerEntry & { id: string }>[] = [
+  const columns = React.useMemo<
+    ColumnDef<CustomerLedgerEntry & { id: string }>[]
+  >(() => [
     {
       accessorKey: "sourceType",
       header: "Source Type",
@@ -91,7 +75,9 @@ export function CustomerLedgerRecords({
     {
       accessorKey: "entryType",
       header: "Type",
-      cell: ({ row }) => getEntryTypeBadge(row.original.entryType),
+      cell: ({ row }) => (
+        <StatusBadge status={row.original.entryType} variant="ledger" />
+      ),
     },
     {
       accessorKey: "createdAt",
@@ -102,7 +88,7 @@ export function CustomerLedgerRecords({
         </div>
       ),
     },
-  ];
+  ], []);
 
   if (isLoading) {
     return (

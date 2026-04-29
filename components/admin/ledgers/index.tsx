@@ -10,7 +10,6 @@ import {
 } from "@/app/api/ledgers/use-get-all";
 import { Spinner } from "@/components/ui/spinner";
 import { formatDate, formatCurrency } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 
 import { Input } from "@/components/ui/input";
@@ -20,6 +19,8 @@ import { DatePicker } from "@/components/ui/date-picker";
 
 import { cn } from "@/lib/utils";
 import { useGetAllCustomers } from "@/app/api/customers/use-get-all";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { StatusBadge } from "@/components/common/status-badge";
 
 // Re-export LedgerEntry type
 export type { LedgerEntry };
@@ -32,23 +33,13 @@ export function Ledgers() {
   });
   const [customerFilter, setCustomerFilter] = React.useState("");
   const [customerSearch, setCustomerSearch] = React.useState("");
-  const [debouncedCustomerSearch, setDebouncedCustomerSearch] =
-    React.useState("");
+  const debouncedCustomerSearch = useDebouncedValue(customerSearch, 400);
   const [startDate, setStartDate] = React.useState<Date | undefined>();
   const [endDate, setEndDate] = React.useState<Date | undefined>();
-  const [customersPagination, setCustomersPagination] = React.useState({
+  const [customersPagination] = React.useState({
     page: 1,
     limit: 50,
   });
-
-  // Debounce customer search input with 400ms delay
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedCustomerSearch(customerSearch);
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [customerSearch]);
 
   // Fetch customers for filter with search
   const { data: customersData } = useGetAllCustomers(
@@ -76,8 +67,7 @@ export function Ledgers() {
   }, [customerSearch, customerFilter, customers]);
 
   // Fetch ledger entries from API with pagination and filters
-  const { data, isLoading, isFetching, isError, error } =
-    useGetAllLedgerEntries(
+  const { data, isLoading, isError, error } = useGetAllLedgerEntries(
       pagination.pageIndex + 1,
       pagination.pageSize,
       customerFilter || undefined,
@@ -88,7 +78,6 @@ export function Ledgers() {
   const handleClearFilters = () => {
     setCustomerFilter("");
     setCustomerSearch("");
-    setDebouncedCustomerSearch("");
     setStartDate(undefined);
     setEndDate(undefined);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
@@ -102,23 +91,7 @@ export function Ledgers() {
     }));
   }, [data]);
 
-  const getEntryTypeBadge = (entryType: string) => {
-    const statusStyles: Record<string, string> = {
-      credit: "bg-green-600 text-white hover:bg-green-700",
-      debit: "bg-red-600 text-white hover:bg-red-700",
-    };
-
-    return (
-      <Badge
-        className={`capitalize ${statusStyles[entryType] || "bg-gray-500 text-white"}`}
-      >
-        {entryType}
-      </Badge>
-    );
-  };
-
-  // Column definitions
-  const columns: ColumnDef<LedgerEntry & { id: string }>[] = [
+  const columns = React.useMemo<ColumnDef<LedgerEntry & { id: string }>[]>(() => [
     {
       accessorKey: "createdAt",
       header: "Date",
@@ -131,7 +104,9 @@ export function Ledgers() {
     {
       accessorKey: "entryType",
       header: "Type",
-      cell: ({ row }) => getEntryTypeBadge(row.original.entryType),
+      cell: ({ row }) => (
+        <StatusBadge status={row.original.entryType} variant="ledger" />
+      ),
     },
     {
       accessorKey: "amount",
@@ -162,25 +137,7 @@ export function Ledgers() {
         );
       },
     },
-  ];
-
-  if (isLoading || isFetching) {
-    return (
-      <div className="flex items-center justify-center py-10">
-        <Spinner className="h-8 w-8" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="rounded-lg border border-destructive p-4">
-        <p className="text-destructive">
-          Error loading ledger entries: {error?.message || "Unknown error"}
-        </p>
-      </div>
-    );
-  }
+  ], [router]);
 
   return (
     <div className="flex flex-col h-full space-y-4 min-h-0">
@@ -262,15 +219,27 @@ export function Ledgers() {
       </div>
 
       <div className="flex-1 min-h-0">
-        <DataTable
-          data={ledgerEntries}
-          columns={columns}
-          enableRowSelection={false}
-          manualPagination={true}
-          pageCount={data?.pagination.pages}
-          pagination={pagination}
-          onPaginationChange={setPagination}
-        />
+        {isError ? (
+          <div className="rounded-lg border border-destructive p-4">
+            <p className="text-destructive">
+              Error loading ledger entries: {error?.message || "Unknown error"}
+            </p>
+          </div>
+        ) : isLoading ? (
+          <div className="flex items-center justify-center py-10">
+            <Spinner className="h-8 w-8" />
+          </div>
+        ) : (
+          <DataTable
+            data={ledgerEntries}
+            columns={columns}
+            enableRowSelection={false}
+            manualPagination={true}
+            pageCount={data?.pagination.pages}
+            pagination={pagination}
+            onPaginationChange={setPagination}
+          />
+        )}
       </div>
     </div>
   );

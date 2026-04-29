@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getClient } from "../api-callers/client";
 
 export interface Order {
@@ -121,5 +121,6 @@ export const useGetAllOrders = (
       });
       return response;
     },
+    placeholderData: keepPreviousData,
   });
 };

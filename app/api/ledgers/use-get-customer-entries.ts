@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getClient } from "../api-callers/client";
 
 export interface CustomerLedgerEntry {
@@ -57,5 +57,6 @@ export function useGetCustomerLedgerEntries(
       return response;
     },
     enabled: !!customerId,
+    placeholderData: keepPreviousData,
   });
 }
