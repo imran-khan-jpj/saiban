@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Select,
   SelectContent,
@@ -80,6 +81,7 @@ export function DataTable<TData extends { id: number | string }>({
   onPaginationChange,
   pagination: externalPagination,
   manualPagination = false,
+  isFetching = false,
 }: {
   data: TData[];
   columns: ColumnDef<TData>[];
@@ -91,6 +93,9 @@ export function DataTable<TData extends { id: number | string }>({
   }) => void;
   pagination?: { pageIndex: number; pageSize: number };
   manualPagination?: boolean;
+  /** When true, pagination buttons are disabled and a small spinner is
+   * shown next to the page indicator so users know data is being refreshed. */
+  isFetching?: boolean;
 }) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -213,8 +218,11 @@ export function DataTable<TData extends { id: number | string }>({
         <div className="border-t bg-background flex items-center justify-end px-4 py-2">
           <div className="flex w-full items-center gap-8 lg:w-fit">
             <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                Records per page
+              <Label
+                htmlFor="rows-per-page"
+                className="text-xs text-muted-foreground"
+              >
+                Rows per page
               </Label>
               <Select
                 value={`${table.getState().pagination.pageSize}`}
@@ -222,7 +230,10 @@ export function DataTable<TData extends { id: number | string }>({
                   table.setPageSize(Number(value));
                 }}
               >
-                <SelectTrigger className="w-20" id="rows-per-page">
+                <SelectTrigger
+                  className="h-7 w-16 text-xs px-2 shadow-none"
+                  id="rows-per-page"
+                >
                   <SelectValue
                     placeholder={table.getState().pagination.pageSize}
                   />
@@ -236,49 +247,53 @@ export function DataTable<TData extends { id: number | string }>({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
+            <div className="flex w-fit items-center justify-center gap-1.5 text-sm font-medium tabular-nums text-muted-foreground">
+              {isFetching && <Spinner className="h-3 w-3" />}
+              <span>
+                Page {table.getState().pagination.pageIndex + 1} of{" "}
+                {table.getPageCount()}
+              </span>
             </div>
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
+            <div className="ml-auto flex items-center gap-1 lg:ml-0">
               <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
+                variant="ghost"
+                size="icon"
+                className="hidden h-7 w-7 text-muted-foreground hover:text-foreground lg:flex"
                 onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
+                disabled={!table.getCanPreviousPage() || isFetching}
               >
                 <span className="sr-only">Go to first page</span>
-                <IconChevronsLeft />
+                <IconChevronsLeft className="h-4 w-4" />
               </Button>
               <Button
-                variant="outline"
-                className="size-8"
+                variant="ghost"
                 size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
                 onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
+                disabled={!table.getCanPreviousPage() || isFetching}
               >
                 <span className="sr-only">Go to previous page</span>
-                <IconChevronLeft />
+                <IconChevronLeft className="h-4 w-4" />
               </Button>
               <Button
-                variant="outline"
-                className="size-8"
+                variant="ghost"
                 size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
                 onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
+                disabled={!table.getCanNextPage() || isFetching}
               >
                 <span className="sr-only">Go to next page</span>
-                <IconChevronRight />
+                <IconChevronRight className="h-4 w-4" />
               </Button>
               <Button
-                variant="outline"
-                className="hidden size-8 lg:flex"
+                variant="ghost"
                 size="icon"
+                className="hidden h-7 w-7 text-muted-foreground hover:text-foreground lg:flex"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
+                disabled={!table.getCanNextPage() || isFetching}
               >
                 <span className="sr-only">Go to last page</span>
-                <IconChevronsRight />
+                <IconChevronsRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
