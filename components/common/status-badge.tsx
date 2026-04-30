@@ -3,10 +3,8 @@ import { cn } from "@/lib/utils";
 
 const ORDER_STATUS_STYLES: Record<string, string> = {
   pending: "bg-orange-500 text-white hover:bg-orange-600",
-  confirmed: "bg-green-600 text-white hover:bg-green-700",
   completed: "bg-green-600 text-white hover:bg-green-700",
   cancelled: "bg-red-600 text-white hover:bg-red-700",
-  paid: "bg-green-600 text-white hover:bg-green-700",
 };
 
 const LEDGER_ENTRY_STYLES: Record<string, string> = {

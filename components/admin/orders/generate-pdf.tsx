@@ -30,6 +30,52 @@ interface GeneratePDFProps {
 
 const defaultNote = DEFAULT_INVOICE_WARRANTY_NOTE;
 
+const FILENAME_INVALID_CHARS = /[\\/:*?"<>|]/g;
+
+/** Title-case ("ashraf centre" -> "Ashraf Centre") + collapse repeated spaces. */
+function titleCase(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : ""))
+    .join(" ");
+}
+
+/** Strip filesystem-reserved characters and collapse whitespace. */
+function sanitizeForFilename(text: string): string {
+  return text.replace(FILENAME_INVALID_CHARS, "").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Build a friendly invoice PDF filename.
+ *
+ * Format: `Saiban Invoice {InvoiceNumber} - {Customer Name} - {YYYY-MM-DD}.pdf`
+ *
+ * Examples:
+ * - `Saiban Invoice INV-2026-001 - Ashraf Centre Dr Rahmatullah Sahab - 2026-04-30.pdf`
+ * - `Saiban Invoice ORD-A1B2C3 - Sajjad Homeo Store - 2026-04-29.pdf`
+ *
+ * The customer is title-cased, illegal filesystem characters are stripped, and
+ * the date is in ISO format so the file sorts naturally in a folder.
+ */
+export function buildInvoiceFileName(order: Order): string {
+  const date = formatDate(order.createdAt, "YYYY-MM-DD");
+
+  const fullName = `${order.customerId.firstName ?? ""} ${
+    order.customerId.lastName ?? ""
+  }`.trim();
+  const customerName =
+    sanitizeForFilename(titleCase(fullName)) || "Customer";
+
+  const invoiceId = order.invoiceNumber?.trim()
+    ? sanitizeForFilename(order.invoiceNumber)
+    : `ORD-${order._id.slice(-6).toUpperCase()}`;
+
+  return `Saiban Invoice ${invoiceId} - ${customerName} - ${date}.pdf`;
+}
+
 export function GeneratePDF({
   order,
   customNote: controlledNote,
@@ -50,13 +96,10 @@ export function GeneratePDF({
     }
   };
 
-  const fileName = React.useMemo(() => {
-    const day = formatDate(order.createdAt, "DD");
-    const month = formatDate(order.createdAt, "MMM").toLowerCase();
-    const customerName =
-      `${order.customerId.firstName}-${order.customerId.lastName}`.toLowerCase();
-    return `${customerName}-${day}-${month}-invoice.pdf`;
-  }, [order]);
+  const fileName = React.useMemo(
+    () => buildInvoiceFileName(order),
+    [order],
+  );
 
   if (buttonOnly) {
     return (

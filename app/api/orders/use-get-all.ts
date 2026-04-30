@@ -37,7 +37,7 @@ export interface Order {
     discountPercentage: number;
     lineTotal: number;
   }>;
-  status: "pending" | "confirmed" | "cancelled" | "paid";
+  status: "pending" | "completed" | "cancelled";
   paymentMethod: string;
   discountTotal: number;
   gstTotal: number;
