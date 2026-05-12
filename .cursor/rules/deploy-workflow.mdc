@@ -1,0 +1,48 @@
+---
+description: When user runs /deploy or asks to ship—branch, commits, push, PR (full-branch description)
+alwaysApply: true
+---
+
+# Deploy workflow (`/deploy`)
+
+When the user invokes **`/deploy`**, asks to **deploy**, **ship**, **open a PR**, or similar, treat this as an **end-to-end git + GitHub release for the working tree**.
+
+## Branching
+
+- **New feature work** (user says “feature”, introduces a sizable capability, or you are clearly not on an existing topic branch): do **not** commit directly to `main`.
+  - `git fetch origin` and sync from **`origin/main`** (or the branch the user names as base).
+  - Create **`feat/<short-kebab-topic>`** (or `fix/…` / `chore/…` if that better matches scope). Prefer one branch per feature.
+- **Already on a suitable branch** (e.g. `feat/foo`) with aligned work: stay on it unless the user asks for a new branch.
+- **If a PR already exists for the current branch**:
+  - Reuse that branch **only** when the new commits are part of the same feature/fix scope.
+  - If new work is materially different (separate feature, different intent, or would make PR review noisy), create a **new branch from `origin/main`** and open a **separate PR**.
+  - Do not keep stacking unrelated changes into the same branch/PR by default.
+- **Never** rewrite shared history (`--force`) unless the user explicitly requests it.
+
+## Before commits
+
+1. `git status` and review **all** changed/untracked files; scope-match the request.
+2. Do **not** stage or commit secrets (e.g. `.env*`).
+3. If the codebase has a quick verify step, run it (e.g. `npm run build` / `npm test`) before push when reasonable.
+
+## Commits
+
+- Produce **focused, conventional** commits (`feat`, `fix`, `chore`, `refactor`, `docs`) that match existing repo tone.
+- **Group by intent**, not one commit per file: separate infrastructure vs feature vs chores when it helps reviewers.
+- For PR description later, summarize from **`origin/main...HEAD`** (or chosen base…HEAD), **not** only “what was unstaged today.”
+
+## Push
+
+- Push the branch: `git push -u origin <branch>`.
+- If push fails due to divergence, reconcile (rebase or merge) rather than blindly forcing.
+
+## Pull request
+
+- **Base**: `main` unless the user specifies another branch.
+- Open with **`gh pr create`** when available. Title and body should reflect **the entire branch**, including earlier commits already on it.
+  - Sections to include where useful: Summary, notable routes/files, commits list (`git log <base>..HEAD --oneline`), how to verify, risks/rollback.
+- **If `gh pr edit` / `pr create` errors** on deprecated GraphQL (e.g. `projectCards`), update the PR with **GitHub REST** `PATCH /repos/{owner}/{repo}/pulls/{number}` (`title` / `body`) using `gh auth token` — do not silently drop PR text.
+
+## Conflict with user edits
+
+These steps run in the real repo; obey the user if they veto a push, branch name, or PR base.
