@@ -1,19 +1,16 @@
-"use client";
-import { SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { readSidebarVersion } from "@/lib/sidebar-version-server";
+import { AdminShell } from "./admin-shell";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const initialSidebarVersion = await readSidebarVersion();
+
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset className="h-screen overflow-hidden p-4 pt-2">
-        {children}
-      </SidebarInset>
-    </SidebarProvider>
+    <AdminShell initialSidebarVersion={initialSidebarVersion}>
+      {children}
+    </AdminShell>
   );
 }
