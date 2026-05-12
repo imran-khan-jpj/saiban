@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Saiban
 
-## Getting Started
+Saiban is a Next.js 16 admin dashboard app for managing products, customers, orders, and ledgers.
 
-First, run the development server:
+## Tech stack
+
+- Next.js (App Router) + React + TypeScript
+- Tailwind CSS + Radix UI components
+- TanStack React Query + TanStack Table
+- Cookie-based auth and route protection
+
+## Prerequisites
+
+- Node.js 20+ recommended
+- npm
+
+## Environment variables
+
+Create a `.env` file in the project root with:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+NEXT_PUBLIC_API_URL=<your-backend-api-base-url>
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+These are read from `app/config/index.ts`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+Open `http://localhost:3000`.
 
-To learn more about Next.js, take a look at the following resources:
+## Available scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `npm run dev` - run development server
+- `npm run build` - build production bundle
+- `npm run start` - run production server
+- `npm run lint` - run ESLint
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Auth and routing behavior
 
-## Deploy on Vercel
+- `app/page.tsx` redirects:
+  - unauthenticated users to `/login`
+  - authenticated users to `/admin/dashboard`
+- `proxy.ts` protects `/admin/*` and redirects logged-in users away from auth pages.
+- Auth token is stored in the `auth-token` cookie.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Main routes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Auth: `/login`, `/register`
+- Dashboard: `/admin/dashboard`
+- Products: `/admin/products`, `/admin/products/v2`
+- Customers: `/admin/customers`, `/admin/customers/[id]`, `/admin/customers/v2`, `/admin/customers/v2/[id]`
+- Orders: `/admin/orders`, `/admin/orders/[id]`, `/admin/orders/v2`, `/admin/orders/v2/[id]`
+- Ledgers: `/admin/ledgers`, `/admin/ledgers/[customerId]/records`, `/admin/ledgers/v2`, `/admin/ledgers/v2/[customerId]`
+
+## API layer
+
+- Client hooks live under `app/api/**` (for example `use-get-all`, `use-create`, `use-update`).
+- Backend calls are proxied through `app/api/proxy/[...slug]/route.ts`.
