@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getClient } from "../api-callers/client";
 
 export interface OrderItem {
@@ -68,5 +68,6 @@ export const useGetCustomerOrders = (
       return response;
     },
     enabled: !!customerId,
+    placeholderData: keepPreviousData,
   });
 };

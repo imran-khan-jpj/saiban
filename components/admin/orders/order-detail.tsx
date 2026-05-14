@@ -2,15 +2,7 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -19,13 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { IconArrowLeft, IconCopy, IconCash } from "@tabler/icons-react";
+import { IconArrowLeft, IconCash } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDate, formatCurrency } from "@/lib/utils";
@@ -33,6 +19,8 @@ import { useGetOrderById } from "@/app/api/orders/use-get-by-id";
 import { useRecordPayment } from "@/app/api/customers/use-record-payment";
 import { PaymentForm } from "../customers/payment-form";
 import { GeneratePDF } from "./generate-pdf";
+import { DEFAULT_INVOICE_WARRANTY_NOTE } from "./constants";
+import { StatusBadge } from "@/components/common/status-badge";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -45,9 +33,7 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
   const queryClient = useQueryClient();
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
   const [customNote, setCustomNote] = React.useState(
-    `We do hereby give this warranty that the medicines described in this invoice has sold by us do not contravene in any way in any provision of the DRAP ACT 2012. 
-Sales Manager Roots Pharma (Pvt) Ltd
-Note: Claim atleast 3 months before the expiry of medicine`,
+    DEFAULT_INVOICE_WARRANTY_NOTE,
   );
   const { data: order, isLoading, isError } = useGetOrderById(orderId);
   const recordPayment = useRecordPayment();
@@ -79,23 +65,6 @@ Note: Claim atleast 3 months before the expiry of medicine`,
           toast.error(`Failed to record payment: ${error.message}`);
         },
       },
-    );
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusStyles: Record<string, string> = {
-      pending: "bg-orange-500 text-white",
-      confirmed: "bg-green-600 text-white",
-      completed: "bg-green-600 text-white",
-      cancelled: "bg-red-600 text-white",
-      paid: "bg-green-600 text-white",
-    };
-    return (
-      <Badge
-        className={`capitalize ${statusStyles[status] || "bg-gray-500 text-white"}`}
-      >
-        {status}
-      </Badge>
     );
   };
 
@@ -152,7 +121,7 @@ Note: Claim atleast 3 months before the expiry of medicine`,
 
           <div className="space-y-1">
             <Label className="text-muted-foreground mr-2">Status</Label>
-            {getStatusBadge(order.status)}
+            <StatusBadge status={order.status} />
           </div>
         </div>
 

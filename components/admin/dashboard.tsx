@@ -7,38 +7,31 @@ import { useGetAllProducts } from "@/app/api/products/use-get-all";
 import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
-import * as React from "react";
 
 export default function Dashboard() {
-  // Fetch recent customers (newest first per API `sort=recent`)
   const { data: customersData, isLoading: isLoadingCustomers } =
     useGetAllCustomers(1, 5, undefined, "recent");
   const recentCustomers = customersData?.data || [];
 
-  // Fetch all products to filter low stock items
-  const { data: productsData, isLoading: isLoadingProducts } =
-    useGetAllProducts(1, 100);
-  const products = productsData?.data || [];
+  const { data: lowStockData, isLoading: isLoadingLowStock } =
+    useGetAllProducts(1, 5, undefined, "low_stock");
+  const lowStockProducts = lowStockData?.data || [];
 
-  // Get low stock products (excluding out of stock)
-  const lowStockProducts = React.useMemo(() => {
-    return products
-      .filter(
-        (p) =>
-          p.quantityInStock > 0 && p.quantityInStock <= p.lowStockThreshold,
-      )
-      .sort((a, b) => a.quantityInStock - b.quantityInStock)
-      .slice(0, 5);
-  }, [products]);
-
-  // Get out of stock products
-  const outOfStockProducts = React.useMemo(() => {
-    return products.filter((p) => p.quantityInStock === 0).slice(0, 5);
-  }, [products]);
+  const { data: outOfStockData, isLoading: isLoadingOutOfStock } =
+    useGetAllProducts(1, 5, undefined, "out_of_stock");
+  const outOfStockProducts = outOfStockData?.data || [];
 
   return (
     <div>
-      <SiteHeader />
+      <SiteHeader>
+        <Link
+          href="/admin/dashboard/v2"
+          className="mr-4 inline-flex items-center gap-1 rounded-full border bg-card px-3 py-1 text-xs font-medium text-foreground/80 hover:border-foreground/30 hover:text-foreground"
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          Try the new dashboard
+        </Link>
+      </SiteHeader>
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
@@ -108,7 +101,7 @@ export default function Dashboard() {
                     </Link>
                   </div>
                   <div className="space-y-3">
-                    {isLoadingProducts ? (
+                    {isLoadingLowStock ? (
                       <div className="flex justify-center py-4">
                         <Spinner className="h-6 w-6" />
                       </div>
@@ -156,7 +149,7 @@ export default function Dashboard() {
                     </Link>
                   </div>
                   <div className="space-y-3">
-                    {isLoadingProducts ? (
+                    {isLoadingOutOfStock ? (
                       <div className="flex justify-center py-4">
                         <Spinner className="h-6 w-6" />
                       </div>

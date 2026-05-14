@@ -1,8 +1,0 @@
-create customer api payload
-Adjust customer balance
-
-
-invoice id opus method
-download pdf should have order date not current date
-make sure rows should display like table
-show bill summary with precious and current balance

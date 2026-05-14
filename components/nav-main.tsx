@@ -1,10 +1,9 @@
 "use client";
 
-import { IconMail, type Icon } from "@tabler/icons-react";
+import { type Icon } from "@tabler/icons-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
 import {
   SidebarGroup,
   SidebarGroupContent,

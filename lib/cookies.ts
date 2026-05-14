@@ -1,7 +1,11 @@
 import Cookies from "js-cookie";
 
 /**
- * Set a cookie with secure defaults
+ * Set a cookie with secure defaults.
+ *
+ * NOTE: This sets a *JS-readable* cookie. The auth JWT must NEVER be
+ * stored here — it lives in an HttpOnly cookie set by the server-side
+ * route handlers under `app/api/auth/*`.
  */
 export const setCookie = (
   name: string,
@@ -9,40 +13,23 @@ export const setCookie = (
   options?: Cookies.CookieAttributes,
 ) => {
   Cookies.set(name, value, {
-    expires: 7, // 7 days default
-    secure: true, // Only sent over HTTPS
-    sameSite: "strict", // CSRF protection
+    expires: 7,
+    secure: true,
+    sameSite: "strict",
     ...options,
   });
 };
 
 /**
- * Get a cookie value
+ * Get a JS-readable cookie value.
  */
 export const getCookie = (name: string): string | undefined => {
   return Cookies.get(name);
 };
 
 /**
- * Delete a cookie
+ * Delete a JS-readable cookie.
  */
 export const deleteCookie = (name: string) => {
   Cookies.remove(name);
-};
-
-/**
- * Auth-specific cookie helpers
- */
-export const AUTH_TOKEN_KEY = "auth-token";
-
-export const setAuthToken = (token: string) => {
-  setCookie(AUTH_TOKEN_KEY, token);
-};
-
-export const getAuthToken = (): string | undefined => {
-  return getCookie(AUTH_TOKEN_KEY);
-};
-
-export const deleteAuthToken = () => {
-  deleteCookie(AUTH_TOKEN_KEY);
 };

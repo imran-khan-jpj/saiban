@@ -1,0 +1,142 @@
+"use client";
+
+import * as React from "react";
+import { useDashboardMetrics } from "@/app/api/dashboard/use-dashboard-metrics";
+import { useGetAllProducts } from "@/app/api/products/use-get-all";
+import { useGetAllOrders } from "@/app/api/orders/use-get-all";
+import { useApp } from "@/providers/app-provider";
+import { formatCurrency } from "@/lib/utils";
+
+import { AlertsBar } from "./alerts-bar";
+import { QuickActions } from "./quick-actions";
+import { KpiCard } from "./kpi-card";
+import { RevenueTrend } from "./revenue-trend";
+import { PaymentSplit } from "./payment-split";
+import { RecentCustomersCard } from "./recent-customers-card";
+import { RecentOrdersCard } from "./recent-orders-card";
+import { InventoryAlerts } from "./inventory-alerts";
+
+const greeting = (date = new Date()): string => {
+  const h = date.getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+};
+
+export function DashboardV2() {
+  const { user } = useApp();
+  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
+  const { data: outOfStockData } = useGetAllProducts(
+    1,
+    1,
+    undefined,
+    "out_of_stock",
+  );
+  const { data: pendingOrdersData } = useGetAllOrders(
+    1,
+    1,
+    undefined,
+    "pending",
+  );
+
+  const m = metrics?.metrics;
+  const firstName = (user?.name ?? "").split(" ")[0] || user?.name || "there";
+
+  return (
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 pb-10 pt-6 sm:px-6">
+      {/* Greeting + quick actions */}
+      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground">
+            {new Date().toLocaleDateString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
+          <h1 className="mt-1.5 text-3xl font-semibold tracking-tight text-foreground">
+            {greeting()}, {firstName}
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Here&apos;s what&apos;s happening across your store today.
+          </p>
+        </div>
+        <QuickActions className="lg:w-[640px]" />
+      </header>
+
+      {/* Alerts strip */}
+      <AlertsBar
+        alerts={[
+          {
+            label: "out of stock",
+            count: outOfStockData?.pagination.total ?? 0,
+            href: "/admin/products",
+            tone: "danger",
+          },
+          {
+            label: "pending orders",
+            count: pendingOrdersData?.pagination.total ?? 0,
+            href: "/admin/orders",
+            tone: "warn",
+          },
+          {
+            label: "in pending payments",
+            count: m?.pendingPayments ?? 0,
+            href: "/admin/ledgers",
+            tone: "warn",
+          },
+        ]}
+      />
+
+      {/* KPI grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          label="Total revenue"
+          value={formatCurrency(m?.totalRevenue ?? 0)}
+          hint={`from ${m?.totalOrders ?? 0} orders`}
+          isLoading={metricsLoading}
+          href="/admin/ledgers"
+        />
+        <KpiCard
+          label="Pending payments"
+          value={formatCurrency(m?.pendingPayments ?? 0)}
+          hint="across all customers"
+          isLoading={metricsLoading}
+          emphasis={(m?.pendingPayments ?? 0) > 0 ? "warn" : "default"}
+          href="/admin/ledgers"
+        />
+        <KpiCard
+          label="Customers"
+          value={m?.totalCustomers ?? 0}
+          hint="total accounts"
+          isLoading={metricsLoading}
+          href="/admin/customers"
+        />
+        <KpiCard
+          label="Products"
+          value={m?.totalProducts ?? 0}
+          hint="active SKUs"
+          isLoading={metricsLoading}
+          href="/admin/products"
+        />
+      </div>
+
+      {/* Revenue trend + payment split */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <RevenueTrend />
+        </div>
+        <PaymentSplit />
+      </div>
+
+      {/* Recent activity */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <RecentCustomersCard />
+        <RecentOrdersCard />
+      </div>
+
+      {/* Inventory alerts */}
+      <InventoryAlerts />
+    </div>
+  );
+}

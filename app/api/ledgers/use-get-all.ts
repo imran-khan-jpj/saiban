@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getClient } from "../api-callers/client";
 
 export interface LedgerEntry {
@@ -55,5 +55,6 @@ export const useGetAllLedgerEntries = (
       });
       return response;
     },
+    placeholderData: keepPreviousData,
   });
 };

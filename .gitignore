@@ -33,6 +33,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+# Cursor: share team rules/commands; ignore other local/editor noise under .cursor/
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
+!.cursor/commands/
+!.cursor/commands/**
 
 # env files (can opt-in for committing if needed)
 .env*
