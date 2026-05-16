@@ -115,7 +115,7 @@ export function OrdersV2() {
 
   const handleView = React.useCallback(
     (orderId: string) => {
-      router.push(`/admin/orders/v2/${orderId}`);
+      router.push(`/admin/v2/orders/${orderId}`);
     },
     [router],
   );
@@ -157,7 +157,7 @@ export function OrdersV2() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={() =>
-                          router.push(`/admin/customers/v2/${c._id}`)
+                          router.push(`/admin/v2/customers/${c._id}`)
                         }
                         className="block w-full text-left truncate text-sm font-semibold text-foreground hover:underline underline-offset-4"
                       >

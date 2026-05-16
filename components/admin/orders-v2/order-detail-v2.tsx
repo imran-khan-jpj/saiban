@@ -99,11 +99,11 @@ export function OrderDetailV2({ orderId }: OrderDetailV2Props) {
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 pb-10 pt-6 sm:px-6">
       {/* Back link */}
       <Link
-        href="/admin/orders/v2"
+        href="/admin/v2/orders"
         className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-fit"
         onClick={(e) => {
           e.preventDefault();
-          router.push("/admin/orders/v2");
+          router.push("/admin/v2/orders");
         }}
       >
         <IconArrowLeft className="h-3.5 w-3.5" />

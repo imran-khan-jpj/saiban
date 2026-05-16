@@ -94,7 +94,7 @@ export function CustomersV2() {
 
   const handleView = React.useCallback(
     (customerId: string) => {
-      router.push(`/admin/customers/v2/${customerId}`);
+      router.push(`/admin/v2/customers/${customerId}`);
     },
     [router],
   );

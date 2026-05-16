@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Spinner } from "@/components/ui/spinner";
 import { useGetAllCustomers } from "@/app/api/customers/use-get-all";
+import { ADMIN_V2 } from "@/lib/admin-routes";
 import { formatDate } from "@/lib/utils";
 
 export function RecentCustomersCard() {
@@ -21,7 +22,7 @@ export function RecentCustomersCard() {
           </p>
         </div>
         <Link
-          href="/admin/customers"
+          href={ADMIN_V2.customers}
           className="text-xs font-medium text-foreground/70 hover:text-foreground"
         >
           View all
@@ -41,7 +42,7 @@ export function RecentCustomersCard() {
             {customers.map((customer) => (
               <li key={customer._id} className="py-3">
                 <Link
-                  href={`/admin/customers/${customer._id}`}
+                  href={`/admin/v2/customers/${customer._id}`}
                   className="flex items-center justify-between gap-3 group"
                 >
                   <div className="min-w-0 flex-1">

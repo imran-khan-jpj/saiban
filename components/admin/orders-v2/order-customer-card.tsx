@@ -32,7 +32,7 @@ export function OrderCustomerCard({ customer }: OrderCustomerCardProps) {
           </p>
         </div>
         <Link
-          href={`/admin/customers/v2/${customer._id}`}
+          href={`/admin/v2/customers/${customer._id}`}
           className="inline-flex items-center gap-1 text-xs font-medium text-foreground/70 hover:text-foreground"
         >
           View profile
@@ -48,7 +48,7 @@ export function OrderCustomerCard({ customer }: OrderCustomerCardProps) {
         />
         <div className="min-w-0 flex-1">
           <Link
-            href={`/admin/customers/v2/${customer._id}`}
+            href={`/admin/v2/customers/${customer._id}`}
             className="text-base font-semibold text-foreground hover:underline underline-offset-4"
           >
             {fullName}

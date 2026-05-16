@@ -217,11 +217,11 @@ export function CustomerLedgerRecordsV2({
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 pb-10 pt-6 sm:px-6">
       {/* Back link */}
       <Link
-        href="/admin/ledgers/v2"
+        href="/admin/v2/ledgers"
         className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-fit"
         onClick={(e) => {
           e.preventDefault();
-          router.push("/admin/ledgers/v2");
+          router.push("/admin/v2/ledgers");
         }}
       >
         <IconArrowLeft className="h-3.5 w-3.5" />
@@ -277,7 +277,7 @@ export function CustomerLedgerRecordsV2({
           </div>
 
           <Button asChild variant="outline" size="sm">
-            <Link href={`/admin/customers/v2/${customer._id}`}>
+            <Link href={`/admin/v2/customers/${customer._id}`}>
               View customer profile
               <IconArrowRight className="h-3.5 w-3.5 ml-1" />
             </Link>

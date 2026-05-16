@@ -105,7 +105,7 @@ export function LedgersV2() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={() =>
-                          router.push(`/admin/ledgers/v2/${c._id}`)
+                          router.push(`/admin/v2/ledgers/${c._id}`)
                         }
                         className="block w-full text-left truncate text-sm font-semibold text-foreground hover:underline underline-offset-4"
                       >

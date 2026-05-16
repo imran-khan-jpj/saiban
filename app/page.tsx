@@ -1,8 +1,10 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { getAdminHomePath } from "@/lib/admin-routes";
+import { readSidebarVersion } from "@/lib/sidebar-version-server";
+
 export default async function Home() {
-  // Check if user is authenticated via cookie
   const cookieStore = await cookies();
   const authToken = cookieStore.get("auth-token");
 
@@ -10,5 +12,6 @@ export default async function Home() {
     redirect("/login");
   }
 
-  redirect("/admin/dashboard");
+  const experience = await readSidebarVersion();
+  redirect(getAdminHomePath(experience));
 }

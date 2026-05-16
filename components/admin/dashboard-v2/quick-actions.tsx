@@ -13,19 +13,19 @@ const ACTIONS = [
   {
     label: "Create order",
     description: "Bill a customer",
-    href: "/admin/orders",
+    href: "/admin/v2/orders",
     icon: IconShoppingCart,
   },
   {
     label: "Add customer",
     description: "Register a new account",
-    href: "/admin/customers",
+    href: "/admin/v2/customers",
     icon: IconUserPlus,
   },
   {
     label: "Add product",
     description: "Expand inventory",
-    href: "/admin/products",
+    href: "/admin/v2/products",
     icon: IconPackage,
   },
 ];
