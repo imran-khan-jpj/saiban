@@ -150,16 +150,16 @@ export function OrderForm({
     });
   }, [apiProducts, selectedProducts]);
 
-  // Calculate total amount with discounts. `items` is read via react-hook-form's
-  // `watch()` so it produces a fresh reference per render, which is enough to
-  // trigger this memo without an external counter.
-  const totalAmount = React.useMemo(() => {
-    return items.reduce((sum, item) => {
-      const itemTotal = (item.quantity || 0) * (item.price || 0);
-      const discount = itemTotal * ((item.discountPercentage || 0) / 100);
-      return sum + itemTotal - discount;
-    }, 0);
-  }, [items]);
+  // Compute total inline on every render. `watch("items")` reliably triggers
+  // re-renders on nested field changes but does not always produce a new
+  // array reference, which would let a `useMemo([items])` skip recomputation
+  // and ship a stale total to the UI. A bare reduce over a handful of items
+  // is cheap and matches how per-row line totals are already computed.
+  const totalAmount = items.reduce((sum, item) => {
+    const itemTotal = (item.quantity || 0) * (item.price || 0);
+    const discount = itemTotal * ((item.discountPercentage || 0) / 100);
+    return sum + itemTotal - discount;
+  }, 0);
 
   // Update price when product is selected
   const handleProductChange = (index: number, productId: string) => {
