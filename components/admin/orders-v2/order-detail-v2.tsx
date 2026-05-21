@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +16,7 @@ import {
   IconArrowLeft,
   IconCash,
   IconCalendar,
+  IconNote,
   IconReceipt,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -86,7 +86,9 @@ export function OrderDetailV2({ orderId }: OrderDetailV2Props) {
   if (isError || !order) {
     return (
       <div className="mx-auto max-w-md py-20 text-center">
-        <p className="text-sm text-destructive">Failed to load order details.</p>
+        <p className="text-sm text-destructive">
+          Failed to load order details.
+        </p>
       </div>
     );
   }
@@ -146,7 +148,28 @@ export function OrderDetailV2({ orderId }: OrderDetailV2Props) {
         </div>
       </header>
 
-      <OrderCustomerCard customer={order.customerId} />
+      {order.note && order.note.trim().length > 0 ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <OrderCustomerCard customer={order.customerId} />
+          <section className="rounded-xl border bg-card">
+            <header className="flex items-center gap-2 border-b px-5 py-3">
+              <IconNote className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-base font-semibold tracking-tight text-foreground">
+                Order note
+              </h2>
+            </header>
+            <div className="px-5 py-3">
+              <div className="rounded-lg border-l-2 border-foreground/20 bg-muted/40 px-4 py-3">
+                <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap break-words">
+                  {order.note}
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
+      ) : (
+        <OrderCustomerCard customer={order.customerId} />
+      )}
 
       <OrderItemsTable items={order.items} />
 
@@ -155,23 +178,12 @@ export function OrderDetailV2({ orderId }: OrderDetailV2Props) {
 
         {/* Notes & warranty */}
         <section className="rounded-xl border bg-card flex flex-col">
-          <header className="border-b px-5 py-4">
+          <header className="border-b px-5 py-3">
             <h2 className="text-base font-semibold tracking-tight text-foreground">
               Invoice warranty
             </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Note printed at the bottom of the downloaded invoice
-            </p>
           </header>
-          <div className="flex-1 px-5 py-5 flex flex-col gap-3">
-            {order.note && (
-              <div className="rounded-lg bg-muted/40 px-4 py-3">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  Order note
-                </Label>
-                <p className="mt-1 text-sm">{order.note}</p>
-              </div>
-            )}
+          <div className="flex-1 px-5 py-4 flex flex-col gap-3">
             <div className="flex-1">
               <GeneratePDF
                 order={order}

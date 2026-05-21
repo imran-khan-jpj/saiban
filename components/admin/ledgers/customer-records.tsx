@@ -61,9 +61,22 @@ export function CustomerLedgerRecords({
     {
       accessorKey: "sourceType",
       header: "Source Type",
-      cell: ({ row }) => (
-        <div className="capitalize">{row.original.sourceType}</div>
-      ),
+      cell: ({ row }) => {
+        const note = (row.original.note ?? "").trim();
+        return (
+          <div className="min-w-0">
+            <div className="capitalize">{row.original.sourceType}</div>
+            {note.length > 0 && (
+              <div
+                className="text-xs text-muted-foreground truncate max-w-xs"
+                title={note}
+              >
+                {note}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "amount",

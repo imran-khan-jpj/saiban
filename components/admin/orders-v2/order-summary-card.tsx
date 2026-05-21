@@ -13,16 +13,13 @@ export function OrderSummaryCard({ order }: OrderSummaryCardProps) {
 
   return (
     <section className="rounded-xl border bg-card">
-      <header className="border-b px-5 py-4">
+      <header className="border-b px-5 py-3">
         <h2 className="text-base font-semibold tracking-tight text-foreground">
           Summary
         </h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          Totals for this order
-        </p>
       </header>
 
-      <div className="space-y-3 px-5 py-5">
+      <div className="space-y-3 px-5 py-4">
         <Row label="Subtotal" value={formatCurrency(order.subtotal)} />
         {showDiscount && (
           <Row

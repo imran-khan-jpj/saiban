@@ -8,6 +8,7 @@ export interface CustomerTransaction {
   amount: number;
   sourceType: string;
   sourceId: string;
+  note: string;
   createdAt: string;
   updatedAt: string;
   __v: number;

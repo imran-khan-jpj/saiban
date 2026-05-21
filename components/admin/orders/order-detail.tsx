@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { IconArrowLeft, IconCash } from "@tabler/icons-react";
+import { IconArrowLeft, IconCash, IconNote } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDate, formatCurrency } from "@/lib/utils";
@@ -140,6 +140,20 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
           </div>
         </div>
 
+        {order.note && order.note.trim().length > 0 && (
+          <div className="space-y-1">
+            <Label className="text-muted-foreground inline-flex items-center gap-1.5">
+              <IconNote className="h-3.5 w-3.5" />
+              Order Note
+            </Label>
+            <div className="rounded-lg border-l-2 border-foreground/20 bg-muted px-4 py-3">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                {order.note}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2">
           <Label className="text-muted-foreground">Order Items</Label>
           <div className="border rounded-lg overflow-hidden">
@@ -201,13 +215,6 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
             </p>
           </div>
         </div>
-
-        {order.note && (
-          <div className="space-y-1">
-            <Label className="text-muted-foreground">Note</Label>
-            <p className="text-sm p-3 bg-muted rounded-lg">{order.note}</p>
-          </div>
-        )}
 
         {/* Invoice Warranty Note */}
         <div className="space-y-1">

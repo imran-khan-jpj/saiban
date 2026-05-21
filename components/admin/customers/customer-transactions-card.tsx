@@ -76,37 +76,50 @@ export function CustomerTransactionsCard({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions.map((transaction) => (
-                    <TableRow key={transaction._id}>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {formatDate(transaction.createdAt)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={`capitalize ${
+                  {transactions.map((transaction) => {
+                    const note = (transaction.note ?? "").trim();
+                    return (
+                      <TableRow key={transaction._id}>
+                        <TableCell className="text-muted-foreground text-sm align-top">
+                          {formatDate(transaction.createdAt)}
+                        </TableCell>
+                        <TableCell className="align-top">
+                          <Badge
+                            className={`capitalize ${
+                              transaction.entryType === "debit"
+                                ? "bg-red-600 text-white"
+                                : "bg-green-600 text-white"
+                            }`}
+                          >
+                            {transaction.entryType}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm align-top">
+                          <span className="capitalize">
+                            {transaction.sourceType}
+                          </span>
+                          {note.length > 0 && (
+                            <span
+                              className="block text-xs text-muted-foreground mt-0.5 truncate max-w-xs"
+                              title={note}
+                            >
+                              {note}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell
+                          className={`font-medium align-top ${
                             transaction.entryType === "debit"
-                              ? "bg-red-600 text-white"
-                              : "bg-green-600 text-white"
+                              ? "text-red-600"
+                              : "text-green-600"
                           }`}
                         >
-                          {transaction.entryType}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="capitalize text-sm">
-                        {transaction.sourceType}
-                      </TableCell>
-                      <TableCell
-                        className={`font-medium ${
-                          transaction.entryType === "debit"
-                            ? "text-red-600"
-                            : "text-green-600"
-                        }`}
-                      >
-                        {transaction.entryType === "debit" ? "-" : "+"}PKR{" "}
-                        {transaction.amount}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                          {transaction.entryType === "debit" ? "-" : "+"}PKR{" "}
+                          {transaction.amount}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

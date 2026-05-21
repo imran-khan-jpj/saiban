@@ -116,17 +116,28 @@ export function CustomerLedgerRecordsV2({
       {
         accessorKey: "sourceType",
         header: "Source",
-        size: 240,
+        size: 280,
         cell: ({ row }) => {
           const Icon = SOURCE_ICONS[row.original.sourceType] ?? IconReceipt;
           const label =
             SOURCE_LABELS[row.original.sourceType] ?? row.original.sourceType;
+          const note = (row.original.note ?? "").trim();
           return (
-            <div className="flex items-center gap-2 text-sm">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <div className="flex items-start gap-2 text-sm min-w-0">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                 <Icon className="h-3.5 w-3.5" />
               </span>
-              <span className="capitalize">{label}</span>
+              <div className="min-w-0">
+                <div className="capitalize">{label}</div>
+                {note.length > 0 && (
+                  <div
+                    className="truncate text-xs text-muted-foreground"
+                    title={note}
+                  >
+                    {note}
+                  </div>
+                )}
+              </div>
             </div>
           );
         },
