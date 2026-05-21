@@ -10,15 +10,13 @@ interface OrderItemsTableProps {
 export function OrderItemsTable({ items }: OrderItemsTableProps) {
   return (
     <section className="rounded-xl border bg-card overflow-hidden">
-      <header className="flex items-baseline justify-between gap-4 border-b px-5 py-4">
-        <div>
-          <h2 className="text-base font-semibold tracking-tight text-foreground">
-            Items
-          </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+      <header className="flex items-center justify-between gap-4 border-b px-5 py-3">
+        <h2 className="text-base font-semibold tracking-tight text-foreground">
+          Items
+          <span className="ml-2 text-xs font-normal text-muted-foreground tabular-nums">
             {items.length} {items.length === 1 ? "product" : "products"}
-          </p>
-        </div>
+          </span>
+        </h2>
       </header>
 
       <div className="overflow-x-auto">
@@ -36,7 +34,7 @@ export function OrderItemsTable({ items }: OrderItemsTableProps) {
           </thead>
           <tbody className="divide-y">
             {items.map((item, idx) => (
-              <tr key={idx} className="text-sm">
+              <tr key={idx} className="text-sm text-foreground">
                 <td className="px-5 py-3">
                   <p className="font-medium text-foreground">
                     {item.productId.name}
@@ -48,13 +46,11 @@ export function OrderItemsTable({ items }: OrderItemsTableProps) {
                 <td className="px-5 py-3 text-right tabular-nums">
                   {item.quantity}
                 </td>
-                <td className="px-5 py-3 text-right tabular-nums text-muted-foreground">
+                <td className="px-5 py-3 text-right tabular-nums">
                   {formatCurrency(item.unitPrice)}
                 </td>
-                <td className="px-5 py-3 text-right tabular-nums text-muted-foreground">
-                  {item.discountPercentage > 0
-                    ? `${item.discountPercentage}%`
-                    : "—"}
+                <td className="px-5 py-3 text-right tabular-nums">
+                  {item.discountPercentage}%
                 </td>
                 <td className="px-5 py-3 text-right font-semibold tabular-nums tracking-tight">
                   {formatCurrency(item.lineTotal)}

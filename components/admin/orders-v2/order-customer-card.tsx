@@ -22,15 +22,10 @@ export function OrderCustomerCard({ customer }: OrderCustomerCardProps) {
 
   return (
     <section className="rounded-xl border bg-card">
-      <header className="flex items-baseline justify-between gap-4 border-b px-5 py-4">
-        <div>
-          <h2 className="text-base font-semibold tracking-tight text-foreground">
-            Customer
-          </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Who this order belongs to
-          </p>
-        </div>
+      <header className="flex items-center justify-between gap-4 border-b px-5 py-3">
+        <h2 className="text-base font-semibold tracking-tight text-foreground">
+          Customer
+        </h2>
         <Link
           href={`/admin/v2/customers/${customer._id}`}
           className="inline-flex items-center gap-1 text-xs font-medium text-foreground/70 hover:text-foreground"
@@ -40,26 +35,26 @@ export function OrderCustomerCard({ customer }: OrderCustomerCardProps) {
         </Link>
       </header>
 
-      <div className="flex items-start gap-4 px-5 py-5">
+      <div className="flex items-start gap-3 px-5 py-3">
         <CustomerAvatar
           firstName={customer.firstName}
           lastName={customer.lastName}
-          size="lg"
+          size="md"
         />
         <div className="min-w-0 flex-1">
           <Link
             href={`/admin/v2/customers/${customer._id}`}
-            className="text-base font-semibold text-foreground hover:underline underline-offset-4"
+            className="text-sm font-medium text-foreground hover:underline underline-offset-4"
           >
             {fullName}
           </Link>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
             {customer.phoneNumber && (
               <a
                 href={`tel:${customer.phoneNumber}`}
                 className="inline-flex items-center gap-1.5 tabular-nums hover:text-foreground transition-colors"
               >
-                <IconPhone className="h-3.5 w-3.5" />
+                <IconPhone className="h-3 w-3" />
                 {customer.phoneNumber}
               </a>
             )}
@@ -68,13 +63,13 @@ export function OrderCustomerCard({ customer }: OrderCustomerCardProps) {
                 href={`mailto:${customer.email}`}
                 className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
               >
-                <IconMail className="h-3.5 w-3.5" />
+                <IconMail className="h-3 w-3" />
                 {customer.email}
               </a>
             )}
             {address && (
               <span className="inline-flex items-center gap-1.5">
-                <IconMapPin className="h-3.5 w-3.5" />
+                <IconMapPin className="h-3 w-3" />
                 {address}
               </span>
             )}
