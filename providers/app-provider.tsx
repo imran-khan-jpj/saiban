@@ -2,10 +2,11 @@
 
 import React, {
   createContext,
+  useCallback,
   useContext,
-  useState,
-  ReactNode,
-  useEffect,
+  useMemo,
+  useSyncExternalStore,
+  type ReactNode,
 } from "react";
 
 interface User {
@@ -24,6 +25,9 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const USER_STORAGE_KEY = "user";
+// Native `storage` events only fire for cross-tab updates. We dispatch this
+// custom event after our own writes so the same-tab subscriber re-snapshots.
+const USER_STORAGE_EVENT = "saiban:user-storage";
 
 const normalizeUser = (raw: unknown): User | null => {
   if (!raw || typeof raw !== "object") return null;
@@ -50,38 +54,62 @@ const normalizeUser = (raw: unknown): User | null => {
   return { id, name, email, role, avatar };
 };
 
-export function AppProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+function readStoredUser(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(USER_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      setIsLoaded(true);
-      return;
-    }
-
-    const stored = localStorage.getItem(USER_STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = normalizeUser(JSON.parse(stored));
-        if (parsed) setUser(parsed);
-      } catch (error) {
-        console.error("Failed to parse stored user:", error);
-        localStorage.removeItem(USER_STORAGE_KEY);
-      }
-    }
-    setIsLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    if (typeof window === "undefined") return;
-    if (user) {
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+function writeStoredUser(value: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (value === null) {
+      window.localStorage.removeItem(USER_STORAGE_KEY);
     } else {
-      localStorage.removeItem(USER_STORAGE_KEY);
+      window.localStorage.setItem(USER_STORAGE_KEY, value);
     }
-  }, [user, isLoaded]);
+  } catch {
+    // localStorage may be unavailable (private mode, quota); ignore.
+  }
+  window.dispatchEvent(new Event(USER_STORAGE_EVENT));
+}
+
+function subscribeToUser(callback: () => void) {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("storage", callback);
+  window.addEventListener(USER_STORAGE_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(USER_STORAGE_EVENT, callback);
+  };
+}
+
+function getServerSnapshot(): string | null {
+  return null;
+}
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const stored = useSyncExternalStore(
+    subscribeToUser,
+    readStoredUser,
+    getServerSnapshot,
+  );
+
+  const user = useMemo<User | null>(() => {
+    if (!stored) return null;
+    try {
+      return normalizeUser(JSON.parse(stored));
+    } catch {
+      return null;
+    }
+  }, [stored]);
+
+  const setUser = useCallback((next: User | null) => {
+    writeStoredUser(next ? JSON.stringify(next) : null);
+  }, []);
 
   return (
     <AppContext.Provider value={{ user, setUser }}>

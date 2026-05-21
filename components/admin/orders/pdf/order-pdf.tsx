@@ -35,6 +35,9 @@ export function OrderPDF({
       <Page size="A4" style={styles.page}>
         <View style={styles.headerContainer} fixed>
           {parentCompanyLogo && (
+            // PDF-only Image from @react-pdf/renderer (not an HTML <img>),
+            // so jsx-a11y/alt-text does not apply.
+            // eslint-disable-next-line jsx-a11y/alt-text
             <Image src={parentCompanyLogo} style={styles.logo} />
           )}
 
@@ -55,7 +58,10 @@ export function OrderPDF({
             <Text style={styles.companyDetails}>DRAP ENLISTMENT #00553</Text>
           </View>
 
-          {companyLogo && <Image src={companyLogo} style={styles.logo} />}
+          {companyLogo && (
+            // eslint-disable-next-line jsx-a11y/alt-text
+            <Image src={companyLogo} style={styles.logo} />
+          )}
         </View>
 
         <View style={styles.topBoxesContainer}>

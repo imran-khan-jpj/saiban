@@ -11,8 +11,8 @@ type DashboardMetricsResponse = {
     receivedPayments: number;
   };
   alerts: {
-    lowStockProducts: any[];
-    pendingOrders: any[];
+    lowStockProducts: unknown[];
+    pendingOrders: unknown[];
   };
 };
 

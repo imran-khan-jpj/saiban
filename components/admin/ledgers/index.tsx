@@ -47,7 +47,10 @@ export function Ledgers() {
     customersPagination.limit,
     debouncedCustomerSearch,
   );
-  const customers = customersData?.data || [];
+  const customers = React.useMemo(
+    () => customersData?.data || [],
+    [customersData],
+  );
 
   // Clear customer filter when search input changes (user is typing new search)
   React.useEffect(() => {

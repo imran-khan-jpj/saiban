@@ -95,7 +95,9 @@ export function ProductForm({
           descriptionUrdu: product.descriptionUrdu,
           formulation: product.formulation,
           packType: product.packType,
-          customPackType: (product as any).customPackType || "",
+          customPackType:
+            (product as Product & { customPackType?: string }).customPackType ||
+            "",
           size: String(product.size),
           unitPrice: String(product.unitPrice),
           lowStockThreshold: String(product.lowStockThreshold),

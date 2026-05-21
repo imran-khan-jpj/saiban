@@ -31,7 +31,6 @@ interface PaymentFormProps {
   onSubmit: (data: PaymentFormValues) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
-  hideOrderId?: boolean;
   defaultOrderId?: string;
 }
 
@@ -39,7 +38,6 @@ export function PaymentForm({
   onSubmit,
   onCancel,
   isSubmitting = false,
-  hideOrderId = false,
   defaultOrderId = "",
 }: PaymentFormProps) {
   const {

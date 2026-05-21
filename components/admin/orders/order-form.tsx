@@ -29,7 +29,7 @@ import {
   IconSelector,
 } from "@tabler/icons-react";
 import { useGetAllCustomers } from "@/app/api/customers/use-get-all";
-import { useGetAllProducts } from "@/app/api/products/use-get-all";
+import { useGetAllProducts, type Product } from "@/app/api/products/use-get-all";
 import { formatCurrency } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
@@ -114,12 +114,11 @@ export function OrderForm({
     Record<number, boolean>
   >({});
 
-  const [productChangeCounter, setProductChangeCounter] = React.useState(0);
   const [productStockLimits, setProductStockLimits] = React.useState<
     Record<number, number>
   >({});
   // Store selected products to persist them in dropdown
-  const [selectedProducts, setSelectedProducts] = React.useState<any[]>([]);
+  const [selectedProducts, setSelectedProducts] = React.useState<Product[]>([]);
 
   // Fetch customers and products
   const { data: customersData } = useGetAllCustomers(
@@ -136,7 +135,10 @@ export function OrderForm({
 
   const customers = customersData?.data || [];
   // Merge API products and selectedProducts, deduplicated by _id
-  const apiProducts = productsData?.data || [];
+  const apiProducts = React.useMemo<Product[]>(
+    () => productsData?.data || [],
+    [productsData],
+  );
   const products = React.useMemo(() => {
     const all = [...apiProducts, ...selectedProducts];
     const seen = new Set();
@@ -148,14 +150,16 @@ export function OrderForm({
     });
   }, [apiProducts, selectedProducts]);
 
-  // Calculate total amount with discounts
-  const totalAmount = React.useMemo(() => {
-    return items.reduce((sum, item) => {
-      const itemTotal = (item.quantity || 0) * (item.price || 0);
-      const discount = itemTotal * ((item.discountPercentage || 0) / 100);
-      return sum + itemTotal - discount;
-    }, 0);
-  }, [items, productChangeCounter]);
+  // Compute total inline on every render. `watch("items")` reliably triggers
+  // re-renders on nested field changes but does not always produce a new
+  // array reference, which would let a `useMemo([items])` skip recomputation
+  // and ship a stale total to the UI. A bare reduce over a handful of items
+  // is cheap and matches how per-row line totals are already computed.
+  const totalAmount = items.reduce((sum, item) => {
+    const itemTotal = (item.quantity || 0) * (item.price || 0);
+    const discount = itemTotal * ((item.discountPercentage || 0) / 100);
+    return sum + itemTotal - discount;
+  }, 0);
 
   // Update price when product is selected
   const handleProductChange = (index: number, productId: string) => {
@@ -198,8 +202,6 @@ export function OrderForm({
           },
         );
       }
-      // Force re-render of total amount
-      setProductChangeCounter((prev) => prev + 1);
     }
   };
 
@@ -217,7 +219,6 @@ export function OrderForm({
         shouldDirty: true,
         shouldValidate: true,
       });
-      setProductChangeCounter((prev) => prev + 1);
       return;
     }
 
@@ -234,7 +235,6 @@ export function OrderForm({
         },
       );
     }
-    setProductChangeCounter((prev) => prev + 1);
   };
 
   // Calculate discounted price from discount percentage
@@ -250,7 +250,6 @@ export function OrderForm({
       shouldDirty: true,
       shouldValidate: true,
     });
-    setProductChangeCounter((prev) => prev + 1);
   };
 
   const handleFormSubmit = (data: OrderFormValues) => {
@@ -264,7 +263,7 @@ export function OrderForm({
       })),
       note: data.note || "",
     };
-    onSubmit(payload as any);
+    onSubmit(payload);
     reset();
   };
 
@@ -468,7 +467,6 @@ export function OrderForm({
                 errorMessage={errors.items?.[index]?.quantity?.message}
                 {...register(`items.${index}.quantity`, {
                   valueAsNumber: true,
-                  onChange: () => setProductChangeCounter((prev) => prev + 1),
                 })}
               />
               {items[index]?.product &&
@@ -496,7 +494,6 @@ export function OrderForm({
                 errorMessage={errors.items?.[index]?.price?.message}
                 {...register(`items.${index}.price`, {
                   valueAsNumber: true,
-                  onChange: () => setProductChangeCounter((prev) => prev + 1),
                 })}
               />
             </div>

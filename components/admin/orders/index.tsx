@@ -40,7 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { OrderForm } from "./order-form";
 import { OrderViewDialog } from "./order-view-dialog";
 import { PaymentForm } from "../customers/payment-form";

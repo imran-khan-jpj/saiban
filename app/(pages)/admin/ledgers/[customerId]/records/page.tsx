@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { CustomerLedgerRecords } from "@/components/admin/ledgers/customer-records";
 import { SiteHeader } from "@/components/site-header";
 import { useGetCustomerById } from "@/app/api/customers/use-get-by-id";
