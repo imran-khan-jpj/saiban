@@ -331,7 +331,6 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
             onSubmit={handleRecordPayment}
             onCancel={() => setIsPaymentDialogOpen(false)}
             isSubmitting={recordPayment.isPending}
-            hideOrderId={true}
           />
         </DialogContent>
       </Dialog>

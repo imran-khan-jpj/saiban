@@ -33,8 +33,6 @@ interface PaymentFormV2Props {
   onCancel: () => void;
   isSubmitting?: boolean;
   defaultOrderId?: string;
-  /** When true, the orderId field is hidden from the form. */
-  hideOrderId?: boolean;
 }
 
 interface FieldProps {
@@ -87,7 +85,6 @@ export function PaymentFormV2({
   onCancel,
   isSubmitting = false,
   defaultOrderId = "",
-  hideOrderId: _hideOrderId = false,
 }: PaymentFormV2Props) {
   const {
     register,
