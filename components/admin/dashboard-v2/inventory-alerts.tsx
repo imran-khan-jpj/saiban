@@ -74,7 +74,7 @@ export function InventoryAlerts() {
           </p>
         </div>
         <Link
-          href="/admin/products"
+          href="/admin/v2/products"
           className="text-xs font-medium text-foreground/70 hover:text-foreground"
         >
           View inventory

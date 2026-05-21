@@ -8,11 +8,11 @@ import {
   IconUsers,
   IconInnerShadowTop,
   IconPackage,
-  IconSparkles,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
+import { AdminExperienceSwitcher } from "@/components/admin-experience-switcher";
 import { useApp } from "@/providers/app-provider";
 import {
   Sidebar,
@@ -22,24 +22,32 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   useSidebarVersion,
   type SidebarVersion,
 } from "@/hooks/use-sidebar-version";
+import { ADMIN_NAV_V1 } from "@/lib/admin-routes";
 import { AppSidebarV2 } from "@/components/sidebar-v2/app-sidebar-v2";
 
 const navMainItems = [
-  { title: "Dashboard", url: "/admin/dashboard", icon: IconDashboard },
-  { title: "Products Management", url: "/admin/products", icon: IconPackage },
-  { title: "Customers Management", url: "/admin/customers", icon: IconUsers },
+  { title: "Dashboard", url: ADMIN_NAV_V1[0].url, icon: IconDashboard },
+  {
+    title: "Products Management",
+    url: ADMIN_NAV_V1[1].url,
+    icon: IconPackage,
+  },
+  {
+    title: "Customers Management",
+    url: ADMIN_NAV_V1[2].url,
+    icon: IconUsers,
+  },
   {
     title: "Orders Management",
-    url: "/admin/orders",
+    url: ADMIN_NAV_V1[3].url,
     icon: IconShoppingCart,
   },
-  { title: "Ledger Management", url: "/admin/ledgers", icon: IconBook2 },
+  { title: "Ledger Management", url: ADMIN_NAV_V1[4].url, icon: IconBook2 },
 ];
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -58,15 +66,18 @@ export function AppSidebar({
   const { version } = useSidebarVersion(initialVersion);
 
   if (version === "v2") {
-    return <AppSidebarV2 {...props} />;
+    return <AppSidebarV2 initialVersion={initialVersion} {...props} />;
   }
-  return <AppSidebarV1 {...props} />;
+  return <AppSidebarV1 initialVersion={initialVersion} {...props} />;
 }
 
-function AppSidebarV1({ ...props }: React.ComponentProps<typeof Sidebar>) {
+function AppSidebarV1({
+  initialVersion = "v1",
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  initialVersion?: SidebarVersion;
+}) {
   const { user } = useApp();
-  const { setVersion } = useSidebarVersion();
-  const { state } = useSidebar();
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -85,20 +96,11 @@ function AppSidebarV1({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="gap-2">
+        <AdminExperienceSwitcher initialVersion={initialVersion} />
         <NavMain items={navMainItems} />
       </SidebarContent>
-      <SidebarFooter className="gap-1">
-        {state !== "collapsed" && (
-          <button
-            type="button"
-            onClick={() => setVersion("v2")}
-            className="mx-2 mb-1 inline-flex items-center justify-center gap-1.5 rounded-full border bg-card px-3 py-1 text-[11px] font-medium text-foreground/80 transition-colors hover:border-foreground/30 hover:text-foreground"
-          >
-            <IconSparkles className="size-3 text-emerald-500" />
-            Try the new sidebar
-          </button>
-        )}
+      <SidebarFooter>
         <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>

@@ -8,7 +8,6 @@ import {
   IconBook2,
   IconUsers,
   IconPackage,
-  IconArrowBackUp,
 } from "@tabler/icons-react";
 
 import {
@@ -19,46 +18,30 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar";
+import { AdminExperienceSwitcher } from "@/components/admin-experience-switcher";
 import { useApp } from "@/providers/app-provider";
-import { useSidebarVersion } from "@/hooks/use-sidebar-version";
+import { ADMIN_NAV_V2 } from "@/lib/admin-routes";
+import type { SidebarVersion } from "@/hooks/use-sidebar-version";
 
 import { NavMainV2 } from "./nav-main";
 import { NavUserV2 } from "./nav-user";
 
 const navMainItems = [
-  {
-    title: "Dashboard",
-    url: "/admin/dashboard",
-    icon: IconDashboard,
-  },
-  {
-    title: "Products",
-    url: "/admin/products",
-    icon: IconPackage,
-  },
-  {
-    title: "Customers",
-    url: "/admin/customers",
-    icon: IconUsers,
-  },
-  {
-    title: "Orders",
-    url: "/admin/orders",
-    icon: IconShoppingCart,
-  },
-  {
-    title: "Ledger",
-    url: "/admin/ledgers",
-    icon: IconBook2,
-  },
+  { title: "Dashboard", url: ADMIN_NAV_V2[0].url, icon: IconDashboard },
+  { title: "Products", url: ADMIN_NAV_V2[1].url, icon: IconPackage },
+  { title: "Customers", url: ADMIN_NAV_V2[2].url, icon: IconUsers },
+  { title: "Orders", url: ADMIN_NAV_V2[3].url, icon: IconShoppingCart },
+  { title: "Ledger", url: ADMIN_NAV_V2[4].url, icon: IconBook2 },
 ];
 
-export function AppSidebarV2(props: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebarV2({
+  initialVersion = "v2",
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  initialVersion?: SidebarVersion;
+}) {
   const { user } = useApp();
-  const { setVersion } = useSidebarVersion();
-  const { state } = useSidebar();
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -70,7 +53,7 @@ export function AppSidebarV2(props: React.ComponentProps<typeof Sidebar>) {
               size="lg"
               className="data-[slot=sidebar-menu-button]:p-2!"
             >
-              <Link href="/admin/dashboard">
+              <Link href={ADMIN_NAV_V2[0].url}>
                 <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-md bg-foreground text-background">
                   <span className="text-base font-bold tracking-tight">S</span>
                 </div>
@@ -88,21 +71,12 @@ export function AppSidebarV2(props: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="gap-2">
+        <AdminExperienceSwitcher initialVersion={initialVersion} />
         <NavMainV2 items={navMainItems} />
       </SidebarContent>
 
-      <SidebarFooter className="gap-1">
-        {state !== "collapsed" && (
-          <button
-            type="button"
-            onClick={() => setVersion("v1")}
-            className="mx-2 mb-1 flex items-center justify-center gap-1.5 rounded-md border border-dashed border-foreground/15 px-2 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-          >
-            <IconArrowBackUp className="size-3" />
-            Switch to classic sidebar
-          </button>
-        )}
+      <SidebarFooter>
         <NavUserV2 user={user} />
       </SidebarFooter>
     </Sidebar>

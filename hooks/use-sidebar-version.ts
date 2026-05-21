@@ -13,7 +13,8 @@ const isValidVersion = (v: string | null | undefined): v is SidebarVersion =>
   v === "v1" || v === "v2";
 
 /**
- * Tracks whether the user has opted into the experimental v2 sidebar.
+ * Tracks whether the user has opted into the experimental v2 experience
+ * (sidebar + v2 admin routes). Persisted via cookie.
  *
  * Persisted in a cookie (not localStorage) so the value is also available
  * on the server. The admin layout reads this cookie via `next/headers`

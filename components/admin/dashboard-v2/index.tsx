@@ -5,6 +5,7 @@ import { useDashboardMetrics } from "@/app/api/dashboard/use-dashboard-metrics";
 import { useGetAllProducts } from "@/app/api/products/use-get-all";
 import { useGetAllOrders } from "@/app/api/orders/use-get-all";
 import { useApp } from "@/providers/app-provider";
+import { ADMIN_V2 } from "@/lib/admin-routes";
 import { formatCurrency } from "@/lib/utils";
 
 import { AlertsBar } from "./alerts-bar";
@@ -70,19 +71,19 @@ export function DashboardV2() {
           {
             label: "out of stock",
             count: outOfStockData?.pagination.total ?? 0,
-            href: "/admin/products",
+            href: ADMIN_V2.products,
             tone: "danger",
           },
           {
             label: "pending orders",
             count: pendingOrdersData?.pagination.total ?? 0,
-            href: "/admin/orders",
+            href: ADMIN_V2.orders,
             tone: "warn",
           },
           {
             label: "in pending payments",
             count: m?.pendingPayments ?? 0,
-            href: "/admin/ledgers",
+            href: ADMIN_V2.ledgers,
             tone: "warn",
           },
         ]}
@@ -95,7 +96,7 @@ export function DashboardV2() {
           value={formatCurrency(m?.totalRevenue ?? 0)}
           hint={`from ${m?.totalOrders ?? 0} orders`}
           isLoading={metricsLoading}
-          href="/admin/ledgers"
+          href={ADMIN_V2.ledgers}
         />
         <KpiCard
           label="Pending payments"
@@ -103,21 +104,21 @@ export function DashboardV2() {
           hint="across all customers"
           isLoading={metricsLoading}
           emphasis={(m?.pendingPayments ?? 0) > 0 ? "warn" : "default"}
-          href="/admin/ledgers"
+          href={ADMIN_V2.ledgers}
         />
         <KpiCard
           label="Customers"
           value={m?.totalCustomers ?? 0}
           hint="total accounts"
           isLoading={metricsLoading}
-          href="/admin/customers"
+          href={ADMIN_V2.customers}
         />
         <KpiCard
           label="Products"
           value={m?.totalProducts ?? 0}
           hint="active SKUs"
           isLoading={metricsLoading}
-          href="/admin/products"
+          href={ADMIN_V2.products}
         />
       </div>
 

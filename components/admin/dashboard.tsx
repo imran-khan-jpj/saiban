@@ -23,15 +23,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <SiteHeader>
-        <Link
-          href="/admin/dashboard/v2"
-          className="mr-4 inline-flex items-center gap-1 rounded-full border bg-card px-3 py-1 text-xs font-medium text-foreground/80 hover:border-foreground/30 hover:text-foreground"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Try the new dashboard
-        </Link>
-      </SiteHeader>
+      <SiteHeader />
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">

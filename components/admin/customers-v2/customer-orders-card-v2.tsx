@@ -83,7 +83,7 @@ export function CustomerOrdersCardV2({
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <Link
-                        href={`/admin/orders/${order._id}`}
+                        href={`/admin/v2/orders/${order._id}`}
                         className="block truncate text-sm font-semibold text-foreground hover:underline underline-offset-4"
                       >
                         Order #{order._id.slice(-6).toUpperCase()}

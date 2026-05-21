@@ -27,7 +27,7 @@ export function NavMainV2({ items }: { items: NavItem[] }) {
       <SidebarGroupContent>
         <SidebarMenu className="gap-0.5">
           {items.map((item) => {
-            // Active when on the exact route or any nested route (including v2).
+            // Active on the exact route or any nested detail route.
             const isActive =
               pathname === item.url || pathname.startsWith(item.url + "/");
             return (

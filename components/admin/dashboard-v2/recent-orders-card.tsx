@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/common/status-badge";
 import { useGetAllOrders } from "@/app/api/orders/use-get-all";
+import { ADMIN_V2 } from "@/lib/admin-routes";
 import { formatDate, formatCurrency } from "@/lib/utils";
 
 export function RecentOrdersCard() {
@@ -22,7 +23,7 @@ export function RecentOrdersCard() {
           </p>
         </div>
         <Link
-          href="/admin/orders"
+          href={ADMIN_V2.orders}
           className="text-xs font-medium text-foreground/70 hover:text-foreground"
         >
           View all
@@ -42,7 +43,7 @@ export function RecentOrdersCard() {
             {orders.map((order) => (
               <li key={order._id} className="py-3">
                 <Link
-                  href={`/admin/orders/${order._id}`}
+                  href={`/admin/v2/orders/${order._id}`}
                   className="flex items-center justify-between gap-3 group"
                 >
                   <div className="min-w-0 flex-1">
