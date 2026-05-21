@@ -80,12 +80,6 @@ export function DashboardV2() {
             href: ADMIN_V2.orders,
             tone: "warn",
           },
-          {
-            label: "in pending payments",
-            count: m?.pendingPayments ?? 0,
-            href: ADMIN_V2.ledgers,
-            tone: "warn",
-          },
         ]}
       />
 
