@@ -45,7 +45,10 @@ export function CustomerCombobox({
     50,
     debouncedSearch || undefined,
   );
-  const customers = data?.data || [];
+  const customers = React.useMemo<Customer[]>(
+    () => data?.data || [],
+    [data],
+  );
 
   // Cache the selected customer separately from the live search results so
   // the trigger label keeps showing the right name even after the search
