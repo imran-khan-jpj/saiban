@@ -31,15 +31,7 @@ import {
 import { useGetAllCustomers } from "@/app/api/customers/use-get-all";
 import { useGetAllProducts } from "@/app/api/products/use-get-all";
 import { formatCurrency } from "@/lib/utils";
-// Debounce hook
-function useDebouncedValue<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = React.useState(value);
-  React.useEffect(() => {
-    const handler = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-  return debouncedValue;
-}
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 // Form validation schema
 const orderFormSchema = z.object({
@@ -167,7 +159,7 @@ export function OrderForm({
 
   // Update price when product is selected
   const handleProductChange = (index: number, productId: string) => {
-    let product = products.find((p) => p._id === productId);
+    const product = products.find((p) => p._id === productId);
     if (product) {
       // Add to selectedProducts if not already present
       setSelectedProducts((prev) => {

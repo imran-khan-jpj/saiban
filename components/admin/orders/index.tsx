@@ -7,13 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   IconPlus,
-  IconEye,
   IconCheck,
   IconX as IconCancel,
   IconFilter,
   IconX,
   IconSearch,
-  IconCash,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import {
@@ -44,6 +42,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { OrderForm } from "./order-form";
+import { OrderViewDialog } from "./order-view-dialog";
 import { PaymentForm } from "../customers/payment-form";
 import { useGetAllOrders, Order } from "@/app/api/orders/use-get-all";
 import { useGetOrderById } from "@/app/api/orders/use-get-by-id";
@@ -54,26 +53,17 @@ import { useRecordPayment } from "@/app/api/customers/use-record-payment";
 import { Spinner } from "@/components/ui/spinner";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { StatusBadge } from "@/components/common/status-badge";
 
 // Re-export Order type
 export type { Order };
 
-interface OrdersProps {
-  searchInput: string;
-  onSearchInputChange: (value: string) => void;
-  statusFilter: string;
-  onStatusFilterChange: (value: string) => void;
-}
-
-export function Orders({
-  searchInput,
-  onSearchInputChange,
-  statusFilter,
-  onStatusFilterChange,
-}: OrdersProps) {
+export function Orders() {
   const queryClient = useQueryClient();
+  const [searchInput, setSearchInput] = React.useState("");
+  const [statusFilter, setStatusFilter] = React.useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const [viewingOrderId, setViewingOrderId] = React.useState<string | null>(
     null,
@@ -94,17 +84,11 @@ export function Orders({
     pageIndex: 0,
     pageSize: 10,
   });
-  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const debouncedSearch = useDebouncedValue(searchInput, 500);
 
-  // Debounce search input
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [debouncedSearch]);
 
   // Reset to first page when status filter changes
   React.useEffect(() => {
@@ -141,25 +125,23 @@ export function Orders({
     }));
   }, [data]);
 
-  const getStatusBadge = (status: string) => {
-    const statusStyles: Record<string, string> = {
-      pending: "bg-orange-500 text-white hover:bg-orange-600",
-      confirmed: "bg-green-600 text-white hover:bg-green-700",
-      completed: "bg-green-600 text-white hover:bg-green-700",
-      cancelled: "bg-red-600 text-white hover:bg-red-700",
-      paid: "bg-green-600 text-white hover:bg-green-700",
-    };
-    return (
-      <Badge
-        className={`capitalize ${statusStyles[status] || "bg-gray-500 text-white"}`}
-      >
-        {status}
-      </Badge>
-    );
-  };
+  const handleConfirm = React.useCallback((orderId: string) => {
+    setConfirmingOrderId(orderId);
+  }, []);
 
-  // Column definitions
-  const columns: ColumnDef<Order & { id: string }>[] = [
+  const handleCancel = React.useCallback((orderId: string) => {
+    setCancellingOrderId(orderId);
+  }, []);
+
+  const handleRecordPaymentClick = React.useCallback(
+    (orderId: string, customerId: string) => {
+      setPaymentOrderId(orderId);
+      setPaymentCustomerId(customerId);
+    },
+    [],
+  );
+
+  const columns = React.useMemo<ColumnDef<Order & { id: string }>[]>(() => [
     {
       accessorKey: "customerId",
       header: "Customer",
@@ -200,7 +182,7 @@ export function Orders({
         const isPending = row.original.status === "pending";
         return (
           <div className="flex items-center gap-2">
-            {getStatusBadge(row.original.status)}
+            <StatusBadge status={row.original.status} />
             {isPending && (
               <>
                 <Button
@@ -248,7 +230,6 @@ export function Orders({
       cell: ({ row }) => (
         <div className="flex justify-end gap-1">
           <Button
-            // variant="outline"
             size="sm"
             className="cursor-pointer"
             onClick={(e) => {
@@ -269,7 +250,7 @@ export function Orders({
         </div>
       ),
     },
-  ];
+  ], [handleConfirm, handleCancel, handleRecordPaymentClick]);
 
   const handleAddOrder = (data: {
     customerId: string;
@@ -291,14 +272,6 @@ export function Orders({
     });
   };
 
-  const handleView = (orderId: string) => {
-    setViewingOrderId(orderId);
-  };
-
-  const handleConfirm = (orderId: string) => {
-    setConfirmingOrderId(orderId);
-  };
-
   const handleConfirmOrder = () => {
     if (!confirmingOrderId) return;
 
@@ -312,10 +285,6 @@ export function Orders({
         setConfirmingOrderId(null);
       },
     });
-  };
-
-  const handleCancel = (orderId: string) => {
-    setCancellingOrderId(orderId);
   };
 
   const handleCancelOrder = () => {
@@ -335,11 +304,6 @@ export function Orders({
 
   const handleDialogClose = () => {
     setIsAddDialogOpen(false);
-  };
-
-  const handleRecordPaymentClick = (orderId: string, customerId: string) => {
-    setPaymentOrderId(orderId);
-    setPaymentCustomerId(customerId);
   };
 
   const handleRecordPayment = (data: {
@@ -372,24 +336,6 @@ export function Orders({
     );
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-10">
-        <Spinner className="h-8 w-8" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="rounded-lg border border-destructive p-4">
-        <p className="text-destructive">
-          Error loading orders: {error?.message || "Unknown error"}
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full space-y-4 min-h-0">
       <div className="shrink-0 flex items-center justify-between mt-2">
@@ -399,14 +345,14 @@ export function Orders({
             <Input
               placeholder="Search orders..."
               value={searchInput}
-              onChange={(e) => onSearchInputChange(e.target.value)}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="pl-9"
             />
           </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
-            <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-45">
                 <IconFilter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Filter by status" />
@@ -422,7 +368,7 @@ export function Orders({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => onStatusFilterChange("")}
+                onClick={() => setStatusFilter("")}
                 title="Clear filter"
               >
                 <IconX className="h-4 w-4" />
@@ -454,166 +400,36 @@ export function Orders({
       </div>
 
       <div className="flex-1 min-h-0">
-        <DataTable
-          data={orders}
-          columns={columns}
-          enableRowSelection={false}
-          manualPagination={true}
-          pageCount={data?.pagination.pages}
-          pagination={pagination}
-          onPaginationChange={setPagination}
-        />
+        {isError ? (
+          <div className="rounded-lg border border-destructive p-4">
+            <p className="text-destructive">
+              Error loading orders: {error?.message || "Unknown error"}
+            </p>
+          </div>
+        ) : isLoading ? (
+          <div className="flex items-center justify-center py-10">
+            <Spinner className="h-8 w-8" />
+          </div>
+        ) : (
+          <DataTable
+            data={orders}
+            columns={columns}
+            enableRowSelection={false}
+            manualPagination={true}
+            pageCount={data?.pagination.pages}
+            pagination={pagination}
+            onPaginationChange={setPagination}
+          />
+        )}
       </div>
 
-      {/* View Order Dialog */}
-      <Dialog
+      <OrderViewDialog
         open={!!viewingOrderId}
         onOpenChange={(open) => !open && setViewingOrderId(null)}
-      >
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Order Details</DialogTitle>
-            <DialogDescription>
-              View detailed information about this order
-            </DialogDescription>
-          </DialogHeader>
-          {isLoadingOrder && (
-            <div className="flex items-center justify-center py-8">
-              <Spinner className="h-8 w-8" />
-            </div>
-          )}
-          {isOrderError && (
-            <div className="rounded-lg border border-destructive p-4">
-              <p className="text-destructive">
-                Error loading order details. Please try again.
-              </p>
-            </div>
-          )}
-          {viewingOrderData && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Order ID</Label>
-                  <p className="font-mono text-sm">{viewingOrderData._id}</p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Status</Label>
-                  {getStatusBadge(viewingOrderData.status)}
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-muted-foreground">Customer</Label>
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="font-medium">
-                    {viewingOrderData.customerId.firstName}{" "}
-                    {viewingOrderData.customerId.lastName}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {viewingOrderData.customerId.email}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Order Items</Label>
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="text-left p-3 text-sm font-medium">
-                          Product
-                        </th>
-                        <th className="text-right p-3 text-sm font-medium">
-                          Quantity
-                        </th>
-                        <th className="text-right p-3 text-sm font-medium">
-                          Unit Price
-                        </th>
-                        <th className="text-right p-3 text-sm font-medium">
-                          Discount
-                        </th>
-                        <th className="text-right p-3 text-sm font-medium">
-                          Line Total
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {viewingOrderData.items.map((item, index) => (
-                        <tr key={index} className="border-t">
-                          <td className="p-3">{item.productId.name}</td>
-                          <td className="p-3 text-right">{item.quantity}</td>
-                          <td className="p-3 text-right">
-                            {formatCurrency(item.unitPrice)}
-                          </td>
-                          <td className="p-3 text-right">
-                            {item.discountPercentage}%
-                          </td>
-                          <td className="p-3 text-right font-medium">
-                            {formatCurrency(item.lineTotal)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div className="space-y-2 p-4 bg-muted rounded-lg">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Subtotal</Label>
-                  <p className="text-sm font-medium">
-                    {formatCurrency(viewingOrderData.subtotal)}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Discount</Label>
-                  <p className="text-sm font-medium">
-                    {formatCurrency(viewingOrderData.discountTotal)}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">GST</Label>
-                  <p className="text-sm font-medium">
-                    {formatCurrency(viewingOrderData.gstTotal)}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between pt-2 border-t">
-                  <Label className="text-lg font-semibold">Grand Total</Label>
-                  <p className="text-lg font-bold">
-                    {formatCurrency(viewingOrderData.grandTotal)}
-                  </p>
-                </div>
-              </div>
-
-              {viewingOrderData.note && (
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Note</Label>
-                  <p className="text-sm p-3 bg-muted rounded-lg">
-                    {viewingOrderData.note}
-                  </p>
-                </div>
-              )}
-
-              <div className="space-y-1">
-                <Label className="text-muted-foreground">Payment Method</Label>
-                <p className="text-sm capitalize">
-                  {viewingOrderData.paymentMethod.replace("_", " ")}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Date</Label>
-                  <p className="text-sm">
-                    {formatDate(viewingOrderData.createdAt)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+        order={viewingOrderData}
+        isLoading={isLoadingOrder}
+        isError={isOrderError}
+      />
 
       {/* Confirm Order Dialog */}
       <AlertDialog

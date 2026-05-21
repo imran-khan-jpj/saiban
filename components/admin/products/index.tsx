@@ -42,23 +42,14 @@ import { Spinner } from "@/components/ui/spinner";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 // Re-export Product type
 export type { Product };
 
-interface ProductsProps {
-  searchInput: string;
-  stockStatus: string;
-  onStockStatusChange: (value: string) => void;
-  setSearchInput: React.Dispatch<React.SetStateAction<string>>;
-}
-
-export function Products({
-  searchInput,
-  stockStatus,
-  onStockStatusChange,
-  setSearchInput,
-}: ProductsProps) {
+export function Products() {
+  const [searchInput, setSearchInput] = React.useState("");
+  const [stockStatus, setStockStatus] = React.useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(
     null,
@@ -73,18 +64,11 @@ export function Products({
     pageIndex: 0,
     pageSize: 10,
   });
-  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const debouncedSearch = useDebouncedValue(searchInput, 500);
 
-  // Debounce search input
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-      // Reset to first page when search changes
-      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [debouncedSearch]);
 
   // Reset to first page when stock status changes
   React.useEffect(() => {
@@ -119,8 +103,20 @@ export function Products({
     }));
   }, [data]);
 
-  // Column definitions
-  const columns: ColumnDef<Product & { id: string }>[] = [
+  const handleEdit = React.useCallback((product: Product & { id: string }) => {
+    setEditingProduct(product);
+    setIsAddDialogOpen(true);
+  }, []);
+
+  const handleView = React.useCallback((productId: string) => {
+    setViewingProductId(productId);
+  }, []);
+
+  const handleDelete = React.useCallback((id: string) => {
+    setDeletingProductId(id);
+  }, []);
+
+  const columns = React.useMemo<ColumnDef<Product & { id: string }>[]>(() => [
     {
       accessorKey: "name",
       header: "Product Name",
@@ -224,7 +220,7 @@ export function Products({
         </div>
       ),
     },
-  ];
+  ], [handleView, handleEdit, handleDelete]);
 
   const handleAddProduct = (
     data: Omit<Product, "_id" | "createdAt" | "updatedAt" | "__v">,
@@ -238,15 +234,6 @@ export function Products({
         toast.error(`Failed to create product: ${error.message}`);
       },
     });
-  };
-
-  const handleEdit = (product: Product & { id: string }) => {
-    setEditingProduct(product);
-    setIsAddDialogOpen(true);
-  };
-
-  const handleView = (productId: string) => {
-    setViewingProductId(productId);
   };
 
   const handleUpdateProduct = (
@@ -267,10 +254,6 @@ export function Products({
         },
       },
     );
-  };
-
-  const handleDelete = (id: string) => {
-    setDeletingProductId(id);
   };
 
   const handleConfirmDelete = () => {
@@ -297,24 +280,6 @@ export function Products({
     setEditingProduct(null);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-10">
-        <Spinner className="h-8 w-8" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="rounded-lg border border-destructive p-4">
-        <p className="text-destructive">
-          Error loading products: {error?.message || "Unknown error"}
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full space-y-4 min-h-0">
       <div className="shrink-0 flex items-center justify-between mt-2">
@@ -329,7 +294,7 @@ export function Products({
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
-            <Select value={stockStatus} onValueChange={onStockStatusChange}>
+            <Select value={stockStatus} onValueChange={setStockStatus}>
               <SelectTrigger className="w-45">
                 <IconFilter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Filter by stock" />
@@ -344,7 +309,7 @@ export function Products({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => onStockStatusChange("")}
+                onClick={() => setStockStatus("")}
                 title="Clear filter"
               >
                 <IconX className="h-4 w-4" />
@@ -385,15 +350,27 @@ export function Products({
       </div>
 
       <div className="flex-1 min-h-0">
-        <DataTable
-          data={products}
-          columns={columns}
-          enableRowSelection={false}
-          manualPagination={true}
-          pageCount={data?.pagination.pages}
-          pagination={pagination}
-          onPaginationChange={setPagination}
-        />
+        {isError ? (
+          <div className="rounded-lg border border-destructive p-4">
+            <p className="text-destructive">
+              Error loading products: {error?.message || "Unknown error"}
+            </p>
+          </div>
+        ) : isLoading ? (
+          <div className="flex items-center justify-center py-10">
+            <Spinner className="h-8 w-8" />
+          </div>
+        ) : (
+          <DataTable
+            data={products}
+            columns={columns}
+            enableRowSelection={false}
+            manualPagination={true}
+            pageCount={data?.pagination.pages}
+            pagination={pagination}
+            onPaginationChange={setPagination}
+          />
+        )}
       </div>
 
       {/* View Product Dialog */}

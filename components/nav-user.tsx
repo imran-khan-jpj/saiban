@@ -26,15 +26,15 @@ import {
 import { logout } from "@/lib/auth";
 import { useApp } from "@/providers/app-provider";
 
-export function NavUser({
-  user,
-}: {
-  user: {
+interface NavUserProps {
+  user?: {
     name: string;
     email: string;
     avatar: string;
-  };
-}) {
+  } | null;
+}
+
+export function NavUser({ user }: NavUserProps) {
   const { setUser } = useApp();
   const { state } = useSidebar();
 
@@ -43,7 +43,10 @@ export function NavUser({
     logout();
   };
 
-  // When sidebar is collapsed, show a dropdown menu
+  const displayName = user?.name ?? "Account";
+  const displayEmail = user?.email ?? "";
+  const avatarUrl = user?.avatar ?? "";
+
   if (state === "collapsed") {
     return (
       <SidebarMenu>
@@ -52,16 +55,22 @@ export function NavUser({
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton size="lg" className="cursor-pointer">
                 <Avatar className="h-8 w-8 rounded-lg grayscale">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarImage src={avatarUrl} alt={displayName} />
+                  <AvatarFallback className="rounded-lg">
+                    {displayName.slice(0, 2).toUpperCase() || "CN"}
+                  </AvatarFallback>
                 </Avatar>
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="right" align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{user.name}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                  <p className="text-sm font-medium">{displayName}</p>
+                  {displayEmail && (
+                    <p className="text-xs text-muted-foreground">
+                      {displayEmail}
+                    </p>
+                  )}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -79,26 +88,42 @@ export function NavUser({
     );
   }
 
-  // When sidebar is expanded, show the full layout
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton size="lg">
           <Avatar className="h-8 w-8 rounded-lg grayscale">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+            <AvatarImage src={avatarUrl} alt={displayName} />
+            <AvatarFallback className="rounded-lg">
+              {displayName.slice(0, 2).toUpperCase() || "CN"}
+            </AvatarFallback>
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-medium">{user.name}</span>
-            <span className="text-muted-foreground truncate text-xs">
-              {user.email}
-            </span>
+            <span className="truncate font-medium">{displayName}</span>
+            {displayEmail && (
+              <span className="text-muted-foreground truncate text-xs">
+                {displayEmail}
+              </span>
+            )}
           </div>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  onClick={handleLogout}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Log out"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLogout();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleLogout();
+                    }
+                  }}
                   className="ml-auto flex items-center justify-center text-destructive hover:opacity-80 transition-opacity cursor-pointer"
                 >
                   <IconLogout className="size-4" />

@@ -1,12 +1,18 @@
-import { deleteAuthToken } from "./cookies";
-
 /**
- * Logout function that clears auth token and redirects to login page
+ * Logout function that clears the auth cookie (server-side, HttpOnly)
+ * and redirects to login page.
  */
-export const logout = () => {
-  // Remove auth token cookie
-  deleteAuthToken();
-
-  // Redirect to login page
-  window.location.href = "/login";
+export const logout = async () => {
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      cache: "no-store",
+    });
+  } catch (error) {
+    console.error("Logout request failed:", error);
+  } finally {
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+  }
 };

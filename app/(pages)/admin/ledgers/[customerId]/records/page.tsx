@@ -69,10 +69,7 @@ export default function CustomerLedgerRecordsPage() {
             </Card>
           </div>
         )}
-        <CustomerLedgerRecords
-          customerId={customerId}
-          customerName={customerName}
-        />
+        <CustomerLedgerRecords customerId={customerId} />
       </div>
     </div>
   );

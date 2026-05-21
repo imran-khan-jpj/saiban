@@ -33,6 +33,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 // Re-export Customer type
 export type { Customer };
@@ -51,21 +52,13 @@ export function Customers() {
     pageSize: 10,
   });
   const [searchInput, setSearchInput] = React.useState("");
-  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const debouncedSearch = useDebouncedValue(searchInput, 400);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Debounce search input with 400ms delay
+  // Reset to first page when the (debounced) search term changes.
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-      // Reset to first page when search changes
-      if (searchInput !== debouncedSearch) {
-        setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-      }
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [searchInput, debouncedSearch]);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [debouncedSearch]);
 
   // Fetch customers from API with pagination and search
   const { data, isLoading, isError, error } = useGetAllCustomers(
@@ -98,79 +91,94 @@ export function Customers() {
     }));
   }, [data]);
 
-  // Column definitions
-  const columns: ColumnDef<Customer & { id: string }>[] = [
-    {
-      accessorKey: "fullName",
-      header: "Full Name",
-      size: 200,
-      cell: ({ row }) => (
-        <button
-          onClick={() => router.push(`/admin/customers/${row.original._id}`)}
-          className="font-medium text-blue-600 hover:text-blue-700 underline text-left cursor-pointer"
-        >
-          {row.original.firstName} {row.original.lastName}
-        </button>
-      ),
+  const handleEdit = React.useCallback(
+    (customer: Customer & { id: string }) => {
+      setEditingCustomer(customer);
+      setIsAddDialogOpen(true);
     },
-    {
-      accessorKey: "phoneNumber",
-      header: "Phone Number",
-      cell: ({ row }) => (
-        <a
-          href={`tel:${row.original.phoneNumber}`}
-          className="hover:text-primary underline-offset-4 hover:underline"
-        >
-          {row.original.phoneNumber}
-        </a>
-      ),
-    },
-    {
-      accessorKey: "address",
-      header: "Address",
-      cell: ({ row }) => (
-        <div
-          className="text-muted-foreground line-clamp-1"
-          title={`${row.original.streetAddress} ${row.original.city} ${row.original.state}`}
-        >
-          {row.original.streetAddress} {row.original.city} {row.original.state}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Date",
-      cell: ({ row }) => (
-        <div className="text-muted-foreground">
-          {formatDate(row.original.createdAt)}
-        </div>
-      ),
-    },
-    {
-      id: "actions",
-      header: () => <div className="text-right">Actions</div>,
-      cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="cursor-pointer"
-            onClick={() => handleEdit(row.original)}
+    [],
+  );
+
+  const handleDelete = React.useCallback((id: string) => {
+    setDeletingCustomerId(id);
+  }, []);
+
+  const columns = React.useMemo<ColumnDef<Customer & { id: string }>[]>(
+    () => [
+      {
+        accessorKey: "fullName",
+        header: "Full Name",
+        size: 200,
+        cell: ({ row }) => (
+          <button
+            onClick={() => router.push(`/admin/customers/${row.original._id}`)}
+            className="font-medium text-blue-600 hover:text-blue-700 underline text-left cursor-pointer"
           >
-            Edit
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            className="cursor-pointer text-white"
-            onClick={() => handleDelete(row.original._id)}
+            {row.original.firstName} {row.original.lastName}
+          </button>
+        ),
+      },
+      {
+        accessorKey: "phoneNumber",
+        header: "Phone Number",
+        cell: ({ row }) => (
+          <a
+            href={`tel:${row.original.phoneNumber}`}
+            className="hover:text-primary underline-offset-4 hover:underline"
           >
-            Delete
-          </Button>
-        </div>
-      ),
-    },
-  ];
+            {row.original.phoneNumber}
+          </a>
+        ),
+      },
+      {
+        accessorKey: "address",
+        header: "Address",
+        cell: ({ row }) => (
+          <div
+            className="text-muted-foreground line-clamp-1"
+            title={`${row.original.streetAddress} ${row.original.city} ${row.original.state}`}
+          >
+            {row.original.streetAddress} {row.original.city}{" "}
+            {row.original.state}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Date",
+        cell: ({ row }) => (
+          <div className="text-muted-foreground">
+            {formatDate(row.original.createdAt)}
+          </div>
+        ),
+      },
+      {
+        id: "actions",
+        header: () => <div className="text-right">Actions</div>,
+        cell: ({ row }) => (
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="cursor-pointer"
+              onClick={() => handleEdit(row.original)}
+            >
+              Edit
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="cursor-pointer text-white"
+              onClick={() => handleDelete(row.original._id)}
+            >
+              Delete
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [router, handleEdit, handleDelete],
+  );
 
   const handleAddCustomer = (data: CustomerFormPayload) => {
     createCustomer.mutate(data, {
@@ -182,11 +190,6 @@ export function Customers() {
         toast.error(`Failed to create customer: ${error.message}`);
       },
     });
-  };
-
-  const handleEdit = (customer: Customer & { id: string }) => {
-    setEditingCustomer(customer);
-    setIsAddDialogOpen(true);
   };
 
   const handleUpdateCustomer = (data: CustomerFormPayload) => {
@@ -205,10 +208,6 @@ export function Customers() {
         },
       },
     );
-  };
-
-  const handleDelete = (id: string) => {
-    setDeletingCustomerId(id);
   };
 
   const handleConfirmDelete = () => {

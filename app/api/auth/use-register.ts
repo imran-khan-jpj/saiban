@@ -1,7 +1,8 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { postClient } from "@/app/api/api-callers/client";
+import { ApiError } from "@/app/api/api-callers/client";
+import { DEFAULTS } from "@/app/defaults";
 
 interface RegisterPayload {
   name: string;
@@ -10,7 +11,6 @@ interface RegisterPayload {
 }
 
 interface RegisterResponse {
-  access_token: string;
   user: {
     id: string;
     email: string;
@@ -20,12 +20,25 @@ interface RegisterResponse {
 }
 
 export const useRegister = () => {
-  return useMutation<RegisterResponse, Error, RegisterPayload>({
+  return useMutation<RegisterResponse, ApiError, RegisterPayload>({
     mutationFn: async (credentials: RegisterPayload) => {
-      return await postClient<RegisterResponse>({
-        url: "/api/auth/register",
-        body: credentials,
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
       });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new ApiError(
+          data?.message ?? data?.error ?? DEFAULTS.ERROR_MESSAGE,
+          response.status,
+          data,
+        );
+      }
+
+      return data as RegisterResponse;
     },
   });
 };

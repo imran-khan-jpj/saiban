@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getClient } from "../api-callers/client";
 
 export interface Order {
@@ -37,7 +37,7 @@ export interface Order {
     discountPercentage: number;
     lineTotal: number;
   }>;
-  status: "pending" | "confirmed" | "cancelled" | "paid";
+  status: "pending" | "completed" | "cancelled";
   paymentMethod: string;
   discountTotal: number;
   gstTotal: number;
@@ -121,5 +121,6 @@ export const useGetAllOrders = (
       });
       return response;
     },
+    placeholderData: keepPreviousData,
   });
 };

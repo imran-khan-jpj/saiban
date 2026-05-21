@@ -1,14 +1,9 @@
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
-  CardAction,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { IconTrendingUp } from "@tabler/icons-react";
-import React from "react";
 import Link from "next/link";
 
 interface SectionCardProps {

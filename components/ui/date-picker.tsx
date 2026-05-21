@@ -5,7 +5,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import { ChevronDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +24,7 @@ export function DatePicker({
   placeholder = "Pick a date",
   className,
   disabled,
-  formatString = "dd-MMM-yyyy",
+  formatString = "DD-MMM-YYYY",
 }: DatePickerProps) {
   return (
     <Popover>
@@ -38,7 +38,7 @@ export function DatePicker({
           )}
           disabled={disabled}
         >
-          {date ? format(date, formatString) : <span>{placeholder}</span>}
+          {date ? dayjs(date).format(formatString) : <span>{placeholder}</span>}
           <ChevronDownIcon className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
