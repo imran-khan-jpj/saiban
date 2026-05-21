@@ -80,6 +80,7 @@ export function CustomerTransactionsCardV2({
           <ul className="divide-y">
             {transactions.map((tx) => {
               const isDebit = tx.entryType === "debit";
+              const note = (tx.note ?? "").trim();
               return (
                 <li key={tx._id} className="py-3">
                   <div className="flex items-center justify-between gap-3">
@@ -105,6 +106,14 @@ export function CustomerTransactionsCardV2({
                         <p className="text-xs text-muted-foreground tabular-nums">
                           {formatDate(tx.createdAt)} · {isDebit ? "Debit" : "Credit"}
                         </p>
+                        {note.length > 0 && (
+                          <p
+                            className="mt-1 truncate text-xs text-muted-foreground/90"
+                            title={note}
+                          >
+                            {note}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <span

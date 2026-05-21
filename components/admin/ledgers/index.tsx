@@ -137,6 +137,24 @@ export function Ledgers() {
         );
       },
     },
+    {
+      accessorKey: "note",
+      header: "Note",
+      cell: ({ row }) => {
+        const note = (row.original.note ?? "").trim();
+        if (!note) {
+          return <span className="text-muted-foreground/60">—</span>;
+        }
+        return (
+          <div
+            className="text-sm text-muted-foreground truncate max-w-[260px]"
+            title={note}
+          >
+            {note}
+          </div>
+        );
+      },
+    },
   ], [router]);
 
   return (

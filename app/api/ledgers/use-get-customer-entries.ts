@@ -11,6 +11,7 @@ export interface CustomerLedgerEntry {
   sourceType: string;
   sourceId: string;
   balance: number;
+  note: string;
   createdAt: string;
   updatedAt: string;
   __v: number;
