@@ -63,7 +63,6 @@ export const Register = () => {
         },
         onError: (error) => {
           toast.error(error.message || "Registration failed");
-          console.error("Registration failed:", error.message);
         },
       },
     );

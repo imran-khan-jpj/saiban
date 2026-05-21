@@ -57,7 +57,6 @@ export const Login = () => {
         },
         onError: (error) => {
           toast.error(error.message || "Login failed");
-          console.error("Login failed:", error.message);
         },
       },
     );
