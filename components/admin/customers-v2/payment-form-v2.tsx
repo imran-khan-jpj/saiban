@@ -17,19 +17,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { cn, roundCurrency, sanitizeCurrencyInput } from "@/lib/utils";
 
 const paymentFormSchema = z.object({
   orderId: z.string().optional(),
-  amount: z.number().min(1, "Amount must be at least 1"),
+  amount: z
+    .string()
+    .min(1, "Amount is required")
+    .refine(
+      (value) => /^\d+(\.\d{1,2})?$/.test(value),
+      "Amount can have at most 2 decimal places",
+    )
+    .refine(
+      (value) => parseFloat(value) >= 0.01,
+      "Amount must be at least PKR 0.01",
+    ),
   paymentMethod: z.enum(["cash", "jazzcash", "easypaisa", "bank_transfer"]),
   note: z.string(),
 });
 
 export type PaymentFormValues = z.infer<typeof paymentFormSchema>;
 
+export type PaymentFormOutput = Omit<PaymentFormValues, "amount"> & {
+  amount: number;
+};
+
 interface PaymentFormV2Props {
-  onSubmit: (data: PaymentFormValues) => void;
+  onSubmit: (data: PaymentFormOutput) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
   defaultOrderId?: string;
@@ -96,17 +110,20 @@ export function PaymentFormV2({
     resolver: zodResolver(paymentFormSchema),
     defaultValues: {
       orderId: defaultOrderId,
-      amount: 0,
+      amount: "",
       paymentMethod: "cash",
       note: "",
     },
   });
 
   const handleFormSubmit = (data: PaymentFormValues) => {
-    onSubmit(data);
+    onSubmit({
+      ...data,
+      amount: roundCurrency(Number(data.amount)),
+    });
     reset({
       orderId: defaultOrderId,
-      amount: 0,
+      amount: "",
       paymentMethod: "cash",
       note: "",
     });
@@ -127,11 +144,16 @@ export function PaymentFormV2({
             </span>
             <Input
               id="amount"
-              type="number"
-              placeholder="5000"
+              type="text"
+              inputMode="decimal"
+              placeholder="250.50"
               className="pl-12"
               error={!!errors.amount}
-              {...register("amount", { valueAsNumber: true })}
+              {...register("amount", {
+                onChange: (e) => {
+                  e.target.value = sanitizeCurrencyInput(e.target.value);
+                },
+              })}
             />
           </div>
         </Field>
