@@ -43,7 +43,7 @@ import { OrderForm } from "@/components/admin/orders/order-form";
 import { CustomerAvatar } from "@/components/admin/customers-v2/customer-avatar";
 import {
   PaymentFormV2,
-  type PaymentFormValues,
+  type PaymentFormOutput,
 } from "@/components/admin/customers-v2/payment-form-v2";
 import { StatusBadge } from "@/components/common/status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -315,7 +315,7 @@ export function OrdersV2() {
     });
   };
 
-  const handleRecordPayment = (data: PaymentFormValues) => {
+  const handleRecordPayment = (data: PaymentFormOutput) => {
     if (!paymentTarget) return;
     recordPayment.mutate(
       {

@@ -1,14 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { getClient } from "../api-callers/client";
+import type { ApiCurrencyAmount } from "@/lib/utils";
 
 type DashboardMetricsResponse = {
   metrics: {
     totalProducts: number;
     totalCustomers: number;
     totalOrders: number;
-    totalRevenue: number;
-    pendingPayments: number;
-    receivedPayments: number;
+    totalRevenue: ApiCurrencyAmount;
+    pendingPayments: ApiCurrencyAmount;
+    receivedPayments: ApiCurrencyAmount;
   };
   alerts: {
     lowStockProducts: unknown[];

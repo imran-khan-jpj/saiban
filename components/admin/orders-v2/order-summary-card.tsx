@@ -1,15 +1,15 @@
 "use client";
 
 import type { Order } from "@/app/api/orders/use-get-all";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, parseCurrency } from "@/lib/utils";
 
 interface OrderSummaryCardProps {
   order: Order;
 }
 
 export function OrderSummaryCard({ order }: OrderSummaryCardProps) {
-  const showDiscount = order.discountTotal > 0;
-  const showGst = order.gstTotal > 0;
+  const showDiscount = parseCurrency(order.discountTotal) > 0;
+  const showGst = parseCurrency(order.gstTotal) > 0;
 
   return (
     <section className="rounded-xl border bg-card">

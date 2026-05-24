@@ -18,7 +18,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetAllOrders } from "@/app/api/orders/use-get-all";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, parseCurrency, type ApiCurrencyAmount } from "@/lib/utils";
 
 type RangeKey = "7d" | "14d" | "30d" | "90d";
 
@@ -57,7 +57,7 @@ interface DataPoint {
 }
 
 function buildSeries(
-  orders: Array<{ createdAt: string; grandTotal: number; status: string }>,
+  orders: Array<{ createdAt: string; grandTotal: ApiCurrencyAmount; status: string }>,
   days: number,
   granularity: "day" | "week",
 ): { series: DataPoint[]; total: number } {
@@ -101,8 +101,9 @@ function buildSeries(
         : orderDate.startOf("week").format("YYYY-MM-DD");
     const bucket = buckets.get(key);
     if (!bucket) continue;
-    bucket.revenue += order.grandTotal ?? 0;
-    total += order.grandTotal ?? 0;
+    const orderTotal = parseCurrency(order.grandTotal);
+    bucket.revenue += orderTotal;
+    total += orderTotal;
   }
 
   return { series: Array.from(buckets.values()), total };
@@ -208,7 +209,11 @@ export function RevenueTrend() {
                 content={
                   <ChartTooltipContent
                     indicator="line"
-                    formatter={(value) => formatCurrency(Number(value))}
+                    formatter={(value) =>
+                      formatCurrency(
+                        Array.isArray(value) ? value[0] : value,
+                      )
+                    }
                   />
                 }
               />

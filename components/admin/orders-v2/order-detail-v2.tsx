@@ -30,7 +30,7 @@ import { formatDate } from "@/lib/utils";
 import { DEFAULT_INVOICE_WARRANTY_NOTE } from "@/components/admin/orders/constants";
 import {
   PaymentFormV2,
-  type PaymentFormValues,
+  type PaymentFormOutput,
 } from "@/components/admin/customers-v2/payment-form-v2";
 
 import { OrderCustomerCard } from "./order-customer-card";
@@ -52,7 +52,7 @@ export function OrderDetailV2({ orderId }: OrderDetailV2Props) {
   const { data: order, isLoading, isError } = useGetOrderById(orderId);
   const recordPayment = useRecordPayment();
 
-  const handleRecordPayment = (data: PaymentFormValues) => {
+  const handleRecordPayment = (data: PaymentFormOutput) => {
     if (!order) return;
     recordPayment.mutate(
       {

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
+import { roundCurrency, sanitizeCurrencyInput } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -20,15 +21,29 @@ import {
 // Form validation schema
 const paymentFormSchema = z.object({
   orderId: z.string().optional(),
-  amount: z.number().min(1, "Amount must be at least 1"),
+  amount: z
+    .string()
+    .min(1, "Amount is required")
+    .refine(
+      (value) => /^\d+(\.\d{1,2})?$/.test(value),
+      "Amount can have at most 2 decimal places",
+    )
+    .refine(
+      (value) => parseFloat(value) >= 0.01,
+      "Amount must be at least PKR 0.01",
+    ),
   paymentMethod: z.enum(["cash", "jazzcash", "easypaisa", "bank_transfer"]),
   note: z.string(),
 });
 
 type PaymentFormValues = z.infer<typeof paymentFormSchema>;
 
+export type PaymentFormOutput = Omit<PaymentFormValues, "amount"> & {
+  amount: number;
+};
+
 interface PaymentFormProps {
-  onSubmit: (data: PaymentFormValues) => void;
+  onSubmit: (data: PaymentFormOutput) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
   defaultOrderId?: string;
@@ -51,7 +66,7 @@ export function PaymentForm({
     resolver: zodResolver(paymentFormSchema),
     defaultValues: {
       orderId: defaultOrderId,
-      amount: 0,
+      amount: "",
       paymentMethod: "cash",
       note: "",
     },
@@ -60,7 +75,10 @@ export function PaymentForm({
   const paymentMethod = watch("paymentMethod");
 
   const handleFormSubmit = (data: PaymentFormValues) => {
-    onSubmit(data);
+    onSubmit({
+      ...data,
+      amount: roundCurrency(Number(data.amount)),
+    });
     reset();
   };
 
@@ -70,11 +88,16 @@ export function PaymentForm({
         <Label htmlFor="amount">Amount *</Label>
         <Input
           id="amount"
-          type="number"
-          placeholder="5000"
+          type="text"
+          inputMode="decimal"
+          placeholder="250.50"
           error={!!errors.amount}
           errorMessage={errors.amount?.message}
-          {...register("amount", { valueAsNumber: true })}
+          {...register("amount", {
+            onChange: (e) => {
+              e.target.value = sanitizeCurrencyInput(e.target.value);
+            },
+          })}
         />
       </div>
 

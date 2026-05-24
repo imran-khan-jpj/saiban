@@ -2,7 +2,7 @@
 
 import { SectionCard } from "./section-card";
 import { useDashboardMetrics } from "@/app/api/dashboard/use-dashboard-metrics";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, parseCurrency } from "@/lib/utils";
 
 export function SectionCards() {
   const { data, isLoading } = useDashboardMetrics();
@@ -55,7 +55,9 @@ export function SectionCards() {
         description="Pending Payments"
         value={formatCurrency(pendingPayments)}
         valueClassName={
-          pendingPayments > 0 ? "text-red-600 dark:text-red-500" : ""
+          parseCurrency(pendingPayments) > 0
+            ? "text-red-600 dark:text-red-500"
+            : ""
         }
       />
     </div>

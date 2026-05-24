@@ -36,7 +36,7 @@ import { CustomerBalanceCards } from "./customer-balance-cards";
 import { CustomerOrdersCardV2 } from "./customer-orders-card-v2";
 import { CustomerTransactionsCardV2 } from "./customer-transactions-card-v2";
 import { CustomerFormV2, type CustomerFormPayload } from "./customer-form-v2";
-import { PaymentFormV2, type PaymentFormValues } from "./payment-form-v2";
+import { PaymentFormV2, type PaymentFormOutput } from "./payment-form-v2";
 import {
   BalanceAdjustmentFormV2,
   type BalanceAdjustmentValues,
@@ -144,7 +144,7 @@ export function CustomerDetailV2({ customerId }: CustomerDetailV2Props) {
     );
   };
 
-  const handleRecordPayment = (data: PaymentFormValues) => {
+  const handleRecordPayment = (data: PaymentFormOutput) => {
     recordPayment.mutate(
       {
         customerId,
