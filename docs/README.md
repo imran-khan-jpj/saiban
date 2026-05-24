@@ -1,0 +1,14 @@
+# Documentation Directory
+
+Use this `docs/` directory as the default place for project documentation files (`.md`).
+
+## Current documents
+
+- `backend-dashboard-revenue-api-handoff.md` - Backend contract and consistency rules for dashboard revenue trend aggregation.
+- `customer-detail-page.md` - Customer detail page implementation guide and API expectations.
+
+## Convention
+
+- Add new project documentation as Markdown files inside `docs/`.
+- Use kebab-case filenames (for example, `some-feature-notes.md`).
+- Keep root-level Markdown files minimal (`README.md` and other repo-level essentials only).

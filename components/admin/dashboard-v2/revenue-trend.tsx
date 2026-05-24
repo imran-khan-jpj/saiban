@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import dayjs from "dayjs";
 import {
   Area,
   AreaChart,
@@ -17,31 +16,24 @@ import {
 } from "@/components/ui/chart";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useGetAllOrders } from "@/app/api/orders/use-get-all";
-import { formatCurrency, parseCurrency, type ApiCurrencyAmount } from "@/lib/utils";
-
-type RangeKey = "7d" | "14d" | "30d" | "90d";
+import {
+  useDashboardRevenueTrend,
+  type RevenueRangeKey,
+} from "@/app/api/dashboard/use-dashboard-revenue-trend";
+import { formatCurrency, parseCurrency } from "@/lib/utils";
 
 interface RangeOption {
-  key: RangeKey;
+  key: RevenueRangeKey;
   label: string;
   shortLabel: string;
-  days: number;
-  granularity: "day" | "week";
 }
 
 const RANGE_OPTIONS: RangeOption[] = [
-  { key: "7d", label: "Last 7 days", shortLabel: "7d", days: 7, granularity: "day" },
-  { key: "14d", label: "Last 14 days", shortLabel: "14d", days: 14, granularity: "day" },
-  { key: "30d", label: "Last 30 days", shortLabel: "30d", days: 30, granularity: "day" },
-  { key: "90d", label: "Last 90 days", shortLabel: "90d", days: 90, granularity: "week" },
+  { key: "7d", label: "Last 7 days", shortLabel: "7d" },
+  { key: "14d", label: "Last 14 days", shortLabel: "14d" },
+  { key: "30d", label: "Last 30 days", shortLabel: "30d" },
+  { key: "90d", label: "Last 90 days", shortLabel: "90d" },
 ];
-
-// Cap on how many orders we fetch from the API to bucket client-side.
-// At 500 we comfortably cover several months for typical-sized stores.
-// For longer ranges (6m / 1y) the proper solution is a backend aggregation
-// endpoint — this client-side approach intentionally tops out at 90 days.
-const ORDERS_FETCH_LIMIT = 500;
 
 const chartConfig = {
   revenue: {
@@ -56,70 +48,23 @@ interface DataPoint {
   revenue: number;
 }
 
-function buildSeries(
-  orders: Array<{ createdAt: string; grandTotal: ApiCurrencyAmount; status: string }>,
-  days: number,
-  granularity: "day" | "week",
-): { series: DataPoint[]; total: number } {
-  const buckets = new Map<string, DataPoint>();
-
-  if (granularity === "day") {
-    const today = dayjs().startOf("day");
-    for (let i = days - 1; i >= 0; i--) {
-      const d = today.subtract(i, "day");
-      buckets.set(d.format("YYYY-MM-DD"), {
-        date: d.format("YYYY-MM-DD"),
-        label: d.format("DD MMM"),
-        revenue: 0,
-      });
-    }
-  } else {
-    // Weekly buckets, anchored to the start of the current week.
-    const thisWeek = dayjs().startOf("week");
-    const numWeeks = Math.ceil(days / 7);
-    for (let i = numWeeks - 1; i >= 0; i--) {
-      const w = thisWeek.subtract(i, "week");
-      buckets.set(w.format("YYYY-MM-DD"), {
-        date: w.format("YYYY-MM-DD"),
-        label: w.format("DD MMM"),
-        revenue: 0,
-      });
-    }
-  }
-
-  const earliestKey = Array.from(buckets.keys())[0];
-  const earliest = dayjs(earliestKey);
-
-  let total = 0;
-  for (const order of orders) {
-    if (order.status === "cancelled") continue;
-    const orderDate = dayjs(order.createdAt);
-    if (orderDate.isBefore(earliest)) continue;
-    const key =
-      granularity === "day"
-        ? orderDate.startOf("day").format("YYYY-MM-DD")
-        : orderDate.startOf("week").format("YYYY-MM-DD");
-    const bucket = buckets.get(key);
-    if (!bucket) continue;
-    const orderTotal = parseCurrency(order.grandTotal);
-    bucket.revenue += orderTotal;
-    total += orderTotal;
-  }
-
-  return { series: Array.from(buckets.values()), total };
-}
-
 export function RevenueTrend() {
-  const [range, setRange] = React.useState<RangeKey>("14d");
+  const [range, setRange] = React.useState<RevenueRangeKey>("14d");
   const activeRange =
     RANGE_OPTIONS.find((r) => r.key === range) ?? RANGE_OPTIONS[1];
 
-  const { data, isLoading, isError } = useGetAllOrders(1, ORDERS_FETCH_LIMIT);
+  const { data, isLoading, isError } = useDashboardRevenueTrend(range);
 
-  const { series, total } = React.useMemo(() => {
-    if (!data?.data) return { series: [], total: 0 };
-    return buildSeries(data.data, activeRange.days, activeRange.granularity);
-  }, [data, activeRange.days, activeRange.granularity]);
+  const series = React.useMemo<DataPoint[]>(() => {
+    if (!data?.series) return [];
+    return data.series.map((point) => ({
+      date: point.bucketStart,
+      label: point.label,
+      revenue: parseCurrency(point.revenue),
+    }));
+  }, [data]);
+
+  const total = parseCurrency(data?.summary?.totalRevenue);
 
   return (
     <section className="rounded-xl border bg-card">
@@ -135,7 +80,7 @@ export function RevenueTrend() {
         <div className="flex items-center gap-3">
           <Tabs
             value={range}
-            onValueChange={(v) => setRange(v as RangeKey)}
+            onValueChange={(v) => setRange(v as RevenueRangeKey)}
           >
             <TabsList className="h-8 bg-muted p-0.5">
               {RANGE_OPTIONS.map((opt) => (

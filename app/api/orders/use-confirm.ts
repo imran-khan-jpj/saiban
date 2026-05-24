@@ -28,6 +28,7 @@ export const useConfirmOrder = () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["order"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-revenue-trend"] });
       if (id) {
         queryClient.invalidateQueries({ queryKey: ["customer", id] });
         queryClient.invalidateQueries({ queryKey: ["customer-orders", id] });

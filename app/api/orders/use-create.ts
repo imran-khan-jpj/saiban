@@ -45,6 +45,8 @@ export const useCreateOrder = () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       // Invalidate products queries to update quantities after order creation
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-revenue-trend"] });
 
       queryClient.invalidateQueries({
         queryKey: ["customer-orders", variables.customerId],
