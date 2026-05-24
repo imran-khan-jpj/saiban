@@ -2,13 +2,13 @@
 
 import { Spinner } from "@/components/ui/spinner";
 import { useDashboardMetrics } from "@/app/api/dashboard/use-dashboard-metrics";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, parseCurrency } from "@/lib/utils";
 
 export function PaymentSplit() {
   const { data, isLoading } = useDashboardMetrics();
 
-  const received = data?.metrics.receivedPayments ?? 0;
-  const pending = data?.metrics.pendingPayments ?? 0;
+  const received = parseCurrency(data?.metrics.receivedPayments);
+  const pending = parseCurrency(data?.metrics.pendingPayments);
   const total = received + pending;
   const pctReceived = total > 0 ? Math.round((received / total) * 100) : 0;
   const pctPending = total > 0 ? 100 - pctReceived : 0;

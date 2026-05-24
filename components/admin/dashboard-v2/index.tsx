@@ -6,7 +6,7 @@ import { useGetAllProducts } from "@/app/api/products/use-get-all";
 import { useGetAllOrders } from "@/app/api/orders/use-get-all";
 import { useApp } from "@/providers/app-provider";
 import { ADMIN_V2 } from "@/lib/admin-routes";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, parseCurrency } from "@/lib/utils";
 
 import { AlertsBar } from "./alerts-bar";
 import { QuickActions } from "./quick-actions";
@@ -97,7 +97,7 @@ export function DashboardV2() {
           value={formatCurrency(m?.pendingPayments ?? 0)}
           hint="across all customers"
           isLoading={metricsLoading}
-          emphasis={(m?.pendingPayments ?? 0) > 0 ? "warn" : "default"}
+          emphasis={parseCurrency(m?.pendingPayments) > 0 ? "warn" : "default"}
           href={ADMIN_V2.ledgers}
         />
         <KpiCard

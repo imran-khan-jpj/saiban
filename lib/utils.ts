@@ -44,14 +44,39 @@ export function formatRelativeTime(date: string | Date): string {
 }
 
 /**
+ * Monetary values from the API may be numbers or decimal strings.
+ */
+export type CurrencyAmount = number | string | null | undefined;
+
+/** Monetary field as returned by the API (always present). */
+export type ApiCurrencyAmount = number | string;
+
+/**
+ * Parse API or form currency values into a finite number (2 decimal places).
+ */
+export function parseCurrency(amount: CurrencyAmount): number {
+  if (amount == null || amount === "") return 0;
+
+  const numeric =
+    typeof amount === "number"
+      ? amount
+      : parseFloat(String(amount).replace(/,/g, ""));
+
+  if (!Number.isFinite(numeric)) return 0;
+  return roundCurrency(numeric);
+}
+
+/**
  * Format a number with comma separators for better readability
  * @param amount - Number or string to format
  * @returns Formatted number string with commas (e.g., "1,000" or "1,000,000")
  */
-export function formatAmount(amount: number | string): string {
-  const num = typeof amount === "string" ? parseFloat(amount) : amount;
-  if (isNaN(num)) return "0";
-  return num.toLocaleString("en-US");
+export function formatAmount(amount: CurrencyAmount): string {
+  const num = parseCurrency(amount);
+  return num.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 /**
@@ -79,16 +104,16 @@ export function roundCurrency(amount: number): number {
 
 /**
  * Format a number as PKR currency with proper formatting
- * @param amount - Number to format
+ * @param amount - Number or decimal string from API/forms
  * @returns Formatted currency string (e.g., "PKR 1,000.00" or "PKR 250.50")
  */
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: CurrencyAmount): string {
   return new Intl.NumberFormat("en-PK", {
     style: "currency",
     currency: "PKR",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(parseCurrency(amount));
 }
 
 /**

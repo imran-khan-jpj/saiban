@@ -2,7 +2,7 @@
 
 import { Document, Page, Text, View, Image } from "@react-pdf/renderer";
 import type { Order } from "@/app/api/orders/use-get-all";
-import { formatDate, formatCurrency } from "@/lib/utils";
+import { formatDate, formatCurrency, parseCurrency } from "@/lib/utils";
 import { pdfStyles as styles } from "./styles";
 
 interface OrderPDFProps {
@@ -162,8 +162,13 @@ export function OrderPDF({
               </Text>
               <Text style={[styles.tableRowText, styles.colDiscPrice]}>
                 {formatCurrency(
-                  item.unitPrice -
-                    (item.unitPrice * item.discountPercentage) / 100,
+                  (() => {
+                    const unitPrice = parseCurrency(item.unitPrice);
+                    return (
+                      unitPrice -
+                      (unitPrice * item.discountPercentage) / 100
+                    );
+                  })(),
                 )}
               </Text>
               <Text style={[styles.tableRowTextLast, styles.colNetValue]}>

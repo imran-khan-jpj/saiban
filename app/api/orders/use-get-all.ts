@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getClient } from "../api-callers/client";
+import type { ApiCurrencyAmount } from "@/lib/utils";
 
 export interface Order {
   _id: string;
@@ -23,7 +24,7 @@ export interface Order {
       packType: string;
       batchNo?: string;
       size: number;
-      unitPrice: number;
+      unitPrice: ApiCurrencyAmount;
       lowStockThreshold: number;
       quantityInStock: number;
       createdAt: string;
@@ -33,17 +34,17 @@ export interface Order {
       __v: number;
     };
     quantity: number;
-    unitPrice: number;
+    unitPrice: ApiCurrencyAmount;
     discountPercentage: number;
-    lineTotal: number;
+    lineTotal: ApiCurrencyAmount;
   }>;
   status: "pending" | "completed" | "cancelled";
   paymentMethod: string;
-  discountTotal: number;
-  gstTotal: number;
+  discountTotal: ApiCurrencyAmount;
+  gstTotal: ApiCurrencyAmount;
   note: string;
-  subtotal: number;
-  grandTotal: number;
+  subtotal: ApiCurrencyAmount;
+  grandTotal: ApiCurrencyAmount;
   createdAt: string;
   updatedAt: string;
   invoiceNumber: string;
@@ -51,27 +52,27 @@ export interface Order {
 
   invoiceBalanceSummary: {
     previousBalance: {
-      amount: number;
+      amount: ApiCurrencyAmount;
       sign: string;
       direction: "we_owe_customer" | "customer_owes_us";
       note: string;
     };
     currentOrderBill: {
-      amount: number;
+      amount: ApiCurrencyAmount;
       sign: string;
-      balanceImpact: number;
+      balanceImpact: ApiCurrencyAmount;
       note: string;
     };
     netPayable: {
-      amount: number;
+      amount: ApiCurrencyAmount;
       sign: string;
       direction: "settled";
       note: string;
     };
     calculation: {
-      previousBalance: number;
-      orderImpact: number;
-      netPayable: number;
+      previousBalance: ApiCurrencyAmount;
+      orderImpact: ApiCurrencyAmount;
+      netPayable: ApiCurrencyAmount;
       expression: string;
     };
     legend: {
