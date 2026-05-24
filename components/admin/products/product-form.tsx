@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Product } from "@/app/api/products/use-get-all";
 import { MonthYearPicker } from "@/components/ui/month-year-picker";
+import { roundCurrency, sanitizeCurrencyInput } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -28,7 +29,13 @@ const productFormSchema = z
     packType: z.string().min(1, "Pack type is required"),
     customPackType: z.string().optional(),
     size: z.string().min(1, "Size is required"),
-    unitPrice: z.string().min(1, "Unit price is required"),
+    unitPrice: z
+      .string()
+      .min(1, "Unit price is required")
+      .refine(
+        (value) => /^\d+(\.\d{1,2})?$/.test(value),
+        "Unit price can have at most 2 decimal places",
+      ),
     lowStockThreshold: z.string().min(1, "Low stock threshold is required"),
     quantityInStock: z.string().min(1, "Quantity in stock is required"),
     batchNo: z.string().optional(),
@@ -143,7 +150,7 @@ export function ProductForm({
       formulation: data.formulation,
       packType: finalPackType,
       size: Number(data.size),
-      unitPrice: Number(data.unitPrice),
+      unitPrice: roundCurrency(Number(data.unitPrice)),
       lowStockThreshold: Number(data.lowStockThreshold),
       quantityInStock: Number(data.quantityInStock),
       batchNo: data.batchNo,
@@ -286,9 +293,7 @@ export function ProductForm({
             errorMessage={errors.unitPrice?.message}
             {...register("unitPrice", {
               onChange: (e) => {
-                e.target.value = e.target.value
-                  .replace(/[^0-9.]/g, "")
-                  .replace(/(\..*)\./g, "$1");
+                e.target.value = sanitizeCurrencyInput(e.target.value);
               },
             })}
           />
