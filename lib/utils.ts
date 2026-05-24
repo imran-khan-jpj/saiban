@@ -55,16 +55,39 @@ export function formatAmount(amount: number | string): string {
 }
 
 /**
+ * Sanitize currency input to digits and at most two decimal places.
+ */
+export function sanitizeCurrencyInput(value: string): string {
+  const cleaned = value
+    .replace(/[^0-9.]/g, "")
+    .replace(/(\..*)\./g, "$1");
+
+  if (!cleaned.includes(".")) {
+    return cleaned;
+  }
+
+  const [whole, fraction = ""] = cleaned.split(".");
+  return `${whole}.${fraction.slice(0, 2)}`;
+}
+
+/**
+ * Round a currency amount to two decimal places.
+ */
+export function roundCurrency(amount: number): number {
+  return Math.round(amount * 100) / 100;
+}
+
+/**
  * Format a number as PKR currency with proper formatting
  * @param amount - Number to format
- * @returns Formatted currency string (e.g., "PKR 1,000" or "PKR 1,000,000")
+ * @returns Formatted currency string (e.g., "PKR 1,000.00" or "PKR 250.50")
  */
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-PK", {
     style: "currency",
     currency: "PKR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 
