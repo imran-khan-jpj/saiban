@@ -25,6 +25,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useGetOrderById } from "@/app/api/orders/use-get-by-id";
 import { useRecordPayment } from "@/app/api/customers/use-record-payment";
 import { GeneratePDF } from "@/components/orders/generate-pdf";
+import { GeneratePDFV2Test } from "@/components/orders/generate-pdf-v2-test";
 import { StatusBadge } from "@/components/common/status-badge";
 import { formatDate } from "@/lib/utils";
 import { DEFAULT_INVOICE_WARRANTY_NOTE } from "@/components/orders/constants";
@@ -141,6 +142,8 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
 
         <div className="flex flex-wrap items-center gap-2">
           <GeneratePDF order={order} customNote={customNote} buttonOnly />
+          {/* TEMPORARY: compare against redesigned invoice — remove once approved */}
+          <GeneratePDFV2Test order={order} customNote={customNote} size="default" />
           <Button onClick={() => setIsPaymentDialogOpen(true)}>
             <IconCash className="h-4 w-4 mr-1.5" />
             Record payment
