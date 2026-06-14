@@ -19,6 +19,7 @@ import { useGetOrderById } from "@/app/api/orders/use-get-by-id";
 import { useRecordPayment } from "@/app/api/customers/use-record-payment";
 import { PaymentForm } from "../customers/payment-form";
 import { GeneratePDF } from "./generate-pdf";
+import { GeneratePDFV2Test } from "./generate-pdf-v2-test";
 import { DEFAULT_INVOICE_WARRANTY_NOTE } from "./constants";
 import { StatusBadge } from "@/components/common/status-badge";
 import { toast } from "sonner";
@@ -102,6 +103,8 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
         </div>
         <div className="flex items-center gap-2">
           <GeneratePDF order={order} customNote={customNote} buttonOnly />
+          {/* TEMPORARY: compare against redesigned invoice — remove once approved */}
+          <GeneratePDFV2Test order={order} customNote={customNote} size="default" />
           <Button
             className="bg-black text-white hover:bg-black/90"
             onClick={() => setIsPaymentDialogOpen(true)}
