@@ -4,6 +4,7 @@ export const ADMIN_ROUTES = {
   customers: "/admin/customers",
   orders: "/admin/orders",
   ledgers: "/admin/ledgers",
+  account: "/admin/account",
 } as const;
 
 export const ADMIN_HOME_PATH = ADMIN_ROUTES.dashboard;
