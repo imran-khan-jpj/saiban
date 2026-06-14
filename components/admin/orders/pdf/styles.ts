@@ -96,6 +96,22 @@ export const pdfStyles = StyleSheet.create({
   tableRow: {
     flexDirection: "row",
     borderBottom: "1pt solid #000",
+    alignItems: "flex-start",
+  },
+  tableCell: {
+    padding: 4,
+    borderRight: "1pt solid #000",
+  },
+  tableCellLast: {
+    padding: 4,
+  },
+  cellText: {
+    fontSize: 8,
+  },
+  cellTextBold: {
+    fontSize: 7,
+    fontWeight: "bold",
+    textAlign: "center",
   },
   tableRowText: {
     fontSize: 8,
@@ -107,8 +123,8 @@ export const pdfStyles = StyleSheet.create({
     padding: 4,
   },
   colSrNo: { width: "4%", textAlign: "center" },
-  colItem: { width: "15%", textAlign: "left" },
-  colBatchNo: { width: "8%", textAlign: "left" },
+  colItem: { width: "13%", textAlign: "left" },
+  colBatchNo: { width: "10%", textAlign: "left" },
   colPacking: { width: "8%", textAlign: "left" },
   colMfgDate: { width: "8%", textAlign: "left" },
   colExpDate: { width: "8%", textAlign: "left" },
