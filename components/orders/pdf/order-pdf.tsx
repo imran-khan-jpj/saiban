@@ -1,15 +1,59 @@
 "use client";
 
-import { Document, Page, Text, View, Image } from "@react-pdf/renderer";
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  Image,
+  type Styles,
+} from "@react-pdf/renderer";
 import type { Order } from "@/app/api/orders/use-get-all";
 import { formatDate, formatCurrency, parseCurrency } from "@/lib/utils";
 import { pdfStyles as styles } from "./styles";
+import { breakLongWord } from "./utils";
 
 interface OrderPDFProps {
   order: Order;
   customNote?: string;
   parentCompanyLogo?: string;
   companyLogo?: string;
+}
+
+interface PdfTableCellProps {
+  columnStyle: Styles[keyof Styles];
+  children: string | number;
+  isLast?: boolean;
+  breakLongWords?: boolean;
+  textStyle?: Styles[keyof Styles];
+}
+
+function PdfTableCell({
+  columnStyle,
+  children,
+  isLast = false,
+  breakLongWords = false,
+  textStyle,
+}: PdfTableCellProps) {
+  const value = String(children);
+
+  return (
+    <View
+      style={[
+        isLast ? styles.tableCellLast : styles.tableCell,
+        columnStyle,
+      ]}
+    >
+      <Text
+        style={textStyle ? [styles.cellText, textStyle] : styles.cellText}
+        hyphenationCallback={
+          breakLongWords ? (word) => breakLongWord(word) : undefined
+        }
+      >
+        {value}
+      </Text>
+    </View>
+  );
 }
 
 export function OrderPDF({
@@ -133,34 +177,34 @@ export function OrderPDF({
 
           {order.items.map((item, index) => (
             <View key={index} style={styles.tableRow}>
-              <Text style={[styles.tableRowText, styles.colSrNo]}>
+              <PdfTableCell columnStyle={styles.colSrNo} textStyle={{ textAlign: "center" }}>
                 {index + 1}
-              </Text>
-              <Text style={[styles.tableRowText, styles.colItem]}>
+              </PdfTableCell>
+              <PdfTableCell columnStyle={styles.colItem} breakLongWords>
                 {item.productId.name}
-              </Text>
-              <Text style={[styles.tableRowText, styles.colBatchNo]}>
+              </PdfTableCell>
+              <PdfTableCell columnStyle={styles.colBatchNo} breakLongWords>
                 {item.productId.batchNo || "-"}
-              </Text>
-              <Text style={[styles.tableRowText, styles.colPacking]}>
-                {item.productId.size} {item.productId.packType || "-"}
-              </Text>
-              <Text style={[styles.tableRowText, styles.colMfgDate]}>
+              </PdfTableCell>
+              <PdfTableCell columnStyle={styles.colPacking} breakLongWords>
+                {`${item.productId.size} ${item.productId.packType || "-"}`.trim()}
+              </PdfTableCell>
+              <PdfTableCell columnStyle={styles.colMfgDate}>
                 {item.productId.mfg ? item.productId.mfg : "-"}
-              </Text>
-              <Text style={[styles.tableRowText, styles.colExpDate]}>
+              </PdfTableCell>
+              <PdfTableCell columnStyle={styles.colExpDate}>
                 {item.productId.expiry ? item.productId.expiry : "-"}
-              </Text>
-              <Text style={[styles.tableRowText, styles.colQty]}>
+              </PdfTableCell>
+              <PdfTableCell columnStyle={styles.colQty} textStyle={{ textAlign: "right" }}>
                 {item.quantity}
-              </Text>
-              <Text style={[styles.tableRowText, styles.colRetail]}>
+              </PdfTableCell>
+              <PdfTableCell columnStyle={styles.colRetail} textStyle={{ textAlign: "right" }}>
                 {formatCurrency(item.unitPrice)}
-              </Text>
-              <Text style={[styles.tableRowText, styles.colDisc]}>
+              </PdfTableCell>
+              <PdfTableCell columnStyle={styles.colDisc} textStyle={{ textAlign: "right" }}>
                 {item.discountPercentage}
-              </Text>
-              <Text style={[styles.tableRowText, styles.colDiscPrice]}>
+              </PdfTableCell>
+              <PdfTableCell columnStyle={styles.colDiscPrice} textStyle={{ textAlign: "right" }}>
                 {formatCurrency(
                   (() => {
                     const unitPrice = parseCurrency(item.unitPrice);
@@ -170,31 +214,41 @@ export function OrderPDF({
                     );
                   })(),
                 )}
-              </Text>
-              <Text style={[styles.tableRowTextLast, styles.colNetValue]}>
+              </PdfTableCell>
+              <PdfTableCell
+                columnStyle={styles.colNetValue}
+                textStyle={{ textAlign: "right" }}
+                isLast
+              >
                 {formatCurrency(item.lineTotal)}
-              </Text>
+              </PdfTableCell>
             </View>
           ))}
 
-          <View style={styles.totalsRow}>
-            <Text style={[styles.totalsRowText, styles.colSrNo]}></Text>
-            <Text style={[styles.totalsRowText, styles.colItem]}></Text>
-            <Text style={[styles.totalsRowText, styles.colBatchNo]}></Text>
-            <Text style={[styles.totalsRowText, styles.colPacking]}>
-              Totals:
-            </Text>
-            <Text style={[styles.totalsRowText, styles.colMfgDate]}></Text>
-            <Text style={[styles.totalsRowText, styles.colExpDate]}></Text>
-            <Text style={[styles.totalsRowText, styles.colQty]}>
-              {totalQty}
-            </Text>
-            <Text style={[styles.totalsRowText, styles.colRetail]}></Text>
-            <Text style={[styles.totalsRowText, styles.colDisc]}></Text>
-            <Text style={[styles.totalsRowText, styles.colDiscPrice]}></Text>
-            <Text style={[styles.totalsRowTextLast, styles.colNetValue]}>
-              {formatCurrency(order.grandTotal)}
-            </Text>
+          <View style={[styles.totalsRow, { alignItems: "flex-start" }]}>
+            <View style={[styles.tableCell, styles.colSrNo]} />
+            <View style={[styles.tableCell, styles.colItem]} />
+            <View style={[styles.tableCell, styles.colBatchNo]} />
+            <View style={[styles.tableCell, styles.colPacking]}>
+              <Text style={[styles.cellText, { fontWeight: "bold" }]}>
+                Totals:
+              </Text>
+            </View>
+            <View style={[styles.tableCell, styles.colMfgDate]} />
+            <View style={[styles.tableCell, styles.colExpDate]} />
+            <View style={[styles.tableCell, styles.colQty]}>
+              <Text style={[styles.cellText, { textAlign: "right", fontWeight: "bold" }]}>
+                {totalQty}
+              </Text>
+            </View>
+            <View style={[styles.tableCell, styles.colRetail]} />
+            <View style={[styles.tableCell, styles.colDisc]} />
+            <View style={[styles.tableCell, styles.colDiscPrice]} />
+            <View style={[styles.tableCellLast, styles.colNetValue]}>
+              <Text style={[styles.cellText, { textAlign: "right", fontWeight: "bold" }]}>
+                {formatCurrency(order.grandTotal)}
+              </Text>
+            </View>
           </View>
         </View>
 

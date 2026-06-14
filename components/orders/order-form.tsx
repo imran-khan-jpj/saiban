@@ -54,6 +54,14 @@ const orderFormSchema = z.object({
 
 type OrderFormValues = z.infer<typeof orderFormSchema>;
 
+const emptyOrderItem = {
+  product: "",
+  quantity: 1,
+  price: 0,
+  discountedPrice: 0,
+  discountPercentage: 0,
+};
+
 interface OrderFormProps {
   onSubmit: (data: {
     customerId: string;
@@ -86,15 +94,7 @@ export function OrderForm({
     defaultValues: {
       customer: "",
       note: "",
-      items: [
-        {
-          product: "",
-          quantity: 1,
-          price: 0,
-          discountedPrice: 0,
-          discountPercentage: 0,
-        },
-      ],
+      items: [emptyOrderItem],
     },
   });
 
@@ -102,6 +102,10 @@ export function OrderForm({
     control,
     name: "items",
   });
+
+  const itemRowRefs = React.useRef<(HTMLDivElement | null)[]>([]);
+  const pendingScrollToIndex = React.useRef<number | null>(null);
+  const pendingOpenProductIndex = React.useRef<number | null>(null);
 
   const items = watch("items");
   const selectedCustomer = watch("customer");
@@ -160,6 +164,40 @@ export function OrderForm({
     const discount = itemTotal * ((item.discountPercentage || 0) / 100);
     return sum + itemTotal - discount;
   }, 0);
+
+  const handleAddItem = React.useCallback(
+    (options?: { openProductPicker?: boolean }) => {
+      const newIndex = fields.length;
+      pendingScrollToIndex.current = newIndex;
+      if (options?.openProductPicker) {
+        pendingOpenProductIndex.current = newIndex;
+      }
+      append(emptyOrderItem);
+    },
+    [append, fields.length],
+  );
+
+  React.useEffect(() => {
+    const index = pendingScrollToIndex.current;
+    if (index === null) return;
+
+    pendingScrollToIndex.current = null;
+    const openProductIndex = pendingOpenProductIndex.current;
+    pendingOpenProductIndex.current = null;
+
+    requestAnimationFrame(() => {
+      const row = itemRowRefs.current[index];
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      if (openProductIndex !== null) {
+        setProductOpenStates((prev) => ({
+          ...prev,
+          [openProductIndex]: true,
+        }));
+      }
+    });
+  }, [fields.length]);
 
   // Update price when product is selected
   const handleProductChange = (index: number, productId: string) => {
@@ -339,28 +377,17 @@ export function OrderForm({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Label>Order Items</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              append({
-                product: "",
-                quantity: 1,
-                price: 0,
-                discountedPrice: 0,
-                discountPercentage: 0,
-              })
-            }
-          >
-            <IconPlus className="mr-2 h-4 w-4" />
-            Add Item
-          </Button>
+          <span className="text-sm text-muted-foreground tabular-nums">
+            {fields.length} {fields.length === 1 ? "item" : "items"}
+          </span>
         </div>
 
         {fields.map((field, index) => (
           <div
             key={field.id}
+            ref={(el) => {
+              itemRowRefs.current[index] = el;
+            }}
             className="grid grid-cols-14 gap-2 items-start p-4 border rounded-lg"
           >
             <div className="col-span-4 space-y-2">
@@ -575,6 +602,16 @@ export function OrderForm({
         {errors.items?.root && (
           <p className="text-sm text-red-500">{errors.items.root.message}</p>
         )}
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => handleAddItem({ openProductPicker: true })}
+        >
+          <IconPlus className="mr-2 h-4 w-4" />
+          Add another item
+        </Button>
       </div>
 
       <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
