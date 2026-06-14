@@ -4,27 +4,26 @@ import { useMutation } from "@tanstack/react-query";
 import { ApiError } from "@/app/api/api-callers/client";
 import { parseApiErrorMessage } from "@/lib/api-error";
 
-interface LoginPayload {
-  email: string;
-  password: string;
+interface UpdateProfilePayload {
+  name: string;
 }
 
-interface LoginResponse {
+interface UpdateProfileResponse {
   user: {
     id: string;
     email: string;
+    name: string;
     role: string;
-    name?: string;
   };
 }
 
-export const useLogin = () => {
-  return useMutation<LoginResponse, ApiError, LoginPayload>({
-    mutationFn: async (credentials: LoginPayload) => {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
+export const useUpdateProfile = () => {
+  return useMutation<UpdateProfileResponse, ApiError, UpdateProfilePayload>({
+    mutationFn: async (payload) => {
+      const response = await fetch("/api/auth/profile", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -37,7 +36,7 @@ export const useLogin = () => {
         );
       }
 
-      return data as LoginResponse;
+      return data as UpdateProfileResponse;
     },
   });
 };

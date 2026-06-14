@@ -1,4 +1,5 @@
 import { DEFAULTS } from "@/app/defaults";
+import { parseApiErrorMessage } from "@/lib/api-error";
 
 const PROXY_PREFIX = "/api/proxy";
 
@@ -115,16 +116,11 @@ export const request = async <T>({
   }
 
   if (!response.ok) {
-    let message: string = DEFAULTS.ERROR_MESSAGE;
-    if (parsed && typeof parsed === "object") {
-      const obj = parsed as { message?: unknown; error?: unknown };
-      if (typeof obj.message === "string") {
-        message = obj.message;
-      } else if (typeof obj.error === "string") {
-        message = obj.error;
-      }
-    }
-    throw new ApiError(message, response.status, parsed);
+    throw new ApiError(
+      parseApiErrorMessage(parsed),
+      response.status,
+      parsed,
+    );
   }
 
   return parsed as T;

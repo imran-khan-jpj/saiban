@@ -4,27 +4,22 @@ import { useMutation } from "@tanstack/react-query";
 import { ApiError } from "@/app/api/api-callers/client";
 import { parseApiErrorMessage } from "@/lib/api-error";
 
-interface LoginPayload {
-  email: string;
-  password: string;
+interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
 }
 
-interface LoginResponse {
-  user: {
-    id: string;
-    email: string;
-    role: string;
-    name?: string;
-  };
+interface ChangePasswordResponse {
+  message: string;
 }
 
-export const useLogin = () => {
-  return useMutation<LoginResponse, ApiError, LoginPayload>({
-    mutationFn: async (credentials: LoginPayload) => {
-      const response = await fetch("/api/auth/login", {
+export const useChangePassword = () => {
+  return useMutation<ChangePasswordResponse, ApiError, ChangePasswordPayload>({
+    mutationFn: async (payload) => {
+      const response = await fetch("/api/auth/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -37,7 +32,7 @@ export const useLogin = () => {
         );
       }
 
-      return data as LoginResponse;
+      return data as ChangePasswordResponse;
     },
   });
 };

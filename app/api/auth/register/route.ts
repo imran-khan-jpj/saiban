@@ -1,10 +1,10 @@
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+
+import { setAuthCookie } from "@/lib/auth-cookie";
 
 export const dynamic = "force-dynamic";
 
 const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL;
-const SEVEN_DAYS_IN_SECONDS = 60 * 60 * 24 * 7;
 
 export async function POST(request: NextRequest) {
   if (!API_URL) {
@@ -45,14 +45,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const cookieStore = await cookies();
-  cookieStore.set("auth-token", accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SEVEN_DAYS_IN_SECONDS,
-  });
+  await setAuthCookie(accessToken);
 
   return NextResponse.json({ user: data.user });
 }

@@ -1,18 +1,22 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { clearAuthCookie, setAuthCookie } from "@/lib/auth-cookie";
-
 export const dynamic = "force-dynamic";
 
 const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL;
 
-export async function POST(request: NextRequest) {
+export async function PATCH(request: NextRequest) {
   if (!API_URL) {
     return NextResponse.json(
       { message: "API_URL is not configured on the server" },
       { status: 500 },
     );
+  }
+
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get("auth-token")?.value;
+  if (!authToken) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   let payload: unknown;
@@ -25,9 +29,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const upstream = await fetch(`${API_URL}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+  const upstream = await fetch(`${API_URL}/api/auth/profile`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
     body: JSON.stringify(payload),
     cache: "no-store",
   });
@@ -38,15 +45,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data, { status: upstream.status });
   }
 
-  const accessToken: string | undefined = data?.access_token;
-  if (!accessToken) {
-    return NextResponse.json(
-      { message: "Login response missing access_token" },
-      { status: 502 },
-    );
-  }
-
-  await setAuthCookie(accessToken);
-
-  return NextResponse.json({ user: data.user });
+  return NextResponse.json(data);
 }
