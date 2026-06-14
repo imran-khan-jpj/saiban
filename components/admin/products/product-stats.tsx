@@ -1,7 +1,7 @@
 "use client";
 
 import { useGetAllProducts } from "@/app/api/products/use-get-all";
-import { KpiCard } from "@/components/admin/dashboard-v2/kpi-card";
+import { KpiCard } from "@/components/admin/dashboard/kpi-card";
 
 export function ProductStats() {
   const { data: totalData, isLoading: isLoadingTotal } = useGetAllProducts(

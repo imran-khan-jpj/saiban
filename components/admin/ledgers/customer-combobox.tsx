@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { IconChevronDown, IconUser, IconX } from "@tabler/icons-react";
-import { CustomerAvatar } from "@/components/admin/customers-v2/customer-avatar";
+import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import {
   useGetAllCustomers,
   type Customer,

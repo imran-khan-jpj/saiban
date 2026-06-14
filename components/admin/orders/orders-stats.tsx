@@ -1,7 +1,7 @@
 "use client";
 
 import { useGetAllOrders } from "@/app/api/orders/use-get-all";
-import { KpiCard } from "@/components/admin/dashboard-v2/kpi-card";
+import { KpiCard } from "@/components/admin/dashboard/kpi-card";
 
 export function OrdersStats() {
   const { data: totalData, isLoading: isLoadingTotal } = useGetAllOrders(

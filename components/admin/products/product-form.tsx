@@ -8,9 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Product } from "@/app/api/products/use-get-all";
-import { MonthYearPicker } from "@/components/ui/month-year-picker";
-import { roundCurrency, sanitizeCurrencyInput } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -18,8 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MonthYearPicker } from "@/components/ui/month-year-picker";
+import { cn, roundCurrency, sanitizeCurrencyInput } from "@/lib/utils";
+import type { Product } from "@/app/api/products/use-get-all";
 
-// Form validation schema
 const productFormSchema = z
   .object({
     name: z.string().min(2, "Product name must be at least 2 characters"),
@@ -43,12 +42,9 @@ const productFormSchema = z
     mfg: z.string().optional(),
   })
   .refine(
-    (data) => {
-      if (data.packType === "other") {
-        return data.customPackType && data.customPackType.trim().length > 0;
-      }
-      return true;
-    },
+    (data) =>
+      data.packType !== "other" ||
+      (!!data.customPackType && data.customPackType.trim().length > 0),
     {
       message: "Custom pack type is required",
       path: ["customPackType"],
@@ -57,8 +53,7 @@ const productFormSchema = z
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
 
-// Type for the transformed data with numbers
-type ProductFormOutput = {
+export type ProductFormOutput = {
   name: string;
   shortDescription: string;
   descriptionUrdu: string;
@@ -79,6 +74,82 @@ interface ProductFormProps {
   onCancel: () => void;
   isSubmitting?: boolean;
 }
+
+interface SectionProps {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}
+
+function Section({ title, description, children }: SectionProps) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold tracking-tight text-foreground">
+          {title}
+        </h3>
+        {description && (
+          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+        )}
+      </div>
+      <div className="space-y-4">{children}</div>
+    </div>
+  );
+}
+
+interface FieldProps {
+  id: string;
+  label: string;
+  required?: boolean;
+  error?: string;
+  hint?: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+function Field({
+  id,
+  label,
+  required,
+  error,
+  hint,
+  children,
+  className,
+}: FieldProps) {
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      <Label
+        htmlFor={id}
+        className="flex items-center gap-1 text-xs font-medium text-foreground"
+      >
+        {label}
+        {required && <span className="text-destructive">*</span>}
+      </Label>
+      {children}
+      {error ? (
+        <p className="text-xs text-destructive">{error}</p>
+      ) : hint ? (
+        <p className="text-xs text-muted-foreground">{hint}</p>
+      ) : null}
+    </div>
+  );
+}
+
+const formationOptions = [
+  { value: "syrup", label: "Syrup" },
+  { value: "tablet", label: "Tablet" },
+  { value: "capsule", label: "Capsule" },
+  { value: "injection", label: "Injection" },
+  { value: "cream", label: "Cream" },
+  { value: "drops", label: "Drops" },
+];
+
+const packTypeOptions = [
+  { value: "tabs", label: "Tabs" },
+  { value: "ml", label: "ml" },
+  { value: "gram", label: "Gram" },
+  { value: "other", label: "Other" },
+];
 
 export function ProductForm({
   product,
@@ -102,9 +173,8 @@ export function ProductForm({
           descriptionUrdu: product.descriptionUrdu,
           formulation: product.formulation,
           packType: product.packType,
-          customPackType:
-            (product as Product & { customPackType?: string }).customPackType ||
-            "",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          customPackType: (product as any).customPackType || "",
           size: String(product.size),
           unitPrice: String(product.unitPrice),
           lowStockThreshold: String(product.lowStockThreshold),
@@ -136,14 +206,12 @@ export function ProductForm({
   const expiryValue = watch("expiry");
 
   const handleFormSubmit = (data: ProductFormValues) => {
-    // Convert string values to numbers before submitting
-    // If packType is "other", replace it with the customPackType value
     const finalPackType =
       data.packType === "other" && data.customPackType
         ? data.customPackType
         : data.packType;
 
-    const outputData: ProductFormOutput = {
+    onSubmit({
       name: data.name,
       shortDescription: data.shortDescription,
       descriptionUrdu: data.descriptionUrdu,
@@ -156,228 +224,286 @@ export function ProductForm({
       batchNo: data.batchNo,
       expiry: data.expiry,
       mfg: data.mfg,
-    };
-    onSubmit(outputData);
-    reset();
+    });
+    if (!product) reset();
   };
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="name">Product Name</Label>
-        <Input
+      {/* Basic info */}
+      <Section
+        title="Basic information"
+        description="What this product is and how it's described to customers."
+      >
+        <Field
           id="name"
-          placeholder="Saiban Syrup 120ml"
-          error={!!errors.name}
-          errorMessage={errors.name?.message}
-          {...register("name")}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="shortDescription">Short Description (English)</Label>
+          label="Product name"
+          required
+          error={errors.name?.message}
+        >
           <Input
+            id="name"
+            placeholder="e.g. Saiban Syrup 120ml"
+            error={!!errors.name}
+            {...register("name")}
+          />
+        </Field>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
             id="shortDescription"
-            placeholder="Pain relief syrup for adults and children"
-            error={!!errors.shortDescription}
-            errorMessage={errors.shortDescription?.message}
-            {...register("shortDescription")}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="descriptionUrdu">Description (Urdu)</Label>
-          <Input
-            id="descriptionUrdu"
-            placeholder="درد کی دوا بڑوں اور بچوں کے لیے"
-            error={!!errors.descriptionUrdu}
-            errorMessage={errors.descriptionUrdu?.message}
-            {...register("descriptionUrdu")}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 relative">
-        <div className="space-y-2">
-          <Label htmlFor="formulation">Formulation</Label>
-          <Select
-            value={formulation}
-            onValueChange={(value) => setValue("formulation", value)}
+            label="Description (English)"
+            error={errors.shortDescription?.message}
           >
-            <SelectTrigger
-              id="formulation"
-              className={errors.formulation ? "border-red-500" : ""}
-            >
-              <SelectValue placeholder="Select formulation" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="syrup">Syrup</SelectItem>
-              <SelectItem value="tablet">Tablet</SelectItem>
-              <SelectItem value="capsule">Capsule</SelectItem>
-              <SelectItem value="injection">Injection</SelectItem>
-              <SelectItem value="cream">Cream</SelectItem>
-              <SelectItem value="drops">Drops</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.formulation && (
-            <p className="text-sm text-red-500">{errors.formulation.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="packType">Pack Type</Label>
-          <Select
-            value={packType}
-            onValueChange={(value) => setValue("packType", value)}
-          >
-            <SelectTrigger
-              id="packType"
-              className={errors.packType ? "border-red-500" : ""}
-            >
-              <SelectValue placeholder="Select pack type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="tabs">Tabs</SelectItem>
-              <SelectItem value="ml">ml</SelectItem>
-              <SelectItem value="gram">Gram</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.packType && (
-            <p className="text-sm text-red-500">{errors.packType.message}</p>
-          )}
-        </div>
-        {packType === "other" && (
-          <div className="space-y-2 absolute right-0 top-16 w-[48.3%]">
             <Input
-              id="customPackType"
-              className="max-h-8"
-              placeholder="Enter custom pack type"
-              error={!!errors.customPackType}
-              errorMessage={errors.customPackType?.message}
-              {...register("customPackType")}
+              id="shortDescription"
+              placeholder="e.g. Pain relief syrup for adults and children"
+              error={!!errors.shortDescription}
+              {...register("shortDescription")}
             />
-          </div>
-        )}
-      </div>
+          </Field>
+          <Field
+            id="descriptionUrdu"
+            label="Description (Urdu)"
+            error={errors.descriptionUrdu?.message}
+          >
+            <Input
+              id="descriptionUrdu"
+              dir="rtl"
+              placeholder="درد کی دوا بڑوں اور بچوں کے لیے"
+              error={!!errors.descriptionUrdu}
+              {...register("descriptionUrdu")}
+            />
+          </Field>
+        </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="size">Size</Label>
-          <Input
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
+            id="formulation"
+            label="Formulation"
+            required
+            error={errors.formulation?.message}
+          >
+            <Select
+              value={formulation}
+              onValueChange={(value) => setValue("formulation", value)}
+            >
+              <SelectTrigger
+                id="formulation"
+                className={cn(errors.formulation && "border-destructive")}
+              >
+                <SelectValue placeholder="Select formulation" />
+              </SelectTrigger>
+              <SelectContent>
+                {formationOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field
+            id="packType"
+            label="Pack type"
+            required
+            error={errors.packType?.message}
+          >
+            <Select
+              value={packType}
+              onValueChange={(value) => setValue("packType", value)}
+            >
+              <SelectTrigger
+                id="packType"
+                className={cn(errors.packType && "border-destructive")}
+              >
+                <SelectValue placeholder="Select pack type" />
+              </SelectTrigger>
+              <SelectContent>
+                {packTypeOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          {packType === "other" && (
+            <Field
+              id="customPackType"
+              label="Custom pack type"
+              required
+              error={errors.customPackType?.message}
+              className="sm:col-span-2"
+            >
+              <Input
+                id="customPackType"
+                placeholder="e.g. sachet, vial, ampoule"
+                error={!!errors.customPackType}
+                {...register("customPackType")}
+              />
+            </Field>
+          )}
+        </div>
+      </Section>
+
+      <div className="border-t" />
+
+      {/* Pricing & inventory */}
+      <Section
+        title="Pricing & inventory"
+        description="What you charge and how much stock you keep on hand."
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
             id="size"
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            placeholder="120"
-            error={!!errors.size}
-            errorMessage={errors.size?.message}
-            {...register("size", {
-              onChange: (e) => {
-                e.target.value = e.target.value.replace(/[^0-9]/g, "");
-              },
-            })}
-          />
-        </div>
+            label="Size"
+            required
+            error={errors.size?.message}
+            hint={packType ? `Numeric value in ${packType}` : "Numeric value"}
+          >
+            <div className="relative">
+              <Input
+                id="size"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="120"
+                className={cn(packType && "pr-12")}
+                error={!!errors.size}
+                {...register("size", {
+                  onChange: (e) => {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                  },
+                })}
+              />
+              {packType && packType !== "other" && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  {packType}
+                </span>
+              )}
+            </div>
+          </Field>
 
-        <div className="space-y-2">
-          <Label htmlFor="unitPrice">Unit Price (PKR)</Label>
-          <Input
+          <Field
             id="unitPrice"
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*\.?[0-9]*"
-            placeholder="250"
-            error={!!errors.unitPrice}
-            errorMessage={errors.unitPrice?.message}
-            {...register("unitPrice", {
-              onChange: (e) => {
-                e.target.value = sanitizeCurrencyInput(e.target.value);
-              },
-            })}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="lowStockThreshold">Low Stock Threshold</Label>
-          <Input
-            id="lowStockThreshold"
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            placeholder="20"
-            error={!!errors.lowStockThreshold}
-            errorMessage={errors.lowStockThreshold?.message}
-            {...register("lowStockThreshold", {
-              onChange: (e) => {
-                e.target.value = e.target.value.replace(/[^0-9]/g, "");
-              },
-            })}
-          />
+            label="Unit price"
+            required
+            error={errors.unitPrice?.message}
+          >
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                PKR
+              </span>
+              <Input
+                id="unitPrice"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*\.?[0-9]*"
+                placeholder="250"
+                className="pl-12"
+                error={!!errors.unitPrice}
+                {...register("unitPrice", {
+                  onChange: (e) => {
+                    e.target.value = sanitizeCurrencyInput(e.target.value);
+                  },
+                })}
+              />
+            </div>
+          </Field>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="quantityInStock">Quantity in Stock</Label>
-          <Input
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
             id="quantityInStock"
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            placeholder="100"
-            error={!!errors.quantityInStock}
-            errorMessage={errors.quantityInStock?.message}
-            {...register("quantityInStock", {
-              onChange: (e) => {
-                e.target.value = e.target.value.replace(/[^0-9]/g, "");
-              },
-            })}
-          />
-        </div>
-      </div>
+            label="Quantity in stock"
+            required
+            error={errors.quantityInStock?.message}
+            hint="How many units are available right now"
+          >
+            <Input
+              id="quantityInStock"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="100"
+              error={!!errors.quantityInStock}
+              {...register("quantityInStock", {
+                onChange: (e) => {
+                  e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                },
+              })}
+            />
+          </Field>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="batchNo">Batch No</Label>
-          <Input
+          <Field
+            id="lowStockThreshold"
+            label="Low stock threshold"
+            required
+            error={errors.lowStockThreshold?.message}
+            hint="Trigger a warning when stock falls to or below this number"
+          >
+            <Input
+              id="lowStockThreshold"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="20"
+              error={!!errors.lowStockThreshold}
+              {...register("lowStockThreshold", {
+                onChange: (e) => {
+                  e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                },
+              })}
+            />
+          </Field>
+        </div>
+      </Section>
+
+      <div className="border-t" />
+
+      {/* Batch tracking */}
+      <Section
+        title="Batch tracking"
+        description="Optional. Helpful for compliance and recall traceability."
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Field
             id="batchNo"
-            placeholder="AL-5433"
-            error={!!errors.batchNo}
-            errorMessage={errors.batchNo?.message}
-            {...register("batchNo")}
-          />
-        </div>
+            label="Batch number"
+            error={errors.batchNo?.message}
+          >
+            <Input
+              id="batchNo"
+              placeholder="e.g. AL-5433"
+              error={!!errors.batchNo}
+              {...register("batchNo")}
+            />
+          </Field>
 
-        <div className="space-y-2">
-          <Label htmlFor="mfg">Mfg. Date</Label>
-          <MonthYearPicker
-            value={mfgValue}
-            onChange={(value) => setValue("mfg", value)}
-            placeholder="Select month/year"
-            className="w-full"
-          />
-          {errors.mfg && (
-            <p className="text-sm text-red-500">{errors.mfg.message}</p>
-          )}
-        </div>
+          <Field id="mfg" label="Manufactured" error={errors.mfg?.message}>
+            <MonthYearPicker
+              value={mfgValue}
+              onChange={(value) => setValue("mfg", value)}
+              placeholder="Select month/year"
+              className="w-full"
+            />
+          </Field>
 
-        <div className="space-y-2">
-          <Label htmlFor="expiry">Expiry Date</Label>
-          <MonthYearPicker
-            value={expiryValue}
-            onChange={(value) => setValue("expiry", value)}
-            placeholder="Select month/year"
-            className="w-full"
-          />
-          {errors.expiry && (
-            <p className="text-sm text-red-500">{errors.expiry.message}</p>
-          )}
+          <Field id="expiry" label="Expires" error={errors.expiry?.message}>
+            <MonthYearPicker
+              value={expiryValue}
+              onChange={(value) => setValue("expiry", value)}
+              placeholder="Select month/year"
+              className="w-full"
+            />
+          </Field>
         </div>
-      </div>
+      </Section>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Button
           type="button"
           variant="outline"
@@ -390,10 +516,10 @@ export function ProductForm({
           {isSubmitting ? (
             <span className="flex items-center gap-2">
               <Spinner className="size-4" />
-              Saving...
+              Saving…
             </span>
           ) : (
-            <span>{product ? "Update" : "Create"} Product</span>
+            <span>{product ? "Save changes" : "Create product"}</span>
           )}
         </Button>
       </div>

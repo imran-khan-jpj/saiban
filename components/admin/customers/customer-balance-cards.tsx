@@ -1,7 +1,7 @@
 "use client";
 
 import { Spinner } from "@/components/ui/spinner";
-import { KpiCard } from "@/components/admin/dashboard-v2/kpi-card";
+import { KpiCard } from "@/components/admin/dashboard/kpi-card";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { Customer } from "@/app/api/customers/use-get-by-id";

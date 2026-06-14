@@ -1,15 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
-import { roundCurrency, sanitizeCurrencyInput } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -17,8 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn, roundCurrency, sanitizeCurrencyInput } from "@/lib/utils";
 
-// Form validation schema
 const paymentFormSchema = z.object({
   orderId: z.string().optional(),
   amount: z
@@ -36,7 +36,7 @@ const paymentFormSchema = z.object({
   note: z.string(),
 });
 
-type PaymentFormValues = z.infer<typeof paymentFormSchema>;
+export type PaymentFormValues = z.infer<typeof paymentFormSchema>;
 
 export type PaymentFormOutput = Omit<PaymentFormValues, "amount"> & {
   amount: number;
@@ -49,6 +49,51 @@ interface PaymentFormProps {
   defaultOrderId?: string;
 }
 
+interface FieldProps {
+  id: string;
+  label: string;
+  required?: boolean;
+  error?: string;
+  hint?: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+function Field({
+  id,
+  label,
+  required,
+  error,
+  hint,
+  children,
+  className,
+}: FieldProps) {
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      <Label
+        htmlFor={id}
+        className="flex items-center gap-1 text-xs font-medium text-foreground"
+      >
+        {label}
+        {required && <span className="text-destructive">*</span>}
+      </Label>
+      {children}
+      {error ? (
+        <p className="text-xs text-destructive">{error}</p>
+      ) : hint ? (
+        <p className="text-xs text-muted-foreground">{hint}</p>
+      ) : null}
+    </div>
+  );
+}
+
+const PAYMENT_METHODS: { value: PaymentFormValues["paymentMethod"]; label: string }[] = [
+  { value: "cash", label: "Cash" },
+  { value: "jazzcash", label: "JazzCash" },
+  { value: "easypaisa", label: "EasyPaisa" },
+  { value: "bank_transfer", label: "Bank transfer" },
+];
+
 export function PaymentForm({
   onSubmit,
   onCancel,
@@ -60,8 +105,7 @@ export function PaymentForm({
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
-    watch,
+    control,
   } = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
     defaultValues: {
@@ -72,77 +116,95 @@ export function PaymentForm({
     },
   });
 
-  const paymentMethod = watch("paymentMethod");
-
   const handleFormSubmit = (data: PaymentFormValues) => {
     onSubmit({
       ...data,
       amount: roundCurrency(Number(data.amount)),
     });
-    reset();
+    reset({
+      orderId: defaultOrderId,
+      amount: "",
+      paymentMethod: "cash",
+      note: "",
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="amount">Amount *</Label>
-        <Input
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field
           id="amount"
-          type="text"
-          inputMode="decimal"
-          placeholder="250.50"
-          error={!!errors.amount}
-          errorMessage={errors.amount?.message}
-          {...register("amount", {
-            onChange: (e) => {
-              e.target.value = sanitizeCurrencyInput(e.target.value);
-            },
-          })}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="paymentMethod">Payment Method *</Label>
-        <Select
-          value={paymentMethod}
-          onValueChange={(value) =>
-            setValue(
-              "paymentMethod",
-              value as PaymentFormValues["paymentMethod"],
-            )
-          }
+          label="Amount"
+          required
+          error={errors.amount?.message}
         >
-          <SelectTrigger
-            className={errors.paymentMethod ? "border-red-500" : ""}
-          >
-            <SelectValue placeholder="Select payment method" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="cash">Cash</SelectItem>
-            <SelectItem value="jazzcash">JazzCash</SelectItem>
-            <SelectItem value="easypaisa">EasyPaisa</SelectItem>
-            <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-          </SelectContent>
-        </Select>
-        {errors.paymentMethod && (
-          <p className="text-sm text-red-500">{errors.paymentMethod.message}</p>
-        )}
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+              PKR
+            </span>
+            <Input
+              id="amount"
+              type="text"
+              inputMode="decimal"
+              placeholder="250.50"
+              className="pl-12"
+              error={!!errors.amount}
+              {...register("amount", {
+                onChange: (e) => {
+                  e.target.value = sanitizeCurrencyInput(e.target.value);
+                },
+              })}
+            />
+          </div>
+        </Field>
+
+        <Field
+          id="paymentMethod"
+          label="Payment method"
+          required
+          error={errors.paymentMethod?.message}
+        >
+          <Controller
+            name="paymentMethod"
+            control={control}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger
+                  id="paymentMethod"
+                  className={cn(
+                    errors.paymentMethod && "border-destructive",
+                  )}
+                >
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHODS.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </Field>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="note">Note</Label>
+      <Field
+        id="note"
+        label="Note"
+        hint="Optional. Useful for reconciliation later."
+        error={errors.note?.message}
+      >
         <Textarea
           id="note"
-          placeholder="Payment received"
-          className={errors.note ? "border-red-500" : ""}
+          placeholder="e.g. Cleared invoice #123 in cash"
+          className={cn(errors.note && "border-destructive")}
           {...register("note")}
         />
-        {errors.note && (
-          <p className="text-sm text-red-500">{errors.note.message}</p>
-        )}
-      </div>
+      </Field>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Button
           type="button"
           variant="outline"
@@ -155,10 +217,10 @@ export function PaymentForm({
           {isSubmitting ? (
             <span className="flex items-center gap-2">
               <Spinner className="size-4" />
-              Recording...
+              Recording…
             </span>
           ) : (
-            "Record Payment"
+            "Record payment"
           )}
         </Button>
       </div>

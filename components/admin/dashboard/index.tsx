@@ -5,7 +5,7 @@ import { useDashboardMetrics } from "@/app/api/dashboard/use-dashboard-metrics";
 import { useGetAllProducts } from "@/app/api/products/use-get-all";
 import { useGetAllOrders } from "@/app/api/orders/use-get-all";
 import { useApp } from "@/providers/app-provider";
-import { ADMIN_V2 } from "@/lib/admin-routes";
+import { ADMIN_ROUTES } from "@/lib/admin-routes";
 import { formatCurrency, parseCurrency } from "@/lib/utils";
 
 import { AlertsBar } from "./alerts-bar";
@@ -24,7 +24,7 @@ const greeting = (date = new Date()): string => {
   return "Good evening";
 };
 
-export function DashboardV2() {
+export function Dashboard() {
   const { user } = useApp();
   const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
   const { data: outOfStockData } = useGetAllProducts(
@@ -71,13 +71,13 @@ export function DashboardV2() {
           {
             label: "out of stock",
             count: outOfStockData?.pagination.total ?? 0,
-            href: ADMIN_V2.products,
+            href: ADMIN_ROUTES.products,
             tone: "danger",
           },
           {
             label: "pending orders",
             count: pendingOrdersData?.pagination.total ?? 0,
-            href: ADMIN_V2.orders,
+            href: ADMIN_ROUTES.orders,
             tone: "warn",
           },
         ]}
@@ -90,7 +90,7 @@ export function DashboardV2() {
           value={formatCurrency(m?.totalRevenue ?? 0)}
           hint={`from ${m?.totalOrders ?? 0} orders`}
           isLoading={metricsLoading}
-          href={ADMIN_V2.ledgers}
+          href={ADMIN_ROUTES.ledgers}
         />
         <KpiCard
           label="Pending payments"
@@ -98,21 +98,21 @@ export function DashboardV2() {
           hint="across all customers"
           isLoading={metricsLoading}
           emphasis={parseCurrency(m?.pendingPayments) > 0 ? "warn" : "default"}
-          href={ADMIN_V2.ledgers}
+          href={ADMIN_ROUTES.ledgers}
         />
         <KpiCard
           label="Customers"
           value={m?.totalCustomers ?? 0}
           hint="total accounts"
           isLoading={metricsLoading}
-          href={ADMIN_V2.customers}
+          href={ADMIN_ROUTES.customers}
         />
         <KpiCard
           label="Products"
           value={m?.totalProducts ?? 0}
           hint="active SKUs"
           isLoading={metricsLoading}
-          href={ADMIN_V2.products}
+          href={ADMIN_ROUTES.products}
         />
       </div>
 
