@@ -3,9 +3,9 @@ import { SiteHeader } from "@/components/site-header";
 
 export default function CustomersPage() {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col overflow-hidden">
       <SiteHeader title="Customers" />
-      <div className="@container/main flex flex-1 flex-col gap-2 min-h-0">
+      <div className="flex-1 overflow-auto">
         <Customers />
       </div>
     </div>

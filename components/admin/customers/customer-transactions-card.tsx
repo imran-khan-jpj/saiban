@@ -1,25 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
-import { formatDate } from "@/lib/utils";
+  IconArrowDownRight,
+  IconArrowUpRight,
+  IconChevronLeft,
+  IconChevronRight,
+  IconReceipt,
+} from "@tabler/icons-react";
+import { cn } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import type {
   CustomerTransaction,
   GetCustomerTransactionsResponse,
@@ -34,6 +25,13 @@ interface CustomerTransactionsCardProps {
   onPageChange: (next: number) => void;
 }
 
+const SOURCE_LABELS: Record<string, string> = {
+  order: "Order",
+  payment: "Payment",
+  adjustment: "Balance adjustment",
+  refund: "Refund",
+};
+
 export function CustomerTransactionsCard({
   transactions,
   transactionsData,
@@ -42,120 +40,128 @@ export function CustomerTransactionsCard({
   page,
   onPageChange,
 }: CustomerTransactionsCardProps) {
+  const totalPages = transactionsData?.pagination.pages ?? 1;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Transaction History</CardTitle>
-        <CardDescription>
-          Recent transactions for this customer
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <section className="flex flex-col rounded-xl border bg-card">
+      <header className="flex items-baseline justify-between gap-4 border-b px-5 py-4">
+        <div>
+          <h2 className="text-base font-semibold tracking-tight text-foreground">
+            Transaction history
+          </h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Every debit and credit on this customer&apos;s ledger
+          </p>
+        </div>
+      </header>
+
+      <div className="flex-1 px-5 py-3">
         {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Spinner className="h-6 w-6" />
+          <div className="flex h-32 items-center justify-center">
+            <Spinner className="h-5 w-5" />
           </div>
         ) : isError ? (
-          <p className="text-destructive text-center py-4">
-            Error loading transactions
+          <p className="py-8 text-center text-sm text-destructive">
+            Could not load transactions
           </p>
         ) : transactions.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">
-            No transactions found
-          </p>
-        ) : (
-          <>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader className="bg-muted">
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {transactions.map((transaction) => {
-                    const note = (transaction.note ?? "").trim();
-                    return (
-                      <TableRow key={transaction._id}>
-                        <TableCell className="text-muted-foreground text-sm align-top">
-                          {formatDate(transaction.createdAt)}
-                        </TableCell>
-                        <TableCell className="align-top">
-                          <Badge
-                            className={`capitalize ${
-                              transaction.entryType === "debit"
-                                ? "bg-red-600 text-white"
-                                : "bg-green-600 text-white"
-                            }`}
-                          >
-                            {transaction.entryType}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm align-top">
-                          <span className="capitalize">
-                            {transaction.sourceType}
-                          </span>
-                          {note.length > 0 && (
-                            <span
-                              className="block text-xs text-muted-foreground mt-0.5 truncate max-w-xs"
-                              title={note}
-                            >
-                              {note}
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell
-                          className={`font-medium align-top ${
-                            transaction.entryType === "debit"
-                              ? "text-red-600"
-                              : "text-green-600"
-                          }`}
-                        >
-                          {transaction.entryType === "debit" ? "-" : "+"}PKR{" "}
-                          {transaction.amount}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+          <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <IconReceipt className="h-5 w-5" />
             </div>
-
-            {transactionsData && transactionsData.pagination.pages > 1 && (
-              <div className="flex items-center justify-between mt-4">
-                <p className="text-sm text-muted-foreground">
-                  Page {page} of {transactionsData.pagination.pages}
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onPageChange(Math.max(1, page - 1))}
-                    disabled={page === 1}
-                  >
-                    <IconChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      onPageChange(
-                        Math.min(transactionsData.pagination.pages, page + 1),
-                      )
-                    }
-                    disabled={page === transactionsData.pagination.pages}
-                  >
-                    <IconChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
+            <p className="text-sm font-medium text-foreground">
+              No transactions yet
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Orders, payments, and adjustments will appear here.
+            </p>
+          </div>
+        ) : (
+          <ul className="divide-y">
+            {transactions.map((tx) => {
+              const isDebit = tx.entryType === "debit";
+              const note = (tx.note ?? "").trim();
+              return (
+                <li key={tx._id} className="py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className={cn(
+                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+                          isDebit
+                            ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300"
+                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
+                        )}
+                      >
+                        {isDebit ? (
+                          <IconArrowUpRight className="h-4 w-4" />
+                        ) : (
+                          <IconArrowDownRight className="h-4 w-4" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground">
+                          {SOURCE_LABELS[tx.sourceType] ?? tx.sourceType}
+                        </p>
+                        <p className="text-xs text-muted-foreground tabular-nums">
+                          {formatDate(tx.createdAt)} · {isDebit ? "Debit" : "Credit"}
+                        </p>
+                        {note.length > 0 && (
+                          <p
+                            className="mt-1 truncate text-xs text-muted-foreground/90"
+                            title={note}
+                          >
+                            {note}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      className={cn(
+                        "shrink-0 text-sm font-semibold tabular-nums tracking-tight",
+                        isDebit
+                          ? "text-red-700 dark:text-red-400"
+                          : "text-emerald-700 dark:text-emerald-400",
+                      )}
+                    >
+                      {isDebit ? "−" : "+"}
+                      {formatCurrency(tx.amount)}
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {totalPages > 1 && (
+        <footer className="flex items-center justify-between border-t px-5 py-3">
+          <p className="text-xs text-muted-foreground tabular-nums">
+            Page {page} of {totalPages}
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={() => onPageChange(Math.max(1, page - 1))}
+              disabled={page === 1}
+            >
+              <IconChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+              disabled={page === totalPages}
+            >
+              <IconChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </footer>
+      )}
+    </section>
   );
 }

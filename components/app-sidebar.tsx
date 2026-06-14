@@ -1,19 +1,15 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   IconShoppingCart,
   IconDashboard,
   IconBook2,
   IconUsers,
-  IconInnerShadowTop,
   IconPackage,
 } from "@tabler/icons-react";
 
-import { NavMain } from "@/components/nav-main";
-import { NavUser } from "@/components/nav-user";
-import { AdminExperienceSwitcher } from "@/components/admin-experience-switcher";
-import { useApp } from "@/providers/app-provider";
 import {
   Sidebar,
   SidebarContent,
@@ -23,60 +19,20 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import {
-  useSidebarVersion,
-  type SidebarVersion,
-} from "@/hooks/use-sidebar-version";
-import { ADMIN_NAV_V1 } from "@/lib/admin-routes";
-import { AppSidebarV2 } from "@/components/sidebar-v2/app-sidebar-v2";
+import { useApp } from "@/providers/app-provider";
+import { ADMIN_NAV } from "@/lib/admin-routes";
+import { NavMain } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
 
 const navMainItems = [
-  { title: "Dashboard", url: ADMIN_NAV_V1[0].url, icon: IconDashboard },
-  {
-    title: "Products Management",
-    url: ADMIN_NAV_V1[1].url,
-    icon: IconPackage,
-  },
-  {
-    title: "Customers Management",
-    url: ADMIN_NAV_V1[2].url,
-    icon: IconUsers,
-  },
-  {
-    title: "Orders Management",
-    url: ADMIN_NAV_V1[3].url,
-    icon: IconShoppingCart,
-  },
-  { title: "Ledger Management", url: ADMIN_NAV_V1[4].url, icon: IconBook2 },
+  { title: "Dashboard", url: ADMIN_NAV[0].url, icon: IconDashboard },
+  { title: "Products", url: ADMIN_NAV[1].url, icon: IconPackage },
+  { title: "Customers", url: ADMIN_NAV[2].url, icon: IconUsers },
+  { title: "Orders", url: ADMIN_NAV[3].url, icon: IconShoppingCart },
+  { title: "Ledger", url: ADMIN_NAV[4].url, icon: IconBook2 },
 ];
 
-interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  initialVersion?: SidebarVersion;
-}
-
-/**
- * Top-level sidebar entry point. Picks v1 (default) or the experimental v2
- * sidebar based on the user's preference (read from a cookie on the server
- * and passed in as `initialVersion`, then synced live as the user toggles).
- */
-export function AppSidebar({
-  initialVersion = "v1",
-  ...props
-}: AppSidebarProps) {
-  const { version } = useSidebarVersion(initialVersion);
-
-  if (version === "v2") {
-    return <AppSidebarV2 initialVersion={initialVersion} {...props} />;
-  }
-  return <AppSidebarV1 initialVersion={initialVersion} {...props} />;
-}
-
-function AppSidebarV1({
-  initialVersion = "v1",
-  ...props
-}: React.ComponentProps<typeof Sidebar> & {
-  initialVersion?: SidebarVersion;
-}) {
+export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { user } = useApp();
 
   return (
@@ -86,20 +42,31 @@ function AppSidebarV1({
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
+              size="lg"
+              className="data-[slot=sidebar-menu-button]:p-2!"
             >
-              <a href="#">
-                <IconInnerShadowTop className="size-5" />
-                <span className="text-base font-semibold">Saiban</span>
-              </a>
+              <Link href={ADMIN_NAV[0].url}>
+                <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-md bg-foreground text-background">
+                  <span className="text-base font-bold tracking-tight">S</span>
+                </div>
+                <div className="grid flex-1 text-left leading-tight">
+                  <span className="text-sm font-semibold tracking-tight text-foreground">
+                    Saiban
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    Homoeopathic Pharma
+                  </span>
+                </div>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent className="gap-2">
-        <AdminExperienceSwitcher initialVersion={initialVersion} />
         <NavMain items={navMainItems} />
       </SidebarContent>
+
       <SidebarFooter>
         <NavUser user={user} />
       </SidebarFooter>

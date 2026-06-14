@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -11,19 +12,31 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { IconArrowLeft, IconCash, IconNote } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { formatDate, formatCurrency } from "@/lib/utils";
-import { useGetOrderById } from "@/app/api/orders/use-get-by-id";
-import { useRecordPayment } from "@/app/api/customers/use-record-payment";
-import { PaymentForm } from "../customers/payment-form";
-import { GeneratePDF } from "./generate-pdf";
-import { GeneratePDFV2Test } from "./generate-pdf-v2-test";
-import { DEFAULT_INVOICE_WARRANTY_NOTE } from "./constants";
-import { StatusBadge } from "@/components/common/status-badge";
+import {
+  IconArrowLeft,
+  IconCash,
+  IconCalendar,
+  IconNote,
+  IconReceipt,
+} from "@tabler/icons-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+
+import { useGetOrderById } from "@/app/api/orders/use-get-by-id";
+import { useRecordPayment } from "@/app/api/customers/use-record-payment";
+import { GeneratePDF } from "@/components/orders/generate-pdf";
+import { GeneratePDFV2Test } from "@/components/orders/generate-pdf-v2-test";
+import { StatusBadge } from "@/components/common/status-badge";
+import { formatDate } from "@/lib/utils";
+import { DEFAULT_INVOICE_WARRANTY_NOTE } from "@/components/orders/constants";
+import {
+  PaymentForm,
+  type PaymentFormOutput,
+} from "@/components/admin/customers/payment-form";
+
+import { OrderCustomerCard } from "./order-customer-card";
+import { OrderItemsTable } from "./order-items-table";
+import { OrderSummaryCard } from "./order-summary-card";
 
 interface OrderDetailProps {
   orderId: string;
@@ -36,34 +49,28 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
   const [customNote, setCustomNote] = React.useState(
     DEFAULT_INVOICE_WARRANTY_NOTE,
   );
+
   const { data: order, isLoading, isError } = useGetOrderById(orderId);
   const recordPayment = useRecordPayment();
 
-  const handleRecordPayment = (data: {
-    orderId?: string;
-    amount: number;
-    paymentMethod: string;
-    note: string;
-  }) => {
+  const handleRecordPayment = (data: PaymentFormOutput) => {
     if (!order) return;
     recordPayment.mutate(
       {
         customerId: order.customerId._id,
-        orderId: orderId,
+        orderId,
         amount: data.amount,
         paymentMethod: data.paymentMethod,
         note: data.note,
       },
       {
         onSuccess: () => {
-          toast.success("Payment recorded successfully");
+          toast.success("Payment recorded");
           setIsPaymentDialogOpen(false);
-          queryClient.invalidateQueries({
-            queryKey: ["order", orderId],
-          });
+          queryClient.invalidateQueries({ queryKey: ["order", orderId] });
         },
-        onError: (error) => {
-          toast.error(`Failed to record payment: ${error.message}`);
+        onError: (err) => {
+          toast.error(`Failed to record payment: ${err.message}`);
         },
       },
     );
@@ -71,173 +78,134 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-10">
-        <Spinner className="h-8 w-8" />
+      <div className="flex items-center justify-center py-20">
+        <Spinner className="h-6 w-6" />
       </div>
     );
   }
 
   if (isError || !order) {
     return (
-      <div className="rounded-lg border border-destructive p-4">
-        <p className="text-destructive">Error loading order details</p>
+      <div className="mx-auto max-w-md py-20 text-center">
+        <p className="text-sm text-destructive">
+          Failed to load order details.
+        </p>
       </div>
     );
   }
 
+  const orderNumber = order.invoiceNumber
+    ? order.invoiceNumber
+    : `#${order._id.slice(-6).toUpperCase()}`;
+
   return (
-    <div className="flex flex-col h-full space-y-4 py-4 overflow-auto">
-      {/* Header with back button */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <IconArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold">Order Details</h2>
-            <span className="text-muted-foreground">•</span>
-            <p className="text-muted-foreground">
-              View complete information about this order
-            </p>
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 pb-10 pt-6 sm:px-6">
+      {/* Back link */}
+      <Link
+        href="/admin/orders"
+        className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-fit"
+        onClick={(e) => {
+          e.preventDefault();
+          router.push("/admin/orders");
+        }}
+      >
+        <IconArrowLeft className="h-3.5 w-3.5" />
+        All orders
+      </Link>
+
+      {/* Header */}
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-4 min-w-0">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <IconReceipt className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground font-mono">
+                Order {orderNumber}
+              </h1>
+              <StatusBadge status={order.status} />
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5 tabular-nums">
+                <IconCalendar className="h-3.5 w-3.5" />
+                Created {formatDate(order.createdAt)}
+              </span>
+              {order.paymentMethod && (
+                <span className="capitalize">
+                  {order.paymentMethod.replace("_", " ")}
+                </span>
+              )}
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex flex-wrap items-center gap-2">
           <GeneratePDF order={order} customNote={customNote} buttonOnly />
           {/* TEMPORARY: compare against redesigned invoice — remove once approved */}
           <GeneratePDFV2Test order={order} customNote={customNote} size="default" />
-          <Button
-            className="bg-black text-white hover:bg-black/90"
-            onClick={() => setIsPaymentDialogOpen(true)}
-          >
-            <IconCash className="h-4 w-4 mr-2" />
-            Record Payment
+          <Button onClick={() => setIsPaymentDialogOpen(true)}>
+            <IconCash className="h-4 w-4 mr-1.5" />
+            Record payment
           </Button>
         </div>
-      </div>
+      </header>
 
-      <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-4">
-          <div className="flex items-center gap-2">
-            <Label className="text-muted-foreground">Date:</Label>
-            <p className="text-sm">{formatDate(order.createdAt)}</p>
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-muted-foreground mr-2">Status</Label>
-            <StatusBadge status={order.status} />
-          </div>
+      {order.note && order.note.trim().length > 0 ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <OrderCustomerCard customer={order.customerId} />
+          <section className="rounded-xl border bg-card">
+            <header className="flex items-center gap-2 border-b px-5 py-3">
+              <IconNote className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-base font-semibold tracking-tight text-foreground">
+                Order note
+              </h2>
+            </header>
+            <div className="px-5 py-3">
+              <div className="rounded-lg border-l-2 border-foreground/20 bg-muted/40 px-4 py-3">
+                <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap break-words">
+                  {order.note}
+                </p>
+              </div>
+            </div>
+          </section>
         </div>
+      ) : (
+        <OrderCustomerCard customer={order.customerId} />
+      )}
 
-        <div className="space-y-1">
-          <Label className="text-muted-foreground">Customer</Label>
-          <div className="p-3 bg-muted rounded-lg">
-            <Link
-              href={`/admin/customers/${order.customerId._id}`}
-              className="font-medium hover:text-primary hover:underline"
-            >
-              {order.customerId.firstName} {order.customerId.lastName}
-            </Link>
-            <p className="text-sm text-muted-foreground">
-              {order.customerId.email}
-            </p>
-          </div>
-        </div>
+      <OrderItemsTable items={order.items} />
 
-        {order.note && order.note.trim().length > 0 && (
-          <div className="space-y-1">
-            <Label className="text-muted-foreground inline-flex items-center gap-1.5">
-              <IconNote className="h-3.5 w-3.5" />
-              Order Note
-            </Label>
-            <div className="rounded-lg border-l-2 border-foreground/20 bg-muted px-4 py-3">
-              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                {order.note}
-              </p>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <OrderSummaryCard order={order} />
+
+        {/* Notes & warranty */}
+        <section className="rounded-xl border bg-card flex flex-col">
+          <header className="border-b px-5 py-3">
+            <h2 className="text-base font-semibold tracking-tight text-foreground">
+              Invoice warranty
+            </h2>
+          </header>
+          <div className="flex-1 px-5 py-4 flex flex-col gap-3">
+            <div className="flex-1">
+              <GeneratePDF
+                order={order}
+                customNote={customNote}
+                onNoteChange={setCustomNote}
+                textareaOnly
+              />
             </div>
           </div>
-        )}
-
-        <div className="space-y-2">
-          <Label className="text-muted-foreground">Order Items</Label>
-          <div className="border rounded-lg overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="text-left p-3 text-sm font-medium">Product</th>
-                  <th className="text-right p-3 text-sm font-medium">
-                    Quantity
-                  </th>
-                  <th className="text-right p-3 text-sm font-medium">
-                    Unit Price
-                  </th>
-                  <th className="text-right p-3 text-sm font-medium">
-                    Discount
-                  </th>
-                  <th className="text-right p-3 text-sm font-medium">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {order.items.map((item, index) => (
-                  <tr key={index} className="border-t">
-                    <td className="p-3">{item.productId.name}</td>
-                    <td className="p-3 text-right">{item.quantity}</td>
-                    <td className="p-3 text-right">
-                      {formatCurrency(item.unitPrice)}
-                    </td>
-                    <td className="p-3 text-right">
-                      {item.discountPercentage}%
-                    </td>
-                    <td className="p-3 text-right font-medium">
-                      {formatCurrency(item.lineTotal)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="space-y-2 p-4 bg-muted rounded-lg">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm">Subtotal</Label>
-            <p className="text-sm font-medium">
-              {formatCurrency(order.subtotal)}
-            </p>
-          </div>
-          <div className="flex items-center justify-between">
-            <Label className="text-sm">Discount</Label>
-            <p className="text-sm font-medium">
-              {formatCurrency(order.discountTotal)}
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between pt-2 border-t">
-            <Label className="text-lg font-semibold">Grand Total</Label>
-            <p className="text-lg font-bold">
-              {formatCurrency(order.grandTotal)}
-            </p>
-          </div>
-        </div>
-
-        {/* Invoice Warranty Note */}
-        <div className="space-y-1">
-          <Label className="text-muted-foreground">Warranty (Optional)</Label>
-          <GeneratePDF
-            order={order}
-            customNote={customNote}
-            onNoteChange={setCustomNote}
-            textareaOnly
-          />
-        </div>
+        </section>
       </div>
 
-      {/* Record Payment Dialog */}
+      {/* Record payment dialog */}
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
+            <DialogTitle>Record payment</DialogTitle>
             <DialogDescription>
-              Record a payment for this order
+              Record a payment received for order {orderNumber}.
             </DialogDescription>
           </DialogHeader>
           <PaymentForm

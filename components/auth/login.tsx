@@ -11,9 +11,7 @@ import { useLogin } from "@/app/api/auth/use-login";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useApp } from "@/providers/app-provider";
-import { getAdminHomePath } from "@/lib/admin-routes";
-import { type SidebarVersion } from "@/hooks/use-sidebar-version";
-import Cookies from "js-cookie";
+import { ADMIN_HOME_PATH } from "@/lib/admin-routes";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -51,9 +49,7 @@ export const Login = () => {
             avatar: "",
           });
           toast.success("Login successful!");
-          const experience: SidebarVersion =
-            Cookies.get("saiban-sidebar-version") === "v2" ? "v2" : "v1";
-          router.push(getAdminHomePath(experience));
+          router.push(ADMIN_HOME_PATH);
         },
         onError: (error) => {
           toast.error(error.message || "Login failed");
