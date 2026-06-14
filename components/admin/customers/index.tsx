@@ -1,17 +1,23 @@
 "use client";
 
 import * as React from "react";
-import { DataTable } from "@/components/data-table";
+import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { IconPlus, IconSearch } from "@tabler/icons-react";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -23,77 +29,80 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CustomerForm, type CustomerFormPayload } from "./customer-form";
-import { useGetAllCustomers, Customer } from "@/app/api/customers/use-get-all";
+import { IconPlus, IconPhone, IconMapPin } from "@tabler/icons-react";
+import { toast } from "sonner";
+
+import { DataTable } from "@/components/data-table";
+import {
+  useGetAllCustomers,
+  Customer,
+  type CustomersListSort,
+} from "@/app/api/customers/use-get-all";
 import { useCreateCustomer } from "@/app/api/customers/use-create";
 import { useUpdateCustomer } from "@/app/api/customers/use-update";
 import { useDeleteCustomer } from "@/app/api/customers/use-delete";
-import { Spinner } from "@/components/ui/spinner";
 import { formatDate } from "@/lib/utils";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
-// Re-export Customer type
-export type { Customer };
+import { CustomersToolbar } from "./customers-toolbar";
+import { CustomerAvatar } from "./customer-avatar";
+import { CustomerRowActions } from "./customer-row-actions";
+import { CustomerForm, type CustomerFormPayload } from "./customer-form";
 
 export function Customers() {
   const router = useRouter();
-  const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
+  const [searchInput, setSearchInput] = React.useState("");
+  const [sort, setSort] = React.useState<CustomersListSort>("name");
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  const debouncedSearch = useDebouncedValue(searchInput, 400);
+
+  React.useEffect(() => {
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [debouncedSearch, sort]);
+
+  const [isFormDialogOpen, setIsFormDialogOpen] = React.useState(false);
   const [editingCustomer, setEditingCustomer] = React.useState<Customer | null>(
     null,
   );
   const [deletingCustomerId, setDeletingCustomerId] = React.useState<
     string | null
   >(null);
-  const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
-  const [searchInput, setSearchInput] = React.useState("");
-  const debouncedSearch = useDebouncedValue(searchInput, 400);
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Reset to first page when the (debounced) search term changes.
-  React.useEffect(() => {
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  }, [debouncedSearch]);
-
-  // Fetch customers from API with pagination and search
-  const { data, isLoading, isError, error } = useGetAllCustomers(
-    pagination.pageIndex + 1, // API uses 1-based page numbering
+  const { data, isLoading, isFetching, isError, error } = useGetAllCustomers(
+    pagination.pageIndex + 1,
     pagination.pageSize,
-    debouncedSearch,
+    debouncedSearch || undefined,
+    sort,
   );
 
-  // Keep search input focused after search completes
-  React.useEffect(() => {
-    if (
-      !isLoading &&
-      searchInputRef.current &&
-      document.activeElement !== searchInputRef.current
-    ) {
-      searchInputRef.current.focus();
-    }
-  }, [isLoading, debouncedSearch]);
-
-  // Mutations
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
   const deleteCustomer = useDeleteCustomer();
 
-  // Transform data for DataTable (add id field)
-  const customers = React.useMemo(() => {
-    return (data?.data || []).map((customer) => ({
-      ...customer,
-      id: customer._id, // Add id field for DataTable
-    }));
-  }, [data]);
+  const customers = React.useMemo(
+    () =>
+      (data?.data || []).map((c) => ({
+        ...c,
+        id: c._id,
+      })),
+    [data],
+  );
+
+  const handleView = React.useCallback(
+    (customerId: string) => {
+      router.push(`/admin/customers/${customerId}`);
+    },
+    [router],
+  );
 
   const handleEdit = React.useCallback(
     (customer: Customer & { id: string }) => {
       setEditingCustomer(customer);
-      setIsAddDialogOpen(true);
+      setIsFormDialogOpen(true);
     },
     [],
   );
@@ -105,48 +114,100 @@ export function Customers() {
   const columns = React.useMemo<ColumnDef<Customer & { id: string }>[]>(
     () => [
       {
-        accessorKey: "fullName",
-        header: "Full Name",
-        size: 200,
-        cell: ({ row }) => (
-          <button
-            onClick={() => router.push(`/admin/customers/${row.original._id}`)}
-            className="font-medium text-blue-600 hover:text-blue-700 underline text-left cursor-pointer"
-          >
-            {row.original.firstName} {row.original.lastName}
-          </button>
-        ),
+        accessorKey: "name",
+        header: "Customer",
+        size: 320,
+        cell: ({ row }) => {
+          const c = row.original;
+          const fullName = `${c.firstName} ${c.lastName ?? ""}`.trim();
+          return (
+            <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+              <CustomerAvatar firstName={c.firstName} lastName={c.lastName} />
+              <div className="min-w-0 flex-1">
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => handleView(c._id)}
+                        className="block w-full text-left truncate text-sm font-semibold text-foreground hover:underline underline-offset-4"
+                      >
+                        {fullName}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[320px]">
+                      {fullName}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                {c.email && (
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {c.email}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        },
       },
       {
         accessorKey: "phoneNumber",
-        header: "Phone Number",
-        cell: ({ row }) => (
-          <a
-            href={`tel:${row.original.phoneNumber}`}
-            className="hover:text-primary underline-offset-4 hover:underline"
-          >
-            {row.original.phoneNumber}
-          </a>
-        ),
+        header: "Phone",
+        size: 170,
+        cell: ({ row }) => {
+          const phone = row.original.phoneNumber;
+          if (!phone) {
+            return <span className="text-xs text-muted-foreground">—</span>;
+          }
+          return (
+            <a
+              href={`tel:${phone}`}
+              className="inline-flex items-center gap-1.5 text-sm tabular-nums text-foreground hover:underline underline-offset-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <IconPhone className="h-3 w-3 text-muted-foreground" />
+              {phone}
+            </a>
+          );
+        },
       },
       {
         accessorKey: "address",
         header: "Address",
-        cell: ({ row }) => (
-          <div
-            className="text-muted-foreground line-clamp-1"
-            title={`${row.original.streetAddress} ${row.original.city} ${row.original.state}`}
-          >
-            {row.original.streetAddress} {row.original.city}{" "}
-            {row.original.state}
-          </div>
-        ),
+        size: 280,
+        cell: ({ row }) => {
+          const c = row.original;
+          const address = [c.streetAddress, c.city, c.state]
+            .filter(Boolean)
+            .join(", ")
+            .trim();
+          if (!address) {
+            return <span className="text-xs text-muted-foreground">—</span>;
+          }
+          return (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <IconMapPin className="h-3 w-3 shrink-0 text-muted-foreground" />
+                    <span className="truncate text-sm text-muted-foreground">
+                      {address}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[300px]">
+                  {address}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        },
       },
       {
         accessorKey: "createdAt",
-        header: "Date",
+        header: "Added",
+        size: 130,
         cell: ({ row }) => (
-          <div className="text-muted-foreground">
+          <div className="text-xs text-muted-foreground tabular-nums">
             {formatDate(row.original.createdAt)}
           </div>
         ),
@@ -154,56 +215,45 @@ export function Customers() {
       {
         id: "actions",
         header: () => <div className="text-right">Actions</div>,
+        size: 80,
         cell: ({ row }) => (
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="cursor-pointer"
-              onClick={() => handleEdit(row.original)}
-            >
-              Edit
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="cursor-pointer text-white"
-              onClick={() => handleDelete(row.original._id)}
-            >
-              Delete
-            </Button>
+          <div className="flex justify-end">
+            <CustomerRowActions
+              onView={() => handleView(row.original._id)}
+              onEdit={() => handleEdit(row.original)}
+              onDelete={() => handleDelete(row.original._id)}
+            />
           </div>
         ),
       },
     ],
-    [router, handleEdit, handleDelete],
+    [handleView, handleEdit, handleDelete],
   );
 
-  const handleAddCustomer = (data: CustomerFormPayload) => {
-    createCustomer.mutate(data, {
+  const handleAddCustomer = (payload: CustomerFormPayload) => {
+    createCustomer.mutate(payload, {
       onSuccess: () => {
-        toast.success("Customer created successfully");
-        setIsAddDialogOpen(false);
+        toast.success("Customer created");
+        setIsFormDialogOpen(false);
       },
-      onError: (error) => {
-        toast.error(`Failed to create customer: ${error.message}`);
+      onError: (err) => {
+        toast.error(`Failed to create customer: ${err.message}`);
       },
     });
   };
 
-  const handleUpdateCustomer = (data: CustomerFormPayload) => {
+  const handleUpdateCustomer = (payload: CustomerFormPayload) => {
     if (!editingCustomer) return;
-
     updateCustomer.mutate(
-      { customerId: editingCustomer._id, data },
+      { customerId: editingCustomer._id, data: payload },
       {
         onSuccess: () => {
-          toast.success("Customer updated successfully");
-          setIsAddDialogOpen(false);
+          toast.success("Customer updated");
+          setIsFormDialogOpen(false);
           setEditingCustomer(null);
         },
-        onError: (error) => {
-          toast.error(`Failed to update customer: ${error.message}`);
+        onError: (err) => {
+          toast.error(`Failed to update customer: ${err.message}`);
         },
       },
     );
@@ -211,55 +261,58 @@ export function Customers() {
 
   const handleConfirmDelete = () => {
     if (!deletingCustomerId) return;
-
     deleteCustomer.mutate(deletingCustomerId, {
       onSuccess: () => {
-        toast.success("Customer deleted successfully");
+        toast.success("Customer deleted");
         setDeletingCustomerId(null);
       },
-      onError: (error) => {
-        toast.error(`Failed to delete customer: ${error.message}`);
+      onError: (err) => {
+        toast.error(`Failed to delete customer: ${err.message}`);
         setDeletingCustomerId(null);
       },
     });
   };
 
-  const handleCancelDelete = () => {
-    setDeletingCustomerId(null);
-  };
-
-  const handleDialogClose = () => {
-    setIsAddDialogOpen(false);
-    setEditingCustomer(null);
-  };
-
-  const handleAddDialogOpen = () => {
-    setEditingCustomer(null);
-    setIsAddDialogOpen(true);
-  };
+  const totalCount = data?.pagination.total ?? 0;
+  const showingFrom =
+    customers.length === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
+  const showingTo = pagination.pageIndex * pagination.pageSize + customers.length;
 
   return (
-    <div className="flex flex-col h-full space-y-4 min-h-0">
-      <div className="shrink-0 flex items-center justify-between mt-2">
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 pb-10 pt-6 sm:px-6">
+      {/* Header */}
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-muted-foreground">
-            Manage your customers and view their details (
-            {data?.pagination.total || 0} total)
+          <p className="text-xs font-medium text-muted-foreground">Directory</p>
+          <h1 className="mt-1.5 text-3xl font-semibold tracking-tight text-foreground">
+            Customers
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground tabular-nums">
+            {totalCount}{" "}
+            {totalCount === 1 ? "customer" : "customers"} in your address book.
           </p>
         </div>
-        <Button onClick={handleAddDialogOpen}>
-          <IconPlus className="mr-2 h-4 w-4" />
-          Add Customer
-        </Button>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent className="max-w-2xl">
+        <Dialog
+          open={isFormDialogOpen}
+          onOpenChange={(open) => {
+            setIsFormDialogOpen(open);
+            if (!open) setEditingCustomer(null);
+          }}
+        >
+          <DialogTrigger asChild>
+            <Button onClick={() => setEditingCustomer(null)}>
+              <IconPlus className="mr-2 h-4 w-4" />
+              Add customer
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingCustomer ? "Edit Customer" : "Add New Customer"}
+                {editingCustomer ? "Edit customer" : "Add new customer"}
               </DialogTitle>
               <DialogDescription>
                 {editingCustomer
-                  ? "Update customer information below."
+                  ? "Update the customer's information below."
                   : "Fill in the details to add a new customer."}
               </DialogDescription>
             </DialogHeader>
@@ -268,74 +321,90 @@ export function Customers() {
               onSubmit={
                 editingCustomer ? handleUpdateCustomer : handleAddCustomer
               }
-              onCancel={handleDialogClose}
+              onCancel={() => {
+                setIsFormDialogOpen(false);
+                setEditingCustomer(null);
+              }}
               isSubmitting={
                 createCustomer.isPending || updateCustomer.isPending
               }
             />
           </DialogContent>
         </Dialog>
+      </header>
+
+      <CustomersToolbar
+        searchInput={searchInput}
+        onSearchChange={setSearchInput}
+        sort={sort}
+        onSortChange={setSort}
+      />
+
+      {/* Table card */}
+      <div className="flex flex-1 min-h-0 flex-col rounded-xl border bg-card">
+        <div className="flex items-center justify-between border-b px-5 py-3">
+          <p className="text-xs text-muted-foreground tabular-nums">
+            {totalCount === 0
+              ? "No customers"
+              : `Showing ${showingFrom}–${showingTo} of ${totalCount}`}
+          </p>
+        </div>
+
+        <div className="flex-1 min-h-0">
+          {isError ? (
+            <div className="flex h-64 items-center justify-center px-5">
+              <p className="text-sm text-destructive">
+                Error loading customers: {error?.message || "Unknown error"}
+              </p>
+            </div>
+          ) : isLoading ? (
+            <div className="flex h-64 items-center justify-center">
+              <Spinner className="h-6 w-6" />
+            </div>
+          ) : customers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+              <p className="text-sm font-medium text-foreground">
+                No customers match your search
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Try clearing the search or adjusting filters.
+              </p>
+            </div>
+          ) : (
+            <DataTable
+              data={customers}
+              columns={columns}
+              enableRowSelection={false}
+              manualPagination={true}
+              pageCount={data?.pagination.pages}
+              pagination={pagination}
+              onPaginationChange={setPagination}
+              isFetching={isFetching}
+            />
+          )}
+        </div>
       </div>
 
-      {/* Search Input */}
-      <div className="shrink-0 relative max-w-md">
-        <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          ref={searchInputRef}
-          type="text"
-          placeholder="Search customers by name"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-
-      <div className="flex-1 min-h-0">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <Spinner className="h-8 w-8" />
-          </div>
-        ) : isError ? (
-          <div className="rounded-lg border border-destructive p-4">
-            <p className="text-destructive">
-              Error loading customers: {error?.message || "Unknown error"}
-            </p>
-          </div>
-        ) : (
-          <DataTable
-            data={customers}
-            columns={columns}
-            enableRowSelection={false}
-            manualPagination={true}
-            pageCount={data?.pagination.pages}
-            pagination={pagination}
-            onPaginationChange={setPagination}
-          />
-        )}
-      </div>
-
-      {/* Delete Confirmation Dialog */}
+      {/* Delete confirm */}
       <AlertDialog
         open={!!deletingCustomerId}
-        onOpenChange={(open) => !open && handleCancelDelete()}
+        onOpenChange={(open) => !open && setDeletingCustomerId(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete this customer?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              customer and remove their data from the system.
+              This action cannot be undone. The customer and their related data
+              will be removed from the system.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelDelete}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
-              className="cursor-pointer bg-destructive text-white hover:bg-destructive/70"
+              className="bg-destructive text-white hover:bg-destructive/70"
             >
-              {deleteCustomer.isPending ? "Deleting..." : "Delete"}
+              {deleteCustomer.isPending ? "Deleting…" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

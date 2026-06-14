@@ -40,6 +40,10 @@ Open `http://localhost:3000`.
 - `npm run build` - build production bundle
 - `npm run start` - run production server
 - `npm run lint` - run ESLint
+- `npm run test:api` - API scenario tests (Vitest; requires `npm run dev` + backend)
+- `npm run test:api:watch` - run scenario tests in watch mode
+
+See [docs/api-scenario-testing.md](docs/api-scenario-testing.md) for details.
 
 ## Auth and routing behavior
 
