@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { clearAuthCookie, setAuthCookie } from "@/lib/auth-cookie";
+import { setAuthCookie } from "@/lib/auth-cookie";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get("auth-token")?.value;
+  if (!authToken) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
   let payload: unknown;
   try {
     payload = await request.json();
@@ -25,9 +31,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const upstream = await fetch(`${API_URL}/api/auth/login`, {
+  const upstream = await fetch(`${API_URL}/api/auth/change-password`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
     body: JSON.stringify(payload),
     cache: "no-store",
   });
@@ -41,12 +50,12 @@ export async function POST(request: NextRequest) {
   const accessToken: string | undefined = data?.access_token;
   if (!accessToken) {
     return NextResponse.json(
-      { message: "Login response missing access_token" },
+      { message: "Change password response missing access_token" },
       { status: 502 },
     );
   }
 
   await setAuthCookie(accessToken);
 
-  return NextResponse.json({ user: data.user });
+  return NextResponse.json({ message: data.message });
 }

@@ -1,10 +1,10 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+
+import { clearAuthCookie } from "@/lib/auth-cookie";
 
 export const dynamic = "force-dynamic";
 
 export async function POST() {
-  const cookieStore = await cookies();
-  cookieStore.delete("auth-token");
+  await clearAuthCookie();
   return NextResponse.json({ success: true });
 }

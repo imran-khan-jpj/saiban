@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { ApiError } from "@/app/api/api-callers/client";
-import { DEFAULTS } from "@/app/defaults";
+import { parseApiErrorMessage } from "@/lib/api-error";
 
 interface RegisterPayload {
   name: string;
@@ -32,7 +32,7 @@ export const useRegister = () => {
 
       if (!response.ok) {
         throw new ApiError(
-          data?.message ?? data?.error ?? DEFAULTS.ERROR_MESSAGE,
+          parseApiErrorMessage(data),
           response.status,
           data,
         );
