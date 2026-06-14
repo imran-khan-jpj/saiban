@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
@@ -20,31 +19,34 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { IconArrowLeft, IconPencil, IconCash } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+
+import { useGetCustomerById } from "@/app/api/customers/use-get-by-id";
 import { useGetCustomerOrders } from "@/app/api/customers/use-get-customer-orders";
 import { useGetCustomerTransactions } from "@/app/api/customers/use-get-customer-transactions";
-import { useGetCustomerById } from "@/app/api/customers/use-get-by-id";
 import { useUpdateCustomer } from "@/app/api/customers/use-update";
 import { useRecordPayment } from "@/app/api/customers/use-record-payment";
 import { useBalanceAdjustment } from "@/app/api/customers/use-balance-adjustment";
 import { useConfirmOrder } from "@/app/api/orders/use-confirm";
 import { useCancelOrder } from "@/app/api/orders/use-cancel";
-import { CustomerForm, type CustomerFormPayload } from "./customer-form";
-import { PaymentForm } from "./payment-form";
-import { BalanceAdjustmentForm } from "./balance-adjustment-form";
-import { CustomerSummaryCards } from "./customer-summary-cards";
+
+import { CustomerProfileHeader } from "./customer-profile-header";
+import { CustomerBalanceCards } from "./customer-balance-cards";
 import { CustomerOrdersCard } from "./customer-orders-card";
 import { CustomerTransactionsCard } from "./customer-transactions-card";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { CustomerForm, type CustomerFormPayload } from "./customer-form";
+import { PaymentForm, type PaymentFormOutput } from "./payment-form";
+import {
+  BalanceAdjustmentForm,
+  type BalanceAdjustmentValues,
+} from "./balance-adjustment-form";
 
 interface CustomerDetailProps {
   customerId: string;
 }
 
 export function CustomerDetail({ customerId }: CustomerDetailProps) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [orderPage, setOrderPage] = React.useState(1);
   const [transactionPage, setTransactionPage] = React.useState(1);
@@ -94,17 +96,16 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
 
   const handleConfirmOrder = () => {
     if (!confirmingOrderId) return;
-
     confirmOrder.mutate(confirmingOrderId, {
       onSuccess: () => {
-        toast.success("Order confirmed successfully");
+        toast.success("Order confirmed");
         setConfirmingOrderId(null);
         queryClient.invalidateQueries({
           queryKey: ["customer-orders", customerId],
         });
       },
-      onError: (error) => {
-        toast.error(`Failed to confirm order: ${error.message}`);
+      onError: (err) => {
+        toast.error(`Failed to confirm: ${err.message}`);
         setConfirmingOrderId(null);
       },
     });
@@ -112,17 +113,16 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
 
   const handleCancelOrder = () => {
     if (!cancellingOrderId) return;
-
     cancelOrder.mutate(cancellingOrderId, {
       onSuccess: () => {
-        toast.success("Order cancelled successfully");
+        toast.success("Order cancelled");
         setCancellingOrderId(null);
         queryClient.invalidateQueries({
           queryKey: ["customer-orders", customerId],
         });
       },
-      onError: (error) => {
-        toast.error(`Failed to cancel order: ${error.message}`);
+      onError: (err) => {
+        toast.error(`Failed to cancel: ${err.message}`);
         setCancellingOrderId(null);
       },
     });
@@ -133,23 +133,18 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
       { customerId, data },
       {
         onSuccess: () => {
-          toast.success("Customer updated successfully");
+          toast.success("Customer updated");
           setIsEditDialogOpen(false);
           queryClient.invalidateQueries({ queryKey: ["customer", customerId] });
         },
-        onError: (error) => {
-          toast.error(`Failed to update customer: ${error.message}`);
+        onError: (err) => {
+          toast.error(`Failed to update: ${err.message}`);
         },
       },
     );
   };
 
-  const handleRecordPayment = (data: {
-    orderId?: string;
-    amount: number;
-    paymentMethod: string;
-    note: string;
-  }) => {
+  const handleRecordPayment = (data: PaymentFormOutput) => {
     recordPayment.mutate(
       {
         customerId,
@@ -160,7 +155,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
       },
       {
         onSuccess: () => {
-          toast.success("Payment recorded successfully");
+          toast.success("Payment recorded");
           setIsPaymentDialogOpen(false);
           queryClient.invalidateQueries({
             queryKey: ["customer", customerId],
@@ -169,30 +164,23 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
             queryKey: ["customer-transactions", customerId],
           });
         },
-        onError: (error) => {
-          toast.error(`Failed to record payment: ${error.message}`);
+        onError: (err) => {
+          toast.error(`Failed to record payment: ${err.message}`);
         },
       },
     );
   };
 
-  const handleBalanceAdjustment = (data: {
-    amount: number;
-    direction: "customer_owes" | "we_owe_customer";
-    note?: string;
-  }) => {
+  const handleBalanceAdjustment = (data: BalanceAdjustmentValues) => {
     balanceAdjustment.mutate(
-      {
-        customerId,
-        payload: data,
-      },
+      { customerId, payload: data },
       {
         onSuccess: () => {
-          toast.success("Balance adjusted successfully");
+          toast.success("Balance adjusted");
           setIsBalanceAdjustmentDialogOpen(false);
         },
-        onError: (error) => {
-          toast.error(`Failed to adjust balance: ${error.message}`);
+        onError: (err) => {
+          toast.error(`Failed to adjust balance: ${err.message}`);
         },
       },
     );
@@ -200,87 +188,44 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
 
   if (isLoadingCustomer) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Spinner />
+      <div className="flex items-center justify-center py-20">
+        <Spinner className="h-6 w-6" />
       </div>
     );
   }
 
   if (isCustomerError || !customer) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-red-500">Failed to load customer details</p>
+      <div className="mx-auto max-w-md py-20 text-center">
+        <p className="text-sm text-destructive">
+          Failed to load customer details.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full py-4">
-      {/* Header with back button and actions */}
-      <div className="flex items-center justify-between gap-4 px-4">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <IconArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold">
-                {customer.firstName} {customer.lastName}
-              </h2>
-              {customer.email && (
-                <div>
-                  <span className="text-muted-foreground">•</span>
-                  <p className="text-muted-foreground">{customer.email}</p>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{customer.phoneNumber}</span>
-              {(customer.streetAddress || customer.city || customer.state) && (
-                <div className="inline">
-                  <span>•</span>
-                  <span>
-                    {customer.streetAddress} {customer.city} {customer.state}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsEditDialogOpen(true)}
-          >
-            <IconPencil className="h-4 w-4 mr-2" />
-            Edit Customer
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsBalanceAdjustmentDialogOpen(true)}
-          >
-            Balance Adjustment
-          </Button>
-          <Button
-            size="sm"
-            className="bg-black text-white hover:bg-black/90"
-            onClick={() => setIsPaymentDialogOpen(true)}
-          >
-            <IconCash className="h-4 w-4 mr-2" />
-            Record Payment
-          </Button>
-        </div>
-      </div>
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 pb-10 pt-6 sm:px-6">
+      <CustomerProfileHeader
+        firstName={customer.firstName}
+        lastName={customer.lastName}
+        email={customer.email}
+        phoneNumber={customer.phoneNumber}
+        streetAddress={customer.streetAddress}
+        city={customer.city}
+        state={customer.state}
+        onEdit={() => setIsEditDialogOpen(true)}
+        onAdjustBalance={() => setIsBalanceAdjustmentDialogOpen(true)}
+        onRecordPayment={() => setIsPaymentDialogOpen(true)}
+      />
 
-      <CustomerSummaryCards
+      <CustomerBalanceCards
         customer={customer}
         orders={orders}
         totalOrders={ordersData?.pagination.total || 0}
       />
 
-      <div className="grid gap-4 lg:grid-cols-2 mt-4 px-4 overflow-auto flex-1">
+      <div className="grid gap-4 lg:grid-cols-2">
         <CustomerOrdersCard
           orders={orders}
           ordersData={ordersData}
@@ -302,12 +247,14 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         />
       </div>
 
-      {/* Edit Customer Dialog */}
+      {/* Edit Customer */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Customer</DialogTitle>
-            <DialogDescription>Update customer information</DialogDescription>
+            <DialogTitle>Edit customer</DialogTitle>
+            <DialogDescription>
+              Update the customer&apos;s information below.
+            </DialogDescription>
           </DialogHeader>
           <CustomerForm
             customer={customer}
@@ -318,13 +265,14 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Record Payment Dialog */}
+      {/* Record Payment */}
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
+            <DialogTitle>Record payment</DialogTitle>
             <DialogDescription>
-              Record a payment received from this customer
+              Record a payment received from {customer.firstName}{" "}
+              {customer.lastName ?? ""}.
             </DialogDescription>
           </DialogHeader>
           <PaymentForm
@@ -335,16 +283,17 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Balance Adjustment Dialog */}
+      {/* Balance Adjustment */}
       <Dialog
         open={isBalanceAdjustmentDialogOpen}
         onOpenChange={setIsBalanceAdjustmentDialogOpen}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Balance Adjustment</DialogTitle>
+            <DialogTitle>Adjust balance</DialogTitle>
             <DialogDescription>
-              Adjust the customer&apos;s balance manually
+              Manually correct {customer.firstName} {customer.lastName ?? ""}
+              &apos;s balance.
             </DialogDescription>
           </DialogHeader>
           <BalanceAdjustmentForm
@@ -355,54 +304,47 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Confirm Order Dialog */}
+      {/* Confirm order */}
       <AlertDialog
         open={!!confirmingOrderId}
         onOpenChange={(open) => !open && setConfirmingOrderId(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Order?</AlertDialogTitle>
+            <AlertDialogTitle>Confirm this order?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will mark the order as confirmed.
+              This will mark the order as confirmed and update inventory.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setConfirmingOrderId(null)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmOrder}
-              className="cursor-pointer"
-            >
-              {confirmOrder.isPending ? "Confirming..." : "Confirm"}
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmOrder}>
+              {confirmOrder.isPending ? "Confirming…" : "Confirm"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Cancel Order Dialog */}
+      {/* Cancel order */}
       <AlertDialog
         open={!!cancellingOrderId}
         onOpenChange={(open) => !open && setCancellingOrderId(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel Order?</AlertDialogTitle>
+            <AlertDialogTitle>Cancel this order?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently cancel the
-              order.
+              This action cannot be undone. The order will be marked as
+              cancelled.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setCancellingOrderId(null)}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel>Keep order</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCancelOrder}
-              className="cursor-pointer bg-destructive text-white hover:bg-destructive/70"
+              className="bg-destructive text-white hover:bg-destructive/80"
             >
-              {cancelOrder.isPending ? "Cancelling..." : "Cancel Order"}
+              {cancelOrder.isPending ? "Cancelling…" : "Cancel order"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

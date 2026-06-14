@@ -46,11 +46,11 @@ export function CustomerProfileHeader({
   return (
     <div className="flex flex-col gap-5">
       <Link
-        href="/admin/v2/customers"
+        href="/admin/customers"
         className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         onClick={(e) => {
           e.preventDefault();
-          router.push("/admin/v2/customers");
+          router.push("/admin/customers");
         }}
       >
         <IconArrowLeft className="h-3.5 w-3.5" />

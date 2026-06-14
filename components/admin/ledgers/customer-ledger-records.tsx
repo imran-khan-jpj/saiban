@@ -27,7 +27,7 @@ import {
   useGetCustomerLedgerEntries,
   type CustomerLedgerEntry,
 } from "@/app/api/ledgers/use-get-customer-entries";
-import { CustomerAvatar } from "@/components/admin/customers-v2/customer-avatar";
+import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -69,13 +69,13 @@ const BALANCE_LABEL: Record<string, string> = {
   customer_owes: "Pending payment",
 };
 
-interface CustomerLedgerRecordsV2Props {
+interface CustomerLedgerRecordsProps {
   customerId: string;
 }
 
-export function CustomerLedgerRecordsV2({
+export function CustomerLedgerRecords({
   customerId,
-}: CustomerLedgerRecordsV2Props) {
+}: CustomerLedgerRecordsProps) {
   const router = useRouter();
   const [startDate, setStartDate] = React.useState<Date | undefined>();
   const [endDate, setEndDate] = React.useState<Date | undefined>();
@@ -228,11 +228,11 @@ export function CustomerLedgerRecordsV2({
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 pb-10 pt-6 sm:px-6">
       {/* Back link */}
       <Link
-        href="/admin/v2/ledgers"
+        href="/admin/ledgers"
         className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-fit"
         onClick={(e) => {
           e.preventDefault();
-          router.push("/admin/v2/ledgers");
+          router.push("/admin/ledgers");
         }}
       >
         <IconArrowLeft className="h-3.5 w-3.5" />
@@ -288,7 +288,7 @@ export function CustomerLedgerRecordsV2({
           </div>
 
           <Button asChild variant="outline" size="sm">
-            <Link href={`/admin/v2/customers/${customer._id}`}>
+            <Link href={`/admin/customers/${customer._id}`}>
               View customer profile
               <IconArrowRight className="h-3.5 w-3.5 ml-1" />
             </Link>

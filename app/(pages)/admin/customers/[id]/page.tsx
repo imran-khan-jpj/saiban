@@ -9,9 +9,9 @@ export default async function CustomerDetailPage({
   const { id } = await params;
 
   return (
-    <div className="flex flex-col h-full">
-      <SiteHeader title="Customer Details" />
-      <div className="@container/main flex flex-1 flex-col gap-2 min-h-0">
+    <div className="flex h-full flex-col overflow-hidden">
+      <SiteHeader title="Customer details" />
+      <div className="flex-1 overflow-auto">
         <CustomerDetail customerId={id} />
       </div>
     </div>

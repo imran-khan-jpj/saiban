@@ -2,265 +2,293 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { DataTable } from "@/components/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import {
-  useGetAllLedgerEntries,
-  LedgerEntry,
-} from "@/app/api/ledgers/use-get-all";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Spinner } from "@/components/ui/spinner";
-import { formatDate, formatCurrency } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
+import {
+  IconArrowDownRight,
+  IconArrowUpRight,
+  IconCash,
+  IconReceipt,
+  IconScale,
+  IconShoppingCart,
+} from "@tabler/icons-react";
 
-import { Input } from "@/components/ui/input";
-import { IconX, IconSearch } from "@tabler/icons-react";
-import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
-
+import { DataTable } from "@/components/data-table";
+import {
+  useGetAllLedgerEntries,
+  type LedgerEntry,
+} from "@/app/api/ledgers/use-get-all";
+import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import { useGetAllCustomers } from "@/app/api/customers/use-get-all";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import { StatusBadge } from "@/components/common/status-badge";
+import dayjs from "dayjs";
 
-// Re-export LedgerEntry type
-export type { LedgerEntry };
+import { LedgersToolbar } from "./ledgers-toolbar";
+
+const SOURCE_LABELS: Record<string, string> = {
+  order: "Order",
+  payment: "Payment",
+  adjustment: "Balance adjustment",
+  refund: "Refund",
+};
+
+const SOURCE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  order: IconShoppingCart,
+  payment: IconCash,
+  adjustment: IconScale,
+  refund: IconReceipt,
+};
 
 export function Ledgers() {
   const router = useRouter();
+  const [customerId, setCustomerId] = React.useState("");
+  const [startDate, setStartDate] = React.useState<Date | undefined>();
+  const [endDate, setEndDate] = React.useState<Date | undefined>();
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
   });
-  const [customerFilter, setCustomerFilter] = React.useState("");
-  const [customerSearch, setCustomerSearch] = React.useState("");
-  const debouncedCustomerSearch = useDebouncedValue(customerSearch, 400);
-  const [startDate, setStartDate] = React.useState<Date | undefined>();
-  const [endDate, setEndDate] = React.useState<Date | undefined>();
-  const [customersPagination] = React.useState({
-    page: 1,
-    limit: 50,
-  });
 
-  // Fetch customers for filter with search
-  const { data: customersData } = useGetAllCustomers(
-    customersPagination.page,
-    customersPagination.limit,
-    debouncedCustomerSearch,
-  );
-  const customers = React.useMemo(
-    () => customersData?.data || [],
-    [customersData],
-  );
-
-  // Clear customer filter when search input changes (user is typing new search)
   React.useEffect(() => {
-    // Only clear if customerSearch doesn't match the selected customer's name
-    if (customerFilter && customerSearch) {
-      const selectedCustomer = customers.find((c) => c._id === customerFilter);
-      if (selectedCustomer) {
-        const fullName = `${selectedCustomer.firstName} ${selectedCustomer.lastName}`;
-        if (customerSearch !== fullName) {
-          setCustomerFilter("");
-        }
-      }
-    } else if (customerFilter && !customerSearch) {
-      // Clear filter if search input is empty
-      setCustomerFilter("");
-    }
-  }, [customerSearch, customerFilter, customers]);
-
-  // Fetch ledger entries from API with pagination and filters
-  const { data, isLoading, isError, error } = useGetAllLedgerEntries(
-      pagination.pageIndex + 1,
-      pagination.pageSize,
-      customerFilter || undefined,
-      startDate ? formatDate(startDate, "YYYY-MM-DD") : undefined,
-      endDate ? formatDate(endDate, "YYYY-MM-DD") : undefined,
-    );
-
-  const handleClearFilters = () => {
-    setCustomerFilter("");
-    setCustomerSearch("");
-    setStartDate(undefined);
-    setEndDate(undefined);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  };
+  }, [customerId, startDate, endDate]);
 
-  // Transform data for DataTable (add id field)
-  const ledgerEntries = React.useMemo(() => {
-    return (data?.data || []).map((entry) => ({
-      ...entry,
-      id: entry._id,
-    }));
-  }, [data]);
+  const { data, isLoading, isFetching, isError, error } = useGetAllLedgerEntries(
+    pagination.pageIndex + 1,
+    pagination.pageSize,
+    customerId || undefined,
+    startDate ? dayjs(startDate).format("YYYY-MM-DD") : undefined,
+    endDate ? dayjs(endDate).format("YYYY-MM-DD") : undefined,
+  );
 
-  const columns = React.useMemo<ColumnDef<LedgerEntry & { id: string }>[]>(() => [
-    {
-      accessorKey: "createdAt",
-      header: "Date",
-      cell: ({ row }) => (
-        <div className="text-muted-foreground">
-          {formatDate(row.original.createdAt)}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "entryType",
-      header: "Type",
-      cell: ({ row }) => (
-        <StatusBadge status={row.original.entryType} variant="ledger" />
-      ),
-    },
-    {
-      accessorKey: "amount",
-      header: "Amount",
-      cell: ({ row }) => (
-        <div className="font-medium">{formatCurrency(row.original.amount)}</div>
-      ),
-    },
-    {
-      accessorKey: "customerId",
-      header: "Customer",
-      cell: ({ row }) => {
-        const customer = row.original.customerId;
-        if (typeof customer === "string") {
-          return <div className="font-mono text-xs">{customer.slice(-8)}</div>;
-        }
-        return (
-          <button
-            onClick={() =>
-              router.push(`/admin/ledgers/${customer._id}/records`)
-            }
-            className="text-left hover:underline cursor-pointer"
-          >
-            <div className="font-medium text-blue-600 underline hover:text-blue-700 hover:underline">
-              {customer?.firstName ?? ""} {customer?.lastName ?? ""}
+  const entries = React.useMemo(
+    () =>
+      (data?.data || []).map((e) => ({
+        ...e,
+        id: e._id,
+      })),
+    [data],
+  );
+
+  const columns = React.useMemo<ColumnDef<LedgerEntry & { id: string }>[]>(
+    () => [
+      {
+        accessorKey: "customerId",
+        header: "Customer",
+        size: 380,
+        cell: ({ row }) => {
+          const c = row.original.customerId;
+          if (typeof c === "string") {
+            return (
+              <span className="font-mono text-xs text-muted-foreground">
+                #{c.slice(-8)}
+              </span>
+            );
+          }
+          const fullName = `${c.firstName} ${c.lastName ?? ""}`.trim();
+          return (
+            <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+              <CustomerAvatar
+                firstName={c.firstName}
+                lastName={c.lastName}
+                size="sm"
+              />
+              <div className="min-w-0 flex-1">
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() =>
+                          router.push(`/admin/ledgers/${c._id}`)
+                        }
+                        className="block w-full text-left truncate text-sm font-semibold text-foreground hover:underline underline-offset-4"
+                      >
+                        {fullName}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[320px]">
+                      {fullName}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                {c.email && (
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {c.email}
+                  </p>
+                )}
+              </div>
             </div>
-          </button>
-        );
+          );
+        },
       },
-    },
-    {
-      accessorKey: "note",
-      header: "Note",
-      cell: ({ row }) => {
-        const note = (row.original.note ?? "").trim();
-        if (!note) {
-          return <span className="text-muted-foreground/60">—</span>;
-        }
-        return (
-          <div
-            className="text-sm text-muted-foreground truncate max-w-[260px]"
-            title={note}
-          >
-            {note}
+      {
+        accessorKey: "sourceType",
+        header: "Source",
+        size: 240,
+        cell: ({ row }) => {
+          const Icon = SOURCE_ICONS[row.original.sourceType] ?? IconReceipt;
+          const label =
+            SOURCE_LABELS[row.original.sourceType] ?? row.original.sourceType;
+          const note = (row.original.note ?? "").trim();
+          return (
+            <div className="flex items-start gap-2 text-sm min-w-0">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                <Icon className="h-3.5 w-3.5" />
+              </span>
+              <div className="min-w-0">
+                <div className="truncate capitalize">{label}</div>
+                {note.length > 0 && (
+                  <div
+                    className="truncate text-xs text-muted-foreground"
+                    title={note}
+                  >
+                    {note}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Date",
+        size: 130,
+        cell: ({ row }) => (
+          <div className="text-xs text-muted-foreground tabular-nums">
+            {formatDate(row.original.createdAt)}
           </div>
-        );
+        ),
       },
-    },
-  ], [router]);
+      {
+        accessorKey: "entryType",
+        header: "Type",
+        size: 110,
+        cell: ({ row }) => {
+          const isDebit = row.original.entryType === "debit";
+          return (
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                isDebit
+                  ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300"
+                  : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
+              )}
+            >
+              {isDebit ? (
+                <IconArrowUpRight className="h-3 w-3" />
+              ) : (
+                <IconArrowDownRight className="h-3 w-3" />
+              )}
+              {isDebit ? "Debit" : "Credit"}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "amount",
+        header: () => <div className="text-right pr-6">Amount</div>,
+        size: 200,
+        cell: ({ row }) => {
+          const isDebit = row.original.entryType === "debit";
+          return (
+            <div
+              className={cn(
+                "text-right pr-6 text-sm font-semibold tabular-nums tracking-tight",
+                isDebit
+                  ? "text-red-700 dark:text-red-400"
+                  : "text-emerald-700 dark:text-emerald-400",
+              )}
+            >
+              {isDebit ? "−" : "+"}
+              {formatCurrency(row.original.amount)}
+            </div>
+          );
+        },
+      },
+    ],
+    [router],
+  );
+
+  const totalCount = data?.pagination.total ?? 0;
+  const showingFrom =
+    entries.length === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
+  const showingTo = pagination.pageIndex * pagination.pageSize + entries.length;
 
   return (
-    <div className="flex flex-col h-full space-y-4 min-h-0">
-      <div className="shrink-0 flex items-end justify-between mt-2">
-        <div className="relative w-64">
-          <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search customers..."
-            value={customerSearch}
-            onChange={(e) => setCustomerSearch(e.target.value)}
-            className="pl-9"
-          />
-          {customerSearch && customers.length > 0 && (
-            <div className="absolute top-full mt-1 w-full bg-popover border rounded-md shadow-md max-h-60 overflow-y-auto z-50">
-              {customers.map((customer) => (
-                <div
-                  key={customer._id}
-                  className={cn(
-                    "w-full px-3 py-2 hover:bg-accent transition-colors border-b last:border-b-0",
-                    customerFilter === customer._id && "bg-accent",
-                  )}
-                >
-                  <button
-                    onClick={() => {
-                      setCustomerFilter(customer._id);
-                      setCustomerSearch(
-                        `${customer.firstName} ${customer.lastName}`,
-                      );
-                    }}
-                    className="w-full text-left"
-                  >
-                    <div className="font-medium">
-                      {customer.firstName} {customer.lastName}
-                    </div>
-                  </button>
-                  <button
-                    onClick={() =>
-                      router.push(`/admin/ledgers/${customer._id}/records`)
-                    }
-                    className="text-xs text-primary hover:underline mt-1"
-                  >
-                    View ledger records →
-                  </button>
-                </div>
-              ))}
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 pb-10 pt-6 sm:px-6">
+      {/* Header */}
+      <header className="flex flex-col gap-1">
+        <p className="text-xs font-medium text-muted-foreground">Finance</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+          Ledger
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Every credit and debit recorded across all customer accounts.
+        </p>
+      </header>
+
+      <LedgersToolbar
+        customerId={customerId}
+        onCustomerIdChange={setCustomerId}
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+      />
+
+      {/* Table card */}
+      <div className="flex flex-1 min-h-0 flex-col rounded-xl border bg-card">
+        <div className="flex items-center justify-between border-b px-5 py-3">
+          <p className="text-xs text-muted-foreground tabular-nums">
+            {totalCount === 0
+              ? "No entries"
+              : `Showing ${showingFrom}–${showingTo} of ${totalCount}`}
+          </p>
+        </div>
+
+        <div className="flex-1 min-h-0">
+          {isError ? (
+            <div className="flex h-64 items-center justify-center px-5">
+              <p className="text-sm text-destructive">
+                Error loading entries: {error?.message || "Unknown error"}
+              </p>
             </div>
+          ) : isLoading ? (
+            <div className="flex h-64 items-center justify-center">
+              <Spinner className="h-6 w-6" />
+            </div>
+          ) : entries.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                <IconReceipt className="h-5 w-5" />
+              </div>
+              <p className="text-sm font-medium text-foreground">
+                No ledger entries match your filters
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Try clearing the customer or date filters.
+              </p>
+            </div>
+          ) : (
+            <DataTable
+              data={entries}
+              columns={columns}
+              enableRowSelection={false}
+              manualPagination={true}
+              pageCount={data?.pagination.pages}
+              pagination={pagination}
+              onPaginationChange={setPagination}
+              isFetching={isFetching}
+            />
           )}
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="startDate">Start Date</Label>
-            <DatePicker
-              date={startDate}
-              onDateChange={setStartDate}
-              placeholder="01-Feb-2025"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Label htmlFor="endDate">End Date</Label>
-            <DatePicker
-              date={endDate}
-              onDateChange={setEndDate}
-              placeholder="28-Feb-2025"
-            />
-          </div>
-
-          {(customerFilter || startDate || endDate) && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleClearFilters}
-              title="Clear all filters"
-            >
-              <IconX className="min-w-8" />
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="flex-1 min-h-0">
-        {isError ? (
-          <div className="rounded-lg border border-destructive p-4">
-            <p className="text-destructive">
-              Error loading ledger entries: {error?.message || "Unknown error"}
-            </p>
-          </div>
-        ) : isLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <Spinner className="h-8 w-8" />
-          </div>
-        ) : (
-          <DataTable
-            data={ledgerEntries}
-            columns={columns}
-            enableRowSelection={false}
-            manualPagination={true}
-            pageCount={data?.pagination.pages}
-            pagination={pagination}
-            onPaginationChange={setPagination}
-          />
-        )}
       </div>
     </div>
   );
