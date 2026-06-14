@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { IconDownload } from "@tabler/icons-react";
-import { formatDate } from "@/lib/utils";
 import { DEFAULT_INVOICE_WARRANTY_NOTE } from "./constants";
 
 const PdfDownloadButton = dynamic(() => import("./pdf/pdf-download-button"), {
@@ -51,18 +50,15 @@ function sanitizeForFilename(text: string): string {
 /**
  * Build a friendly invoice PDF filename.
  *
- * Format: `Saiban Invoice {InvoiceNumber} - {Customer Name} - {YYYY-MM-DD}.pdf`
+ * Format: `Saiban Invoice {InvoiceNumber} - {Customer Name}.pdf`
  *
  * Examples:
- * - `Saiban Invoice INV-2026-001 - Ashraf Centre Dr Rahmatullah Sahab - 2026-04-30.pdf`
- * - `Saiban Invoice ORD-A1B2C3 - Sajjad Homeo Store - 2026-04-29.pdf`
+ * - `Saiban Invoice INV-2026-001 - Ashraf Centre Dr Rahmatullah Sahab.pdf`
+ * - `Saiban Invoice ORD-A1B2C3 - Sajjad Homeo Store.pdf`
  *
- * The customer is title-cased, illegal filesystem characters are stripped, and
- * the date is in ISO format so the file sorts naturally in a folder.
+ * The customer is title-cased and illegal filesystem characters are stripped.
  */
 export function buildInvoiceFileName(order: Order): string {
-  const date = formatDate(order.createdAt, "YYYY-MM-DD");
-
   const fullName = `${order.customerId.firstName ?? ""} ${
     order.customerId.lastName ?? ""
   }`.trim();
@@ -73,7 +69,7 @@ export function buildInvoiceFileName(order: Order): string {
     ? sanitizeForFilename(order.invoiceNumber)
     : `ORD-${order._id.slice(-6).toUpperCase()}`;
 
-  return `Saiban Invoice ${invoiceId} - ${customerName} - ${date}.pdf`;
+  return `Saiban Invoice ${invoiceId} - ${customerName}.pdf`;
 }
 
 export function GeneratePDF({
