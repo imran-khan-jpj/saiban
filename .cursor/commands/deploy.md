@@ -11,9 +11,13 @@ Follow the workspace rule **Deploy workflow (`/deploy`)** in `.cursor/rules/depl
 2. Review `git status` / diff; exclude secrets (`\.env`) but otherwise include all non-ignored changed files.
 3. If there are unrelated changes, split them into smaller logical commits (and separate branch/PR when scope differs) instead of leaving files local.
 4. Create **logical commits** with conventional messages.
-5. Run a quick sanity check (`npm run build` or tests) when appropriate.
-6. **Push**: `git push -u origin <current-branch>`.
-7. **PR** into `main` (unless specified otherwise): use `gh`; description must summarize **`origin/main...HEAD`**, list commits, include verification notes. Use REST PATCH for title/body if `gh pr edit` hits GraphQL `projectCards` errors.
-8. Finish with clean `git status` unless the user explicitly asked to keep local changes.
+5. **Sync pnpm lockfile** when `package.json` changed (added/removed/updated deps or scripts):
+   - This repo tracks **`pnpm-lock.yaml`** for Vercel; `npm install` alone does **not** update it.
+   - Run `pnpm install`, commit the updated `pnpm-lock.yaml` (e.g. `fix(deps): sync pnpm-lock.yaml after …`).
+   - Verify CI will pass: `pnpm install --frozen-lockfile` (Vercel uses frozen lockfile by default).
+6. Run a quick sanity check (`pnpm run build` or tests) when appropriate — prefer **pnpm** here when deps changed.
+7. **Push**: `git push -u origin <current-branch>`.
+8. **PR** into `main` (unless specified otherwise): use `gh`; description must summarize **`origin/main...HEAD`**, list commits, include verification notes. Use REST PATCH for title/body if `gh pr edit` hits GraphQL `projectCards` errors.
+9. Finish with clean `git status` unless the user explicitly asked to keep local changes.
 
 Explicitly confirm the branch name and PR URL when finished.
