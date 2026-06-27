@@ -40,8 +40,8 @@ export const pdfV2Styles = StyleSheet.create({
     borderBottomColor: tokens.accent,
   },
   logo: {
-    width: 70,
-    height: 70,
+    width: 92,
+    height: 92,
     objectFit: "contain",
   },
   headerCenter: {
@@ -54,6 +54,14 @@ export const pdfV2Styles = StyleSheet.create({
     fontFamily: "Helvetica-Bold",
     color: tokens.ink,
     marginBottom: 6,
+    textAlign: "center",
+  },
+  companyTrademark: {
+    fontSize: 7,
+    fontFamily: "Helvetica-Bold",
+    color: tokens.muted,
+    letterSpacing: 0.4,
+    marginBottom: 7,
     textAlign: "center",
   },
   companyTagline: {
