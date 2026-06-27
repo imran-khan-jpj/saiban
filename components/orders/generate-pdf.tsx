@@ -9,15 +9,18 @@ import { Label } from "@/components/ui/label";
 import { IconDownload } from "@tabler/icons-react";
 import { DEFAULT_INVOICE_WARRANTY_NOTE } from "./constants";
 
-const PdfDownloadButton = dynamic(() => import("./pdf/pdf-download-button"), {
-  ssr: false,
-  loading: () => (
-    <Button disabled>
-      <IconDownload className="h-4 w-4 mr-2" />
-      Loading PDF…
-    </Button>
-  ),
-});
+const PdfDownloadButton = dynamic(
+  () => import("./pdf-v2/pdf-download-button-v2"),
+  {
+    ssr: false,
+    loading: () => (
+      <Button disabled>
+        <IconDownload className="h-4 w-4 mr-2" />
+        Loading PDF…
+      </Button>
+    ),
+  },
+);
 
 interface GeneratePDFProps {
   order: Order;

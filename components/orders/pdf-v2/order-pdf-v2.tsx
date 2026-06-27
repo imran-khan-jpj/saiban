@@ -103,6 +103,9 @@ export function OrderPDFV2({
 
           <View style={s.headerCenter}>
             <Text style={s.companyName}>Saiban Homoeopathic Pharma</Text>
+            <Text style={s.companyTrademark}>
+              &#174; Reg. Trademark No. 875322
+            </Text>
             <Text style={s.companyTagline}>
               Mfg. By Root&apos;s Pharma, Lahore · DRAP Enlistment #00553
             </Text>
