@@ -201,7 +201,11 @@ export function CustomerForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+    <form
+      onSubmit={handleSubmit(handleFormSubmit)}
+      className="space-y-6"
+      autoComplete="on"
+    >
       {/* Identity */}
       <Section
         title="Identity"
@@ -217,6 +221,7 @@ export function CustomerForm({
             <Input
               id="firstName"
               placeholder="Ahmed"
+              autoComplete="given-name"
               error={!!errors.firstName}
               {...register("firstName")}
             />
@@ -229,6 +234,7 @@ export function CustomerForm({
             <Input
               id="lastName"
               placeholder="Khan"
+              autoComplete="family-name"
               error={!!errors.lastName}
               {...register("lastName")}
             />
@@ -249,6 +255,7 @@ export function CustomerForm({
               id="email"
               type="email"
               placeholder="ahmed.khan@example.com"
+              autoComplete="email"
               error={!!errors.email}
               {...register("email")}
             />
@@ -261,6 +268,7 @@ export function CustomerForm({
             <Input
               id="phoneNumber"
               placeholder="+92-300-9876543"
+              autoComplete="tel"
               error={!!errors.phoneNumber}
               {...register("phoneNumber")}
             />
@@ -283,6 +291,7 @@ export function CustomerForm({
           <Input
             id="streetAddress"
             placeholder="House 123, Street 5, Block A"
+            autoComplete="street-address"
             error={!!errors.streetAddress}
             {...register("streetAddress")}
           />
@@ -293,6 +302,7 @@ export function CustomerForm({
             <Input
               id="city"
               placeholder="Sialkot"
+              autoComplete="address-level2"
               error={!!errors.city}
               {...register("city")}
             />
@@ -305,6 +315,7 @@ export function CustomerForm({
             <Input
               id="state"
               placeholder="Punjab"
+              autoComplete="address-level1"
               error={!!errors.state}
               {...register("state")}
             />
