@@ -49,10 +49,40 @@ import { CustomerAvatar } from "./customer-avatar";
 import { CustomerRowActions } from "./customer-row-actions";
 import { CustomerForm, type CustomerFormPayload } from "./customer-form";
 
+const CUSTOMERS_LIST_SORT_KEY = "customers-list-sort";
+
+function readStoredCustomersSort(): CustomersListSort | null {
+  try {
+    const stored = window.sessionStorage.getItem(CUSTOMERS_LIST_SORT_KEY);
+    if (stored === "recent" || stored === "name") return stored;
+  } catch {
+    // sessionStorage may be unavailable (private mode, quota); ignore.
+  }
+  return null;
+}
+
+function storeCustomersSort(sort: CustomersListSort) {
+  try {
+    window.sessionStorage.setItem(CUSTOMERS_LIST_SORT_KEY, sort);
+  } catch {
+    // sessionStorage may be unavailable (private mode, quota); ignore.
+  }
+}
+
 export function Customers() {
   const router = useRouter();
   const [searchInput, setSearchInput] = React.useState("");
   const [sort, setSort] = React.useState<CustomersListSort>("name");
+
+  React.useEffect(() => {
+    const stored = readStoredCustomersSort();
+    if (stored) setSort(stored);
+  }, []);
+
+  const handleSortChange = React.useCallback((value: CustomersListSort) => {
+    setSort(value);
+    storeCustomersSort(value);
+  }, []);
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
@@ -71,6 +101,7 @@ export function Customers() {
   const [deletingCustomerId, setDeletingCustomerId] = React.useState<
     string | null
   >(null);
+  const [newCustomerFormKey, setNewCustomerFormKey] = React.useState(0);
 
   const { data, isLoading, isFetching, isError, error } = useGetAllCustomers(
     pagination.pageIndex + 1,
@@ -300,7 +331,12 @@ export function Customers() {
           }}
         >
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingCustomer(null)}>
+            <Button
+              onClick={() => {
+                setEditingCustomer(null);
+                setNewCustomerFormKey((key) => key + 1);
+              }}
+            >
               <IconPlus className="mr-2 h-4 w-4" />
               Add customer
             </Button>
@@ -317,6 +353,7 @@ export function Customers() {
               </DialogDescription>
             </DialogHeader>
             <CustomerForm
+              key={editingCustomer?._id ?? `new-${newCustomerFormKey}`}
               customer={editingCustomer}
               onSubmit={
                 editingCustomer ? handleUpdateCustomer : handleAddCustomer
@@ -337,7 +374,7 @@ export function Customers() {
         searchInput={searchInput}
         onSearchChange={setSearchInput}
         sort={sort}
-        onSortChange={setSort}
+        onSortChange={handleSortChange}
       />
 
       {/* Table card */}
