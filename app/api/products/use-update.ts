@@ -9,6 +9,7 @@ export interface UpdateProductPayload {
   packType: string;
   size: number;
   unitPrice: number;
+  purchasePrice: number;
   lowStockThreshold: number;
   quantityInStock: number;
 }
@@ -23,6 +24,7 @@ export interface UpdateProductResponse {
     packType: string;
     size: number;
     unitPrice: number;
+    purchasePrice?: number;
     lowStockThreshold: number;
     quantityInStock: number;
     createdAt: string;

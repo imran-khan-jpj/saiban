@@ -13,14 +13,17 @@ export interface OrderItem {
     unitPrice: number;
     lowStockThreshold: number;
     quantityInStock: number;
+    purchasePrice?: number;
     createdAt: string;
     updatedAt: string;
     __v: number;
   };
   quantity: number;
   unitPrice: number;
+  costPrice?: number;
   discountPercentage: number;
   lineTotal: number;
+  lineCost?: number;
 }
 
 export interface CustomerOrder {
@@ -38,6 +41,8 @@ export interface CustomerOrder {
   gstTotal: number;
   note: string;
   subtotal: number;
+  costTotal?: number;
+  profitTotal?: number;
   grandTotal: number;
   createdAt: string;
   updatedAt: string;

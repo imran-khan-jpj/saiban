@@ -10,6 +10,14 @@ type DashboardMetricsResponse = {
     totalRevenue: ApiCurrencyAmount;
     pendingPayments: ApiCurrencyAmount;
     receivedPayments: ApiCurrencyAmount;
+    /** Cost of goods sold across all (non-cancelled) orders. */
+    totalCost?: ApiCurrencyAmount;
+    /** Gross profit = totalRevenue − totalCost. */
+    grossProfit?: ApiCurrencyAmount;
+    /** Gross margin percentage (0–100). */
+    profitMargin?: ApiCurrencyAmount;
+    /** Value of current stock on hand, valued at purchase/cost price. */
+    inventoryValueAtCost?: ApiCurrencyAmount;
   };
   alerts: {
     lowStockProducts: unknown[];
