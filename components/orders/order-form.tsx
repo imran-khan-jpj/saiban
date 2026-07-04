@@ -30,7 +30,12 @@ import {
 } from "@tabler/icons-react";
 import { useGetAllCustomers } from "@/app/api/customers/use-get-all";
 import { useGetAllProducts, type Product } from "@/app/api/products/use-get-all";
-import { formatCurrency } from "@/lib/utils";
+import {
+  formatCurrency,
+  formatPercent,
+  getMarginPercent,
+  parseCurrency,
+} from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 // Form validation schema
@@ -43,6 +48,7 @@ const orderFormSchema = z.object({
         product: z.string().min(1, "Product is required"),
         quantity: z.number().min(1, "Quantity must be at least 1"),
         price: z.number().min(0, "Price must be at least 0"),
+        cost: z.number().min(0).optional(),
         discountedPrice: z
           .number()
           .min(0, "Discounted price must be at least 0"),
@@ -58,6 +64,7 @@ const emptyOrderItem = {
   product: "",
   quantity: 1,
   price: 0,
+  cost: 0,
   discountedPrice: 0,
   discountPercentage: 0,
 };
@@ -165,6 +172,13 @@ export function OrderForm({
     return sum + itemTotal - discount;
   }, 0);
 
+  const totalCost = items.reduce(
+    (sum, item) => sum + (item.quantity || 0) * (item.cost || 0),
+    0,
+  );
+  const totalProfit = totalAmount - totalCost;
+  const hasCostData = items.some((item) => (item.cost || 0) > 0);
+
   const handleAddItem = React.useCallback(
     (options?: { openProductPicker?: boolean }) => {
       const newIndex = fields.length;
@@ -213,12 +227,20 @@ export function OrderForm({
         shouldDirty: true,
         shouldValidate: true,
       });
-      setValue(`items.${index}.price`, product.unitPrice, {
+      // Currency fields arrive from the API as 2-decimal strings; coerce to
+      // numbers so the react-hook-form `z.number()` fields validate correctly.
+      const unitPrice = parseCurrency(product.unitPrice);
+      setValue(`items.${index}.price`, unitPrice, {
         shouldTouch: true,
         shouldDirty: true,
         shouldValidate: true,
       });
-      setValue(`items.${index}.discountedPrice`, product.unitPrice, {
+      setValue(`items.${index}.cost`, parseCurrency(product.purchasePrice), {
+        shouldTouch: true,
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue(`items.${index}.discountedPrice`, unitPrice, {
         shouldTouch: true,
         shouldDirty: true,
         shouldValidate: true,
@@ -576,13 +598,36 @@ export function OrderForm({
             </div>
 
             <div className="col-span-2 flex items-center justify-between pt-7">
-              <div className="text-sm font-medium">
-                PKR{" "}
-                {(
-                  (items[index]?.quantity || 0) *
-                  (items[index]?.price || 0) *
-                  (1 - (items[index]?.discountPercentage || 0) / 100)
-                ).toFixed(2)}
+              <div>
+                <div className="text-sm font-medium">
+                  PKR{" "}
+                  {(
+                    (items[index]?.quantity || 0) *
+                    (items[index]?.price || 0) *
+                    (1 - (items[index]?.discountPercentage || 0) / 100)
+                  ).toFixed(2)}
+                </div>
+                {(items[index]?.cost || 0) > 0 &&
+                  (() => {
+                    const lineRevenue =
+                      (items[index]?.quantity || 0) *
+                      (items[index]?.price || 0) *
+                      (1 - (items[index]?.discountPercentage || 0) / 100);
+                    const lineCost =
+                      (items[index]?.quantity || 0) * (items[index]?.cost || 0);
+                    const lineProfit = lineRevenue - lineCost;
+                    return (
+                      <div
+                        className={`mt-0.5 text-xs tabular-nums ${
+                          lineProfit < 0
+                            ? "text-red-600 dark:text-red-500"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        +{lineProfit.toFixed(0)} profit
+                      </div>
+                    );
+                  })()}
               </div>
               {fields.length > 1 && (
                 <Button
@@ -614,9 +659,30 @@ export function OrderForm({
         </Button>
       </div>
 
-      <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-        <Label className="text-lg font-semibold">Total Amount</Label>
-        <p className="text-lg font-bold">{formatCurrency(totalAmount)}</p>
+      <div className="space-y-2 p-4 bg-muted rounded-lg">
+        <div className="flex items-center justify-between">
+          <Label className="text-lg font-semibold">Total Amount</Label>
+          <p className="text-lg font-bold">{formatCurrency(totalAmount)}</p>
+        </div>
+        {hasCostData && (
+          <div className="flex items-center justify-between border-t border-border/60 pt-2 text-sm">
+            <span className="text-muted-foreground">
+              Est. cost {formatCurrency(totalCost)} · gross profit
+            </span>
+            <span
+              className={`font-semibold tabular-nums ${
+                totalProfit < 0
+                  ? "text-red-600 dark:text-red-500"
+                  : "text-emerald-600 dark:text-emerald-500"
+              }`}
+            >
+              {formatCurrency(totalProfit)}
+              <span className="ml-1 text-xs font-normal text-muted-foreground">
+                {formatPercent(getMarginPercent(totalAmount, totalCost))}
+              </span>
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="flex justify-end gap-2 pt-4">

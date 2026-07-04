@@ -16,7 +16,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MonthYearPicker } from "@/components/ui/month-year-picker";
-import { cn, roundCurrency, sanitizeCurrencyInput } from "@/lib/utils";
+import {
+  cn,
+  formatPercent,
+  getMarginPercent,
+  roundCurrency,
+  sanitizeCurrencyInput,
+} from "@/lib/utils";
 import type { Product } from "@/app/api/products/use-get-all";
 
 const productFormSchema = z
@@ -34,6 +40,13 @@ const productFormSchema = z
       .refine(
         (value) => /^\d+(\.\d{1,2})?$/.test(value),
         "Unit price can have at most 2 decimal places",
+      ),
+    purchasePrice: z
+      .string()
+      .min(1, "Purchase price is required")
+      .refine(
+        (value) => /^\d+(\.\d{1,2})?$/.test(value),
+        "Purchase price can have at most 2 decimal places",
       ),
     lowStockThreshold: z.string().min(1, "Low stock threshold is required"),
     quantityInStock: z.string().min(1, "Quantity in stock is required"),
@@ -61,6 +74,7 @@ export type ProductFormOutput = {
   packType: string;
   size: number;
   unitPrice: number;
+  purchasePrice: number;
   lowStockThreshold: number;
   quantityInStock: number;
   batchNo?: string;
@@ -177,6 +191,8 @@ export function ProductForm({
           customPackType: (product as any).customPackType || "",
           size: String(product.size),
           unitPrice: String(product.unitPrice),
+          purchasePrice:
+            product.purchasePrice != null ? String(product.purchasePrice) : "",
           lowStockThreshold: String(product.lowStockThreshold),
           quantityInStock: String(product.quantityInStock),
           batchNo: product.batchNo || "",
@@ -192,6 +208,7 @@ export function ProductForm({
           customPackType: "",
           size: "",
           unitPrice: "",
+          purchasePrice: "",
           lowStockThreshold: "",
           quantityInStock: "",
           batchNo: "",
@@ -204,6 +221,15 @@ export function ProductForm({
   const packType = watch("packType");
   const mfgValue = watch("mfg");
   const expiryValue = watch("expiry");
+  const unitPriceValue = watch("unitPrice");
+  const purchasePriceValue = watch("purchasePrice");
+
+  const sale = Number(unitPriceValue);
+  const cost = Number(purchasePriceValue);
+  const hasMarginInputs =
+    Number.isFinite(sale) && sale > 0 && Number.isFinite(cost) && cost > 0;
+  const marginPercent = hasMarginInputs ? getMarginPercent(sale, cost) : 0;
+  const costExceedsSale = hasMarginInputs && cost > sale;
 
   const handleFormSubmit = (data: ProductFormValues) => {
     const finalPackType =
@@ -219,6 +245,7 @@ export function ProductForm({
       packType: finalPackType,
       size: Number(data.size),
       unitPrice: roundCurrency(Number(data.unitPrice)),
+      purchasePrice: roundCurrency(Number(data.purchasePrice)),
       lowStockThreshold: Number(data.lowStockThreshold),
       quantityInStock: Number(data.quantityInStock),
       batchNo: data.batchNo,
@@ -358,6 +385,91 @@ export function ProductForm({
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
+            id="purchasePrice"
+            label="Purchase price"
+            required
+            error={errors.purchasePrice?.message}
+            hint="What you pay your supplier per unit (internal only)"
+          >
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                PKR
+              </span>
+              <Input
+                id="purchasePrice"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*\.?[0-9]*"
+                placeholder="180"
+                className="pl-12"
+                error={!!errors.purchasePrice}
+                {...register("purchasePrice", {
+                  onChange: (e) => {
+                    e.target.value = sanitizeCurrencyInput(e.target.value);
+                  },
+                })}
+              />
+            </div>
+          </Field>
+
+          <Field
+            id="unitPrice"
+            label="Unit price (sale)"
+            required
+            error={errors.unitPrice?.message}
+            hint="What the customer pays per unit"
+          >
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                PKR
+              </span>
+              <Input
+                id="unitPrice"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*\.?[0-9]*"
+                placeholder="250"
+                className="pl-12"
+                error={!!errors.unitPrice}
+                {...register("unitPrice", {
+                  onChange: (e) => {
+                    e.target.value = sanitizeCurrencyInput(e.target.value);
+                  },
+                })}
+              />
+            </div>
+          </Field>
+        </div>
+
+        {hasMarginInputs && (
+          <div
+            className={cn(
+              "flex items-center justify-between rounded-lg border px-4 py-2.5 text-sm",
+              costExceedsSale
+                ? "border-destructive/40 bg-destructive/5"
+                : "border-emerald-500/30 bg-emerald-500/5",
+            )}
+          >
+            <span className="text-xs font-medium text-muted-foreground">
+              Profit per unit
+            </span>
+            <span
+              className={cn(
+                "tabular-nums font-semibold",
+                costExceedsSale
+                  ? "text-destructive"
+                  : "text-emerald-600 dark:text-emerald-500",
+              )}
+            >
+              PKR {roundCurrency(sale - cost).toLocaleString("en-US")} ·{" "}
+              {formatPercent(marginPercent)} margin
+              {costExceedsSale && " — selling below cost"}
+            </span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
             id="size"
             label="Size"
             required
@@ -387,32 +499,7 @@ export function ProductForm({
             </div>
           </Field>
 
-          <Field
-            id="unitPrice"
-            label="Unit price"
-            required
-            error={errors.unitPrice?.message}
-          >
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
-                PKR
-              </span>
-              <Input
-                id="unitPrice"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*\.?[0-9]*"
-                placeholder="250"
-                className="pl-12"
-                error={!!errors.unitPrice}
-                {...register("unitPrice", {
-                  onChange: (e) => {
-                    e.target.value = sanitizeCurrencyInput(e.target.value);
-                  },
-                })}
-              />
-            </div>
-          </Field>
+          <div className="hidden sm:block" />
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

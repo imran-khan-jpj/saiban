@@ -3,8 +3,10 @@
 import * as React from "react";
 import {
   Area,
-  AreaChart,
+  ComposedChart,
   CartesianGrid,
+  Legend,
+  Line,
   XAxis,
   YAxis,
 } from "recharts";
@@ -35,10 +37,21 @@ const RANGE_OPTIONS: RangeOption[] = [
   { key: "90d", label: "Last 90 days", shortLabel: "90d" },
 ];
 
+const COST_COLOR = "#f59e0b"; // amber-500
+const PROFIT_COLOR = "#10b981"; // emerald-500
+
 const chartConfig = {
   revenue: {
     label: "Revenue",
     color: "hsl(var(--foreground))",
+  },
+  cost: {
+    label: "Cost",
+    color: COST_COLOR,
+  },
+  profit: {
+    label: "Profit",
+    color: PROFIT_COLOR,
   },
 } satisfies ChartConfig;
 
@@ -46,6 +59,8 @@ interface DataPoint {
   date: string;
   label: string;
   revenue: number;
+  cost: number | null;
+  profit: number | null;
 }
 
 export function RevenueTrend() {
@@ -61,17 +76,33 @@ export function RevenueTrend() {
       date: point.bucketStart,
       label: point.label,
       revenue: parseCurrency(point.revenue),
+      cost: point.cost != null ? parseCurrency(point.cost) : null,
+      profit:
+        point.profit != null
+          ? parseCurrency(point.profit)
+          : point.cost != null
+            ? parseCurrency(point.revenue) - parseCurrency(point.cost)
+            : null,
     }));
   }, [data]);
 
+  // Show cost/profit overlays only once the backend provides cost data.
+  const hasProfitData = series.some((p) => p.cost != null || p.profit != null);
+
   const total = parseCurrency(data?.summary?.totalRevenue);
+  const totalProfit =
+    data?.summary?.totalProfit != null
+      ? parseCurrency(data.summary.totalProfit)
+      : hasProfitData
+        ? series.reduce((sum, p) => sum + (p.profit ?? 0), 0)
+        : null;
 
   return (
     <section className="rounded-xl border bg-card">
       <header className="flex flex-col gap-3 border-b px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-base font-semibold tracking-tight text-foreground">
-            Revenue
+            {hasProfitData ? "Revenue & profit" : "Revenue"}
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {activeRange.label}, excluding cancelled orders
@@ -94,9 +125,19 @@ export function RevenueTrend() {
               ))}
             </TabsList>
           </Tabs>
-          <p className="text-xl font-semibold tabular-nums tracking-tight whitespace-nowrap">
-            {formatCurrency(total)}
-          </p>
+          <div className="text-right">
+            <p className="text-xl font-semibold tabular-nums tracking-tight whitespace-nowrap">
+              {formatCurrency(total)}
+            </p>
+            {totalProfit != null && (
+              <p
+                className="text-xs font-medium tabular-nums whitespace-nowrap"
+                style={{ color: PROFIT_COLOR }}
+              >
+                {formatCurrency(totalProfit)} profit
+              </p>
+            )}
+          </div>
         </div>
       </header>
       <div className="px-2 py-2">
@@ -113,7 +154,10 @@ export function RevenueTrend() {
             config={chartConfig}
             className="aspect-auto h-[220px] w-full"
           >
-            <AreaChart data={series} margin={{ left: 4, right: 16, top: 8 }}>
+            <ComposedChart
+              data={series}
+              margin={{ left: 4, right: 16, top: 8 }}
+            >
               <defs>
                 <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
                   <stop
@@ -162,7 +206,16 @@ export function RevenueTrend() {
                   />
                 }
               />
+              {hasProfitData && (
+                <Legend
+                  verticalAlign="top"
+                  height={28}
+                  iconType="plainline"
+                  wrapperStyle={{ fontSize: 12 }}
+                />
+              )}
               <Area
+                name="Revenue"
                 dataKey="revenue"
                 type="monotone"
                 stroke="currentColor"
@@ -170,7 +223,30 @@ export function RevenueTrend() {
                 fill="url(#revenueFill)"
                 className="text-foreground"
               />
-            </AreaChart>
+              {hasProfitData && (
+                <Line
+                  name="Cost"
+                  dataKey="cost"
+                  type="monotone"
+                  stroke={COST_COLOR}
+                  strokeWidth={2}
+                  strokeDasharray="4 3"
+                  dot={false}
+                  connectNulls
+                />
+              )}
+              {hasProfitData && (
+                <Line
+                  name="Profit"
+                  dataKey="profit"
+                  type="monotone"
+                  stroke={PROFIT_COLOR}
+                  strokeWidth={2}
+                  dot={false}
+                  connectNulls
+                />
+              )}
+            </ComposedChart>
           </ChartContainer>
         )}
       </div>
