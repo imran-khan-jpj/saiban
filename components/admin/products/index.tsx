@@ -35,14 +35,20 @@ import { useGetProductById } from "@/app/api/products/use-get-by-id";
 import { useCreateProduct } from "@/app/api/products/use-create";
 import { useUpdateProduct } from "@/app/api/products/use-update";
 import { useDeleteProduct } from "@/app/api/products/use-delete";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import {
+  formatCurrency,
+  formatDate,
+  formatPercent,
+  getMarginPercent,
+  parseCurrency,
+} from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 import { ProductStats } from "./product-stats";
 import { ProductsToolbar } from "./products-toolbar";
 import { StockIndicator } from "./stock-indicator";
 import { ProductRowActions } from "./product-row-actions";
-import { ProductForm } from "./product-form";
+import { ProductForm, type ProductFormOutput } from "./product-form";
 import { ProductDetailsDialog } from "./product-details-dialog";
 
 export function Products() {
@@ -152,14 +158,47 @@ export function Products() {
         ),
       },
       {
+        accessorKey: "purchasePrice",
+        header: () => <div className="text-right">Cost</div>,
+        size: 120,
+        cell: ({ row }) => {
+          const cost = parseCurrency(row.original.purchasePrice);
+          return (
+            <div className="text-right text-sm tabular-nums text-muted-foreground">
+              {cost > 0 ? formatCurrency(cost) : "—"}
+            </div>
+          );
+        },
+      },
+      {
         accessorKey: "unitPrice",
-        header: () => <div className="text-right">Unit price</div>,
-        size: 130,
-        cell: ({ row }) => (
-          <div className="text-right text-sm font-semibold tabular-nums tracking-tight">
-            {formatCurrency(row.original.unitPrice)}
-          </div>
-        ),
+        header: () => <div className="text-right">Sale price</div>,
+        size: 150,
+        cell: ({ row }) => {
+          const cost = parseCurrency(row.original.purchasePrice);
+          const margin =
+            cost > 0
+              ? getMarginPercent(row.original.unitPrice, cost)
+              : null;
+          return (
+            <div className="text-right">
+              <p className="text-sm font-semibold tabular-nums tracking-tight">
+                {formatCurrency(row.original.unitPrice)}
+              </p>
+              {margin != null && (
+                <p
+                  className={`mt-0.5 text-xs tabular-nums ${
+                    margin < 0
+                      ? "text-red-600 dark:text-red-500"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {formatPercent(margin)} margin
+                </p>
+              )}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "createdAt",
@@ -189,9 +228,7 @@ export function Products() {
     [handleView, handleEdit, handleDelete],
   );
 
-  const handleAddProduct = (
-    payload: Omit<Product, "_id" | "createdAt" | "updatedAt" | "__v">,
-  ) => {
+  const handleAddProduct = (payload: ProductFormOutput) => {
     createProduct.mutate(payload, {
       onSuccess: () => {
         toast.success("Product created");
@@ -203,9 +240,7 @@ export function Products() {
     });
   };
 
-  const handleUpdateProduct = (
-    payload: Omit<Product, "_id" | "createdAt" | "updatedAt" | "__v">,
-  ) => {
+  const handleUpdateProduct = (payload: ProductFormOutput) => {
     if (!editingProduct) return;
     updateProduct.mutate(
       { productId: editingProduct._id, data: payload },

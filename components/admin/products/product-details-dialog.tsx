@@ -13,7 +13,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { IconPencil } from "@tabler/icons-react";
 import type { Product } from "@/app/api/products/use-get-all";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import {
+  formatCurrency,
+  formatDate,
+  formatPercent,
+  getMarginPercent,
+  getProfit,
+  parseCurrency,
+} from "@/lib/utils";
 import { StockIndicator } from "./stock-indicator";
 
 interface ProductDetailsDialogProps {
@@ -79,10 +86,20 @@ export function ProductDetailsDialog({
             </div>
 
             {/* Price + stock callout */}
-            <div className="grid grid-cols-2 gap-4 rounded-xl border bg-muted/40 p-4">
+            <div className="grid grid-cols-2 gap-4 rounded-xl border bg-muted/40 p-4 sm:grid-cols-3">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">
-                  Unit price
+                  Purchase price
+                </p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-muted-foreground">
+                  {parseCurrency(product.purchasePrice) > 0
+                    ? formatCurrency(product.purchasePrice)
+                    : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Sale price
                 </p>
                 <p className="mt-1 text-2xl font-semibold tabular-nums tracking-tight">
                   {formatCurrency(product.unitPrice)}
@@ -100,6 +117,36 @@ export function ProductDetailsDialog({
                 </div>
               </div>
             </div>
+
+            {/* Profit callout */}
+            {parseCurrency(product.purchasePrice) > 0 && (
+              <div className="flex items-center justify-between rounded-xl border bg-card px-4 py-3">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Profit per unit
+                </p>
+                {(() => {
+                  const profit = getProfit(
+                    product.unitPrice,
+                    product.purchasePrice,
+                  );
+                  const margin = getMarginPercent(
+                    product.unitPrice,
+                    product.purchasePrice,
+                  );
+                  return (
+                    <p
+                      className={`text-sm font-semibold tabular-nums ${
+                        profit < 0
+                          ? "text-red-600 dark:text-red-500"
+                          : "text-emerald-600 dark:text-emerald-500"
+                      }`}
+                    >
+                      {formatCurrency(profit)} · {formatPercent(margin)} margin
+                    </p>
+                  );
+                })()}
+              </div>
+            )}
 
             {/* Descriptions */}
             {(product.shortDescription || product.descriptionUrdu) && (

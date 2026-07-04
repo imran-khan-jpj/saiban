@@ -25,6 +25,8 @@ export interface Order {
       batchNo?: string;
       size: number;
       unitPrice: ApiCurrencyAmount;
+      /** Cost / purchase price on the product (internal only). */
+      purchasePrice?: ApiCurrencyAmount;
       lowStockThreshold: number;
       quantityInStock: number;
       createdAt: string;
@@ -35,8 +37,12 @@ export interface Order {
     };
     quantity: number;
     unitPrice: ApiCurrencyAmount;
+    /** Cost per unit snapshotted at order time (internal only). */
+    costPrice?: ApiCurrencyAmount;
     discountPercentage: number;
     lineTotal: ApiCurrencyAmount;
+    /** Cost × quantity for this line (internal only). */
+    lineCost?: ApiCurrencyAmount;
   }>;
   status: "pending" | "completed" | "cancelled";
   paymentMethod: string;
@@ -44,6 +50,10 @@ export interface Order {
   gstTotal: ApiCurrencyAmount;
   note: string;
   subtotal: ApiCurrencyAmount;
+  /** Total cost of goods for this order (internal only). */
+  costTotal?: ApiCurrencyAmount;
+  /** Gross profit for this order = subtotal − costTotal (internal only). */
+  profitTotal?: ApiCurrencyAmount;
   grandTotal: ApiCurrencyAmount;
   createdAt: string;
   updatedAt: string;

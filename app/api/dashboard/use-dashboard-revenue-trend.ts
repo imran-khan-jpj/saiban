@@ -11,6 +11,10 @@ export interface RevenueTrendPoint {
   bucketEnd?: string;
   label: string;
   revenue: ApiCurrencyAmount;
+  /** Cost of goods sold in this bucket (internal only). */
+  cost?: ApiCurrencyAmount;
+  /** Gross profit in this bucket = revenue − cost (internal only). */
+  profit?: ApiCurrencyAmount;
   orderCount?: number;
 }
 
@@ -20,6 +24,8 @@ export interface DashboardRevenueTrendResponse {
   timezone?: string;
   summary: {
     totalRevenue: ApiCurrencyAmount;
+    totalCost?: ApiCurrencyAmount;
+    totalProfit?: ApiCurrencyAmount;
     orderCount?: number;
     currency?: string;
     excludedStatuses?: string[];

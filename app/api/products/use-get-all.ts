@@ -10,6 +10,8 @@ export interface Product {
   packType: string;
   size: number;
   unitPrice: number;
+  /** Cost / purchase price paid to the supplier (internal only). */
+  purchasePrice?: number;
   lowStockThreshold: number;
   quantityInStock: number;
   batchNo?: string;

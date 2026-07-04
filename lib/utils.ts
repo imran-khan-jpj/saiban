@@ -103,6 +103,36 @@ export function roundCurrency(amount: number): number {
 }
 
 /**
+ * Profit = revenue − cost (rounded to 2 decimals).
+ */
+export function getProfit(revenue: CurrencyAmount, cost: CurrencyAmount): number {
+  return roundCurrency(parseCurrency(revenue) - parseCurrency(cost));
+}
+
+/**
+ * Gross margin as a percentage of revenue: (revenue − cost) / revenue × 100.
+ * Returns 0 when revenue is 0 to avoid divide-by-zero noise.
+ */
+export function getMarginPercent(
+  revenue: CurrencyAmount,
+  cost: CurrencyAmount,
+): number {
+  const rev = parseCurrency(revenue);
+  if (rev <= 0) return 0;
+  return roundCurrency((getProfit(rev, cost) / rev) * 100);
+}
+
+/**
+ * Format a margin/percentage value (e.g. "32.5%"). Accepts a pre-computed percent.
+ */
+export function formatPercent(value: number): string {
+  return `${roundCurrency(value).toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 1,
+  })}%`;
+}
+
+/**
  * Format a number as PKR currency with proper formatting
  * @param amount - Number or decimal string from API/forms
  * @returns Formatted currency string (e.g., "PKR 1,000.00" or "PKR 250.50")

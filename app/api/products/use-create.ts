@@ -9,6 +9,7 @@ export interface CreateProductPayload {
   packType: string;
   size: number;
   unitPrice: number;
+  purchasePrice: number;
   lowStockThreshold: number;
   quantityInStock: number;
 }
@@ -23,6 +24,7 @@ export interface CreateProductResponse {
     packType: string;
     size: number;
     unitPrice: number;
+    purchasePrice?: number;
     lowStockThreshold: number;
     quantityInStock: number;
     createdAt: string;
