@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -24,13 +25,20 @@ export function CustomersToolbar({
   sort,
   onSortChange,
 }: CustomersToolbarProps) {
+  const [searchEditable, setSearchEditable] = React.useState(false);
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="relative max-w-sm flex-1 min-w-[240px]">
         <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
+          type="search"
+          name="customers-list-search"
+          autoComplete="off"
           placeholder="Search customers by name…"
           value={searchInput}
+          readOnly={!searchEditable}
+          onFocus={() => setSearchEditable(true)}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-9 pr-9 h-10"
         />
