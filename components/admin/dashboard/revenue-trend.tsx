@@ -1,19 +1,10 @@
 "use client";
 
 import * as React from "react";
-import {
-  Area,
-  ComposedChart,
-  CartesianGrid,
-  Legend,
-  Line,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
 import { Spinner } from "@/components/ui/spinner";
@@ -22,7 +13,7 @@ import {
   useDashboardRevenueTrend,
   type RevenueRangeKey,
 } from "@/app/api/dashboard/use-dashboard-revenue-trend";
-import { formatCurrency, parseCurrency } from "@/lib/utils";
+import { cn, formatCurrency, formatPercent, parseCurrency } from "@/lib/utils";
 
 interface RangeOption {
   key: RevenueRangeKey;
@@ -37,13 +28,13 @@ const RANGE_OPTIONS: RangeOption[] = [
   { key: "90d", label: "Last 90 days", shortLabel: "90d" },
 ];
 
+const REVENUE_COLOR = "hsl(var(--foreground))";
 const COST_COLOR = "#f59e0b"; // amber-500
 const PROFIT_COLOR = "#10b981"; // emerald-500
+const UNCOSTED_COLOR = "hsl(var(--muted-foreground))";
 
 /** Cost/profit only when the bucket has snapshotted purchase cost (> 0). */
-function bucketCost(point: {
-  cost?: string | number | null;
-}): number | null {
+function bucketCost(point: { cost?: string | number | null }): number | null {
   if (point.cost == null) return null;
   const cost = parseCurrency(point.cost);
   return cost > 0 ? cost : null;
@@ -60,18 +51,10 @@ function bucketProfit(
 }
 
 const chartConfig = {
-  revenue: {
-    label: "Revenue",
-    color: "hsl(var(--foreground))",
-  },
-  cost: {
-    label: "Cost",
-    color: COST_COLOR,
-  },
-  profit: {
-    label: "Profit",
-    color: PROFIT_COLOR,
-  },
+  revenue: { label: "Revenue", color: REVENUE_COLOR },
+  cost: { label: "Cost", color: COST_COLOR },
+  profit: { label: "Profit", color: PROFIT_COLOR },
+  uncosted: { label: "Revenue", color: UNCOSTED_COLOR },
 } satisfies ChartConfig;
 
 interface DataPoint {
@@ -80,6 +63,132 @@ interface DataPoint {
   revenue: number;
   cost: number | null;
   profit: number | null;
+  margin: number | null;
+  // Stacked segments — cost + profit sum to revenue on costed buckets;
+  // uncosted carries the full revenue when a bucket has no cost data.
+  costSeg: number;
+  profitSeg: number;
+  uncostedSeg: number;
+}
+
+function compactCurrency(value: number): string {
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}m`;
+  if (abs >= 1_000) return `${Math.round(value / 1000)}k`;
+  return `${value}`;
+}
+
+interface StatBlockProps {
+  label: string;
+  value: string;
+  dotColor?: string;
+  prominent?: boolean;
+  valueClassName?: string;
+}
+
+function StatBlock({
+  label,
+  value,
+  dotColor,
+  prominent,
+  valueClassName,
+}: StatBlockProps) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        {dotColor && (
+          <span
+            className="h-2 w-2 shrink-0 rounded-full"
+            style={{ background: dotColor }}
+          />
+        )}
+        {label}
+      </span>
+      <span
+        className={cn(
+          "tabular-nums tracking-tight whitespace-nowrap",
+          prominent ? "text-2xl font-semibold" : "text-base font-semibold",
+          valueClassName,
+        )}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function TooltipRow({
+  color,
+  label,
+  value,
+}: {
+  color: string;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="flex items-center gap-1.5 text-muted-foreground">
+        <span
+          className="h-2 w-2 shrink-0 rounded-[2px]"
+          style={{ background: color }}
+        />
+        {label}
+      </span>
+      <span className="font-medium tabular-nums text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function RevenueTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: DataPoint }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const p = payload[0].payload;
+
+  return (
+    <div className="min-w-[10rem] rounded-lg border border-border/50 bg-background px-3 py-2 text-xs shadow-xl">
+      <p className="mb-1.5 font-medium text-foreground">{p.label}</p>
+      <div className="grid gap-1">
+        <TooltipRow
+          color={p.cost != null ? UNCOSTED_COLOR : REVENUE_COLOR}
+          label="Revenue"
+          value={formatCurrency(p.revenue)}
+        />
+        {p.cost != null && (
+          <TooltipRow
+            color={COST_COLOR}
+            label="Cost"
+            value={formatCurrency(p.cost)}
+          />
+        )}
+        {p.profit != null && (
+          <TooltipRow
+            color={PROFIT_COLOR}
+            label="Profit"
+            value={formatCurrency(p.profit)}
+          />
+        )}
+        {p.margin != null && (
+          <div className="mt-0.5 flex items-center justify-between gap-4 border-t border-border/50 pt-1">
+            <span className="text-muted-foreground">Margin</span>
+            <span className="font-medium tabular-nums text-foreground">
+              {formatPercent(p.margin)}
+            </span>
+          </div>
+        )}
+        {p.cost == null && p.revenue > 0 && (
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            Cost not recorded
+          </p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function RevenueTrend() {
@@ -94,46 +203,57 @@ export function RevenueTrend() {
     return data.series.map((point) => {
       const revenue = parseCurrency(point.revenue);
       const cost = bucketCost(point);
+      const profit = bucketProfit(revenue, cost, point.profit);
+      const costed = cost != null;
       return {
         date: point.bucketStart,
         label: point.label,
         revenue,
         cost,
-        profit: bucketProfit(revenue, cost, point.profit),
+        profit,
+        margin: costed && revenue > 0 ? ((profit ?? 0) / revenue) * 100 : null,
+        costSeg: costed ? (cost as number) : 0,
+        profitSeg: costed ? (profit ?? 0) : 0,
+        uncostedSeg: costed ? 0 : revenue,
       };
     });
   }, [data]);
 
   const hasProfitData = series.some((p) => p.cost != null);
   const hasPartialCostData =
-    hasProfitData &&
-    series.some((p) => p.revenue > 0 && p.cost == null);
+    hasProfitData && series.some((p) => p.revenue > 0 && p.cost == null);
+  const hasAnyData = series.some((p) => p.revenue !== 0);
 
   const total = parseCurrency(data?.summary?.totalRevenue);
+  const totalCost = hasProfitData
+    ? data?.summary?.totalCost != null
+      ? parseCurrency(data.summary.totalCost)
+      : series.reduce((sum, p) => sum + (p.cost ?? 0), 0)
+    : 0;
   const totalProfit = hasProfitData
     ? data?.summary?.totalProfit != null
       ? parseCurrency(data.summary.totalProfit)
       : series.reduce((sum, p) => sum + (p.profit ?? 0), 0)
     : null;
+  // Margin over costed revenue only, so partial-cost days don't dilute it.
+  const costedRevenue = totalCost + (totalProfit ?? 0);
+  const margin =
+    hasProfitData && costedRevenue > 0
+      ? ((totalProfit ?? 0) / costedRevenue) * 100
+      : null;
 
   return (
     <section className="rounded-xl border bg-card">
-      <header className="flex flex-col gap-3 border-b px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-base font-semibold tracking-tight text-foreground">
-            {hasProfitData ? "Revenue & profit" : "Revenue"}
-          </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {activeRange.label}, excluding cancelled orders
-            {hasPartialCostData && (
-              <span className="block text-[11px] text-muted-foreground/80">
-                Some orders lack purchase price — cost and profit may be
-                incomplete on those days
-              </span>
-            )}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
+      <header className="flex flex-col gap-4 border-b px-5 py-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">
+              {hasProfitData ? "Revenue & profit" : "Revenue"}
+            </h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {activeRange.label}, excluding cancelled orders
+            </p>
+          </div>
           <Tabs
             value={range}
             onValueChange={(v) => setRange(v as RevenueRangeKey)}
@@ -150,53 +270,79 @@ export function RevenueTrend() {
               ))}
             </TabsList>
           </Tabs>
-          <div className="text-right">
-            <p className="text-xl font-semibold tabular-nums tracking-tight whitespace-nowrap">
-              {formatCurrency(total)}
-            </p>
-            {totalProfit != null && (
-              <p
-                className="text-xs font-medium tabular-nums whitespace-nowrap"
-                style={{ color: PROFIT_COLOR }}
-              >
-                {formatCurrency(totalProfit)} profit
-              </p>
-            )}
-          </div>
         </div>
+
+        <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+          <StatBlock label="Revenue" value={formatCurrency(total)} prominent />
+          {hasProfitData && (
+            <StatBlock
+              label="Cost"
+              dotColor={COST_COLOR}
+              value={formatCurrency(totalCost)}
+            />
+          )}
+          {hasProfitData && totalProfit != null && (
+            <StatBlock
+              label="Profit"
+              dotColor={PROFIT_COLOR}
+              value={formatCurrency(totalProfit)}
+              valueClassName="text-emerald-600 dark:text-emerald-500"
+            />
+          )}
+          {margin != null && (
+            <StatBlock
+              label="Margin"
+              value={formatPercent(margin)}
+              valueClassName={cn(
+                margin >= 0
+                  ? "text-emerald-600 dark:text-emerald-500"
+                  : "text-red-600 dark:text-red-500",
+              )}
+            />
+          )}
+        </div>
+
+        {hasPartialCostData && (
+          <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <span
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{ background: UNCOSTED_COLOR, opacity: 0.5 }}
+            />
+            Lighter bars are revenue from orders with no purchase price — cost
+            and profit exclude those.
+          </p>
+        )}
       </header>
-      <div className="px-2 py-2">
+
+      <div className="px-2 py-3">
         {isLoading ? (
-          <div className="flex h-[220px] items-center justify-center">
+          <div className="flex h-[240px] items-center justify-center">
             <Spinner className="h-5 w-5" />
           </div>
         ) : isError ? (
-          <p className="flex h-[220px] items-center justify-center text-sm text-destructive">
+          <p className="flex h-[240px] items-center justify-center text-sm text-destructive">
             Could not load revenue trend
           </p>
+        ) : !hasAnyData ? (
+          <div className="flex h-[240px] flex-col items-center justify-center gap-1 px-5 text-center">
+            <p className="text-sm font-medium text-foreground">
+              No revenue in this period
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Confirmed orders will show up here as daily bars.
+            </p>
+          </div>
         ) : (
           <ChartContainer
             config={chartConfig}
-            className="aspect-auto h-[220px] w-full"
+            className="aspect-auto h-[240px] w-full"
           >
-            <ComposedChart
+            <BarChart
               data={series}
-              margin={{ left: 4, right: 16, top: 8 }}
+              margin={{ left: 4, right: 8, top: 8 }}
+              maxBarSize={36}
+              barCategoryGap="18%"
             >
-              <defs>
-                <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="5%"
-                    stopColor="var(--color-revenue)"
-                    stopOpacity={0.18}
-                  />
-                  <stop
-                    offset="95%"
-                    stopColor="var(--color-revenue)"
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-              </defs>
               <CartesianGrid
                 vertical={false}
                 strokeDasharray="3 3"
@@ -208,69 +354,56 @@ export function RevenueTrend() {
                 axisLine={false}
                 tickMargin={8}
                 interval="preserveStartEnd"
-                minTickGap={32}
+                minTickGap={24}
               />
               <YAxis
-                width={48}
+                width={44}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(v: number) =>
-                  v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`
-                }
+                tickFormatter={compactCurrency}
               />
               <ChartTooltip
-                cursor={{ strokeOpacity: 0.4 }}
-                content={
-                  <ChartTooltipContent
-                    indicator="line"
-                    formatter={(value) =>
-                      formatCurrency(
-                        Array.isArray(value) ? value[0] : value,
-                      )
-                    }
-                  />
-                }
+                cursor={{ fill: "hsl(var(--muted))", fillOpacity: 0.5 }}
+                content={<RevenueTooltip />}
               />
               {hasProfitData && (
-                <Legend
-                  verticalAlign="top"
-                  height={28}
-                  iconType="plainline"
-                  wrapperStyle={{ fontSize: 12 }}
-                />
-              )}
-              <Area
-                name="Revenue"
-                dataKey="revenue"
-                type="monotone"
-                stroke="var(--color-revenue)"
-                strokeWidth={2}
-                fill="url(#revenueFill)"
-              />
-              {hasProfitData && (
-                <Line
+                <Bar
+                  dataKey="costSeg"
                   name="Cost"
-                  dataKey="cost"
-                  type="monotone"
-                  stroke={COST_COLOR}
-                  strokeWidth={2}
-                  strokeDasharray="4 3"
-                  dot={false}
-                  connectNulls
+                  stackId="rev"
+                  fill={COST_COLOR}
+                  radius={[0, 0, 0, 0]}
                 />
               )}
               {hasProfitData && (
-                <Line
+                <Bar
+                  dataKey="profitSeg"
                   name="Profit"
-                  dataKey="profit"
-                  type="monotone"
-                  stroke={PROFIT_COLOR}
-                  strokeWidth={2}
-                  dot={false}
-                  connectNulls
+                  stackId="rev"
+                  fill={PROFIT_COLOR}
+                  radius={[4, 4, 0, 0]}
                 />
               )}
-            </ComposedChart>
+              {hasProfitData && (
+                <Bar
+                  dataKey="uncostedSeg"
+                  name="Revenue"
+                  stackId="rev"
+                  fill={UNCOSTED_COLOR}
+                  fillOpacity={0.35}
+                  radius={[4, 4, 0, 0]}
+                />
+              )}
+              {!hasProfitData && (
+                <Bar
+                  dataKey="revenue"
+                  name="Revenue"
+                  fill={REVENUE_COLOR}
+                  fillOpacity={0.85}
+                  radius={[4, 4, 0, 0]}
+                />
+              )}
+            </BarChart>
           </ChartContainer>
         )}
       </div>
