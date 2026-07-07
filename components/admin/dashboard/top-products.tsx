@@ -26,14 +26,17 @@ export function TopProducts() {
         <div className="flex h-[180px] items-center justify-center">
           <Spinner className="h-5 w-5" />
         </div>
-      ) : isError || rows.length === 0 ? (
+      ) : isError ? (
+        <div className="flex h-[180px] items-center justify-center px-5 text-sm text-destructive">
+          Could not load product profitability
+        </div>
+      ) : rows.length === 0 ? (
         <div className="flex h-[180px] flex-col items-center justify-center gap-1 px-5 text-center">
           <p className="text-sm font-medium text-foreground">
-            No profit data yet
+            No completed sales yet
           </p>
           <p className="text-xs text-muted-foreground">
-            Product profitability appears here once orders are recorded with
-            cost prices.
+            Top products by profit will appear once orders are completed.
           </p>
         </div>
       ) : (

@@ -204,6 +204,24 @@ unchanged.
 - `profit` per bucket = `revenue − cost`.
 - Same bucketing/timezone/exclusion rules as the existing revenue series.
 
+### Aggregation guardrails (important)
+
+Orders created **before** cost tracking shipped have no snapshotted `costPrice`.
+Until those orders are backfilled (see §7), the API must **not** imply profit on
+them:
+
+1. **`revenue`** — always include every non-cancelled order in the bucket (unchanged).
+2. **`cost`** — sum only orders/items with a recorded `costPrice`. Omit the field
+   or return `0` when no snapshotted cost exists in the bucket; do **not** treat
+   missing cost as `0` profit.
+3. **`profit`** — return only when the bucket has **snapshotted** cost data
+   (`cost > 0` from orders that actually have `costPrice`). Do **not** set
+   `profit = revenue` when cost is missing or zero — that shows a misleading
+   100% margin on the chart. Prefer `null`/omit `profit` for those buckets.
+
+The frontend applies the same rule: profit overlays are hidden when cost is
+missing or zero.
+
 ---
 
 ## 5. New endpoint — `GET /api/dashboard/top-products`
@@ -253,7 +271,125 @@ empty state, but returning `200` with an empty array is preferred.
 
 ---
 
-## 6. Tests / validation to update
+## 6. Historical order backfill (one-time migration)
+
+### Problem
+
+Section §2 snapshots `costPrice` only when **new** orders are created. Orders
+placed before purchase-price tracking went live have `costPrice` / `costTotal` /
+`profitTotal` missing. Dashboard charts then show:
+
+- **Revenue** for the full range (correct)
+- **Cost** only for recent orders (last few days)
+- **Profit** incorrectly equal to revenue on older buckets when the API sets
+  `profit = revenue − 0`
+
+Production data (Jul 2026) showed ~80% of non-cancelled orders without cost
+snapshots while products already had `purchasePrice` set.
+
+### Goal
+
+Backfill historical line items so **all non-cancelled orders** have consistent
+`costPrice`, `costTotal`, and `profitTotal`, enabling accurate dashboard
+metrics, revenue-trend series, and top-products for the full order history.
+
+### Scope
+
+| Include | Exclude |
+|---------|---------|
+| All orders with `status !== "cancelled"` | Cancelled orders |
+| Line items missing `costPrice` | Line items that already have `costPrice` (idempotent) |
+
+### Backfill rules
+
+For each order line item where `costPrice` is `null`, `undefined`, or absent:
+
+1. Load the product referenced by `productId` (use populated snapshot or join).
+2. Set `costPrice = product.purchasePrice` (use `0` only if the product truly
+   has `purchasePrice = 0`).
+3. Set `lineCost = round(costPrice × quantity, 2)`.
+4. Recompute order totals:
+   - `costTotal = Σ lineCost` across items
+   - `profitTotal = subtotal − costTotal` (ex-GST, same basis as §2)
+
+**Do not** change `unitPrice`, `lineTotal`, `subtotal`, `discountTotal`,
+`gstTotal`, or `grandTotal` — only cost/profit fields.
+
+### Important caveats (communicate to stakeholders)
+
+- Backfill uses each product's **current** `purchasePrice`, not the supplier
+  price at the original order date. This is the best available default unless
+  historical cost records exist elsewhere.
+- Products with `purchasePrice = 0` will still show 100% margin until those
+  products are updated.
+- Re-running the migration must be **idempotent**: skip items that already have
+  `costPrice` set (including orders created after the feature shipped).
+
+### Suggested migration script (pseudocode)
+
+```js
+for (const order of orders.where({ status: { $ne: "cancelled" } })) {
+  let changed = false;
+  let costTotal = 0;
+
+  for (const item of order.items) {
+    if (item.costPrice != null) {
+      costTotal += item.lineCost ?? item.costPrice * item.quantity;
+      continue;
+    }
+
+    const product = await Product.findById(item.productId);
+    const costPrice = round(product?.purchasePrice ?? 0, 2);
+    const lineCost = round(costPrice * item.quantity, 2);
+
+    item.costPrice = costPrice;
+    item.lineCost = lineCost;
+    costTotal += lineCost;
+    changed = true;
+  }
+
+  if (changed) {
+    order.costTotal = round(costTotal, 2);
+    order.profitTotal = round(order.subtotal - order.costTotal, 2);
+    await order.save();
+  }
+}
+```
+
+Run in a transaction or batched job; log counts: orders scanned, orders updated,
+items backfilled, items skipped (no product / missing `purchasePrice`).
+
+### Downstream endpoints to refresh after backfill
+
+No cache layer is assumed, but verify these return updated totals immediately:
+
+| Endpoint | Expected change |
+|----------|-----------------|
+| `GET /api/orders`, `GET /api/orders/:id` | `costPrice`, `lineCost`, `costTotal`, `profitTotal` on old orders |
+| `GET /api/dashboard/metrics` | Higher `totalCost`, lower `grossProfit` / `profitMargin` |
+| `GET /api/dashboard/revenue-trend` | `cost` and `profit` on historical buckets |
+| `GET /api/dashboard/top-products` | Non-zero `cost`, realistic `margin` (not 100%) |
+
+### Verification checklist
+
+1. Pick an order from before the feature launch date — confirm `costTotal > 0`
+   and `profitTotal = subtotal − costTotal`.
+2. Pick a post-launch order — confirm backfill did **not** overwrite its
+   snapshotted `costPrice`.
+3. `GET /api/dashboard/revenue-trend?range=14d` — buckets with revenue should
+   also have `cost > 0` and `profit < revenue` after backfill.
+4. `summary.totalProfit` must equal `sum(series[*].profit)` (after rounding).
+5. Cancelled orders unchanged.
+
+### Optional dry-run mode
+
+Support `?dryRun=true` on an admin-only migration route (or CLI flag) that
+returns `{ ordersAffected, itemsAffected, estimatedTotalCost, estimatedTotalProfit }`
+without writing.
+
+---
+
+## 7. Tests / validation to update
 
 - Product create/update scenarios: include `purchasePrice`; reject negative
   values (`400`).
@@ -262,6 +398,9 @@ empty state, but returning `200` with an empty array is preferred.
   `costTotal`/`profitTotal`.
 - Dashboard metrics schema: add the four new fields.
 - Add coverage for the new `top-products` endpoint.
+- **Backfill migration**: order with missing `costPrice` gets product
+  `purchasePrice`; existing `costPrice` left unchanged; cancelled orders skipped;
+  `revenue-trend` bucket omits `profit` when no snapshotted cost (pre-backfill).
 
 ---
 

@@ -18,6 +18,8 @@ type DashboardMetricsResponse = {
     profitMargin?: ApiCurrencyAmount;
     /** Value of current stock on hand, valued at purchase/cost price. */
     inventoryValueAtCost?: ApiCurrencyAmount;
+    /** Products with no purchase price — profit on their orders stays incomplete. */
+    productsMissingPurchasePrice?: number;
   };
   alerts: {
     lowStockProducts: unknown[];

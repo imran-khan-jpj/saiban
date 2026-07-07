@@ -84,6 +84,12 @@ export function Dashboard() {
             href: ADMIN_ROUTES.orders,
             tone: "warn",
           },
+          {
+            label: "missing purchase price",
+            count: m?.productsMissingPurchasePrice ?? 0,
+            href: ADMIN_ROUTES.products,
+            tone: "warn",
+          },
         ]}
       />
 

@@ -40,6 +40,25 @@ const RANGE_OPTIONS: RangeOption[] = [
 const COST_COLOR = "#f59e0b"; // amber-500
 const PROFIT_COLOR = "#10b981"; // emerald-500
 
+/** Cost/profit only when the bucket has snapshotted purchase cost (> 0). */
+function bucketCost(point: {
+  cost?: string | number | null;
+}): number | null {
+  if (point.cost == null) return null;
+  const cost = parseCurrency(point.cost);
+  return cost > 0 ? cost : null;
+}
+
+function bucketProfit(
+  revenue: number,
+  cost: number | null,
+  profit?: string | number | null,
+): number | null {
+  if (cost == null) return null;
+  if (profit != null) return parseCurrency(profit);
+  return parseCurrency(revenue - cost);
+}
+
 const chartConfig = {
   revenue: {
     label: "Revenue",
@@ -72,30 +91,30 @@ export function RevenueTrend() {
 
   const series = React.useMemo<DataPoint[]>(() => {
     if (!data?.series) return [];
-    return data.series.map((point) => ({
-      date: point.bucketStart,
-      label: point.label,
-      revenue: parseCurrency(point.revenue),
-      cost: point.cost != null ? parseCurrency(point.cost) : null,
-      profit:
-        point.profit != null
-          ? parseCurrency(point.profit)
-          : point.cost != null
-            ? parseCurrency(point.revenue) - parseCurrency(point.cost)
-            : null,
-    }));
+    return data.series.map((point) => {
+      const revenue = parseCurrency(point.revenue);
+      const cost = bucketCost(point);
+      return {
+        date: point.bucketStart,
+        label: point.label,
+        revenue,
+        cost,
+        profit: bucketProfit(revenue, cost, point.profit),
+      };
+    });
   }, [data]);
 
-  // Show cost/profit overlays only once the backend provides cost data.
-  const hasProfitData = series.some((p) => p.cost != null || p.profit != null);
+  const hasProfitData = series.some((p) => p.cost != null);
+  const hasPartialCostData =
+    hasProfitData &&
+    series.some((p) => p.revenue > 0 && p.cost == null);
 
   const total = parseCurrency(data?.summary?.totalRevenue);
-  const totalProfit =
-    data?.summary?.totalProfit != null
+  const totalProfit = hasProfitData
+    ? data?.summary?.totalProfit != null
       ? parseCurrency(data.summary.totalProfit)
-      : hasProfitData
-        ? series.reduce((sum, p) => sum + (p.profit ?? 0), 0)
-        : null;
+      : series.reduce((sum, p) => sum + (p.profit ?? 0), 0)
+    : null;
 
   return (
     <section className="rounded-xl border bg-card">
@@ -106,6 +125,12 @@ export function RevenueTrend() {
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {activeRange.label}, excluding cancelled orders
+            {hasPartialCostData && (
+              <span className="block text-[11px] text-muted-foreground/80">
+                Some orders lack purchase price — cost and profit may be
+                incomplete on those days
+              </span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -162,12 +187,12 @@ export function RevenueTrend() {
                 <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
-                    stopColor="currentColor"
+                    stopColor="var(--color-revenue)"
                     stopOpacity={0.18}
                   />
                   <stop
                     offset="95%"
-                    stopColor="currentColor"
+                    stopColor="var(--color-revenue)"
                     stopOpacity={0}
                   />
                 </linearGradient>
@@ -218,10 +243,9 @@ export function RevenueTrend() {
                 name="Revenue"
                 dataKey="revenue"
                 type="monotone"
-                stroke="currentColor"
+                stroke="var(--color-revenue)"
                 strokeWidth={2}
                 fill="url(#revenueFill)"
-                className="text-foreground"
               />
               {hasProfitData && (
                 <Line
