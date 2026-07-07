@@ -10,6 +10,8 @@ export interface Customer {
   streetAddress: string;
   city: string;
   state: string;
+  /** Free-text note / context saved directly on the customer. */
+  note?: string;
   createdAt: string;
   updatedAt: string;
 }

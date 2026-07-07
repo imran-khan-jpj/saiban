@@ -9,6 +9,8 @@ export interface UpdateCustomerPayload {
   streetAddress?: string;
   city?: string;
   state?: string;
+  /** Free-text note / context saved directly on the customer. */
+  note?: string;
 }
 
 export interface UpdateCustomerResponse {
@@ -21,6 +23,7 @@ export interface UpdateCustomerResponse {
     streetAddress: string;
     city: string;
     state: string;
+    note?: string;
     createdAt: string;
     updatedAt: string;
   };
