@@ -9,6 +9,8 @@ export interface CreateCustomerPayload {
   streetAddress?: string;
   city?: string;
   state?: string;
+  /** Free-text note / context saved directly on the customer. */
+  note?: string;
   balanceAdjustment?: {
     amount?: number;
     direction: "customer_owes" | "we_owe_customer";
@@ -26,6 +28,7 @@ export interface CreateCustomerResponse {
     streetAddress: string;
     city: string;
     state: string;
+    note?: string;
     createdAt: string;
     updatedAt: string;
   };

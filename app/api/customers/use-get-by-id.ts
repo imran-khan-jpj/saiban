@@ -10,10 +10,13 @@ export interface Customer {
   streetAddress: string;
   city: string;
   state: string;
+  /** Free-text note / context saved directly on the customer. */
+  note?: string;
   /**
    * Note entered with the opening balance when the customer was created.
    * Sourced (read-only) from the opening-balance ledger adjustment; `null`
-   * when no opening balance was set or it had no note.
+   * when no opening balance was set or it had no note. Shown in transaction
+   * history rather than the main profile.
    */
   openingBalanceNote?: string | null;
   createdAt: string;

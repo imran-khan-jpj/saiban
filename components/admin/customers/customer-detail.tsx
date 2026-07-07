@@ -226,22 +226,21 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         totalOrders={ordersData?.pagination.total || 0}
       />
 
-      {customer.openingBalanceNote &&
-        customer.openingBalanceNote.trim().length > 0 && (
-          <section className="rounded-xl border bg-card">
-            <header className="flex items-center gap-2 border-b px-5 py-3">
-              <IconNote className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-base font-semibold tracking-tight text-foreground">
-                Opening balance note
-              </h2>
-            </header>
-            <div className="px-5 py-4">
-              <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap break-words">
-                {customer.openingBalanceNote}
-              </p>
-            </div>
-          </section>
-        )}
+      {customer.note && customer.note.trim().length > 0 && (
+        <section className="rounded-xl border bg-card">
+          <header className="flex items-center gap-2 border-b px-5 py-3">
+            <IconNote className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-base font-semibold tracking-tight text-foreground">
+              Note
+            </h2>
+          </header>
+          <div className="px-5 py-4">
+            <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap break-words">
+              {customer.note}
+            </p>
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <CustomerOrdersCard

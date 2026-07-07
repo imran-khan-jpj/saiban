@@ -48,6 +48,10 @@ const customerFormSchema = z.object({
     .min(2, "State must be at least 2 characters")
     .optional()
     .or(z.literal("")),
+  note: z
+    .string()
+    .max(2000, "Note cannot exceed 2000 characters")
+    .optional(),
   balanceAdjustment: z
     .object({
       amount: z.number().min(0, "Amount cannot be negative").optional(),
@@ -67,6 +71,7 @@ export type CustomerFormPayload = {
   streetAddress?: string;
   city?: string;
   state?: string;
+  note?: string;
   balanceAdjustment?: {
     amount?: number;
     direction: "customer_owes" | "we_owe_customer";
@@ -164,6 +169,7 @@ export function CustomerForm({
           streetAddress: customer.streetAddress,
           city: customer.city,
           state: customer.state,
+          note: customer.note ?? "",
         }
       : {
           firstName: "",
@@ -173,6 +179,7 @@ export function CustomerForm({
           streetAddress: "",
           city: "",
           state: "",
+          note: "",
           balanceAdjustment: {
             amount: 0,
             direction: "customer_owes",
@@ -188,6 +195,8 @@ export function CustomerForm({
     if (data.streetAddress?.trim()) formData.streetAddress = data.streetAddress;
     if (data.city?.trim()) formData.city = data.city;
     if (data.state?.trim()) formData.state = data.state;
+    // Always send note (trimmed) so it can be set on create and cleared on edit.
+    formData.note = (data.note ?? "").trim();
     if (
       data.balanceAdjustment?.amount &&
       !isNaN(data.balanceAdjustment.amount) &&
@@ -323,6 +332,23 @@ export function CustomerForm({
         </div>
       </Section>
 
+      <div className="border-t" />
+
+      {/* Customer note */}
+      <Section
+        title="Note"
+        description="Optional. Any important context or information about this customer."
+      >
+        <Field id="note" label="Note" error={errors.note?.message}>
+          <Textarea
+            id="note"
+            placeholder="e.g. Prefers delivery after 5pm. Verbal discount agreed with owner."
+            className={cn(errors.note && "border-destructive")}
+            {...register("note")}
+          />
+        </Field>
+      </Section>
+
       {!customer && (
         <>
           <div className="border-t" />
@@ -391,7 +417,7 @@ export function CustomerForm({
 
             <Field
               id="balanceNote"
-              label="Note"
+              label="Opening balance note"
               error={errors.balanceAdjustment?.note?.message}
             >
               <Textarea
